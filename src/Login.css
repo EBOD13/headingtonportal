@@ -1,9 +1,11 @@
 
+*{
+    font-family: "EB+Garamond";
+}
 body {
     margin: 0;
     padding: 0;
     background-color: #841516;
-    font-family: "EB+Garamond";
   }
   .container {
     border-radius: 10px;
@@ -74,7 +76,6 @@ body {
     border-radius: 10px;
     min-height: 2.5rem;
     cursor: pointer;
-    font-family: "EB+Garamond";
     font-style: italic;
     font-weight: bold;
 }  
