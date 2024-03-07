@@ -1,6 +1,6 @@
 import React from 'react';
 import './Login.css';
-import logo from './images/logo.png'
+import logo from './images/icons/hh_logo.png'
 const Login = () => {
     return (
         <div className="Login">

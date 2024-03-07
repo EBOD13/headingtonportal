@@ -6,6 +6,8 @@
   }
   header{
     height: 10vh;
+    background-color: #ffffff;
+
   }
   header a p {
     position: absolute;
@@ -18,7 +20,8 @@
     text-align: center;
     color: #ffffff;
     font-size: 18px;
-    padding-bottom: 20px;
+    padding-top: 30px;
+    padding-bottom: 30px;
   }
   .menu-bar {
     display: flex; /* Make header a flex container */
@@ -29,6 +32,8 @@
   .header-link {
     color: #000000;
     display: flex;
+    margin-top: auto;
+    margin-bottom: auto;
     text-decoration: none;
     justify-content: center; /* Center content horizontally */
     align-items: center; /* Optional: Center content vertically (if needed) */
@@ -52,6 +57,8 @@
   .profile{
     margin-left: auto;
     padding-right: 40px;
+    margin-top: auto;
+    margin-bottom: auto;
     text-align: center;
   }
   .profile-img{
@@ -66,6 +73,7 @@
   }
   .logo-img {
     height: 60px;
+    width: 250px;
     position: absolute;
     top: 0;
     left: 0;
@@ -91,7 +99,7 @@
   }
   
   .nav-links li a img {
-    filter: invert(100%);
+
     height: 1.3rem;
     margin-right: 15px;
   }

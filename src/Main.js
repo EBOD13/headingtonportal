@@ -1,5 +1,7 @@
 import React from "react";
 import "./Main.css";
+import imageList from "./ImageGallery";
+
 
 // Import all images from the icons folder dynamically
 const importAll = (r) => {
@@ -33,13 +35,13 @@ const Main = () => {
             <p>Dashboard</p>
           </a>
           <a href="card.html" className="profile">
-            <img src="avatar.png" className="profile-img" id="user_profile" />
+            <img src={imageList["avatar.png"]} className="profile-img" id="user_profile" />
           </a>
         </header>
         <div className="header">
           <div className="side-nav">
             <a href="#" className="logo">
-              <img src="OU_Banner.png" className="logo-img" />
+              <img src={imageList["OU_Banner.png"]} className="logo-img" />
               <img src="hh_logo.png" className="logo-icon" />
             </a>
             <p className="logo-text">
@@ -50,54 +52,52 @@ const Main = () => {
             <ul className="nav-links">
               <li>
                 <a href="card.html">
-                  <img src={images["./check-in.svg"]} className="icons" />
+                  <img src={imageList["check-in.svg"]} className="icons" />
                   <p className="nav-text">Check In</p>
                 </a>
               </li>
               <li>
                 <a href="#">
-                  <img src={images["./check-out.svg"]} className="icons" />
+                  <img src={imageList["check-out.svg"]} className="icons" />
                   <p className="nav-text">Check Out</p>
                 </a>
               </li>
               <li>
                 <a href="#">
-                  <img src={images["./new-user.svg"]} className="icons" />
+                  <img src={imageList["new-user.svg"]} className="icons" />
                   <p className="nav-text"> New Guest</p>
                 </a>
               </li>
               <li>
                 <a href="#">
-                  <img src={images["./residents.svg"]} className="icons" />
+                  <img src={imageList["residents.svg"]} className="icons" />
                   <p className="nav-text">Residents</p>
                 </a>
               </li>
               <li>
                 <a href="#">
-                  <img src={images["./guests.svg"]} className="icons" />
+                  <img src={imageList["guests.svg"]} className="icons" />
                   <p className="nav-text">Guests</p>
                 </a>
               </li>
               <li>
                 <a href="#">
-                  <img src={images["./blacklist.svg"]} className="icons" />
+                  <img src={imageList["blacklist.svg"]} className="icons" />
                   <p className="nav-text">Blacklist</p>
                 </a>
               </li>
               <li>
                 <a href="#">
-                  <img src={images["./settings.svg"]} className="icons" />
+                  <img src={imageList["settings.svg"]} className="icons" />
                   <p className="nav-text">Settings</p>
                 </a>
               </li>
               <li className="log-out">
                 <a href="#">
-                  <img src={images["./door.svg"]} className="icons" />
+                  <img src={imageList["door.svg"]} className="icons" />
                   <p className="nav-text">Log out</p>
                 </a>
               </li>
-
-              <div className="active"></div>
             </ul>
           </div>
         </div>
