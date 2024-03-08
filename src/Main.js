@@ -39,6 +39,15 @@ const Main = () => {
           </a>
         </header>
         <div className="header">
+            <div className="box-container">
+                <div class="status-box"><p className="banner-text">Current Guest - North</p>
+                <br/><p className="guests-numbers">13</p></div>
+                <div class="status-box"><p className="banner-text">Current Guest - South</p>
+                <br/><p className="guests-numbers">11</p></div>
+                <div class="status-box"><p className="banner-text">Daily Guests</p>
+                <br/><p className="guests-numbers">32</p></div>
+            </div>
+
           <div className="side-nav">
             <a href="#" className="logo">
               <img src={imageList["OU_Banner.png"]} className="logo-img" />
