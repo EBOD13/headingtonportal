@@ -4,6 +4,7 @@ import './index.css';
 // import App from './App';
 import Login from './Login';
 import ImageGallery from './ImageGallery';
+import CheckInForm from './CheckInForm';
 import Main from './Main';
 import reportWebVitals from './reportWebVitals';
 
@@ -11,7 +12,7 @@ import reportWebVitals from './reportWebVitals';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <Main/>
+    <CheckInForm/>
   </React.StrictMode>
 );
 
