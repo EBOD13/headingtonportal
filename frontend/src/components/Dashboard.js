@@ -4,6 +4,7 @@ import imageList from "./ImageGallery";
 import CheckInForm from "./CheckInForm";
 import CheckOutForm from './CheckOutForm';
 import AddNewGuest from './AddNewGuest';
+import AppLogout from './AppLogout';
 import { logout, reset } from '../features/auth/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCheckedInGuests, resetGuest } from '../features/guests/guestSlice';
@@ -91,6 +92,7 @@ const animationConfig ={
   };
   
   return (
+    <AppLogout>
     <>
       <head>
         <meta charset="UTF-8" />
@@ -195,6 +197,7 @@ const animationConfig ={
           </div>
         </div>
     </>
+    </AppLogout>
   );
 };
 export default Dashboard;
