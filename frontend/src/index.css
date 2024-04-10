@@ -1,0 +1,687 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+* {
+  font-family: "EB+Garamond";
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+/* Other CSS rules remain unchanged */
+
+/* Register and Login styling */
+/* Register and Login styling */
+.login-container {
+  position: fixed; /* Ensure the Login component is fixed in the viewport */
+  top: 50%; /* Position it in the vertical center */
+  left: 50%; /* Position it in the horizontal center */
+  transform: translate(-50%, -50%); /* Center it precisely */
+  z-index: 1000; /* Set a higher z-index value */
+  background-color: #ffffff; /* Background color of the Login component */
+  border-radius: 10px; /* Add some border radius for styling */
+  padding: 20px; /* Add padding for spacing */
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5); /* Adding box shadow */
+  display: flex; /* Set the display to flex */
+  flex-direction: column; /* Align children vertically */
+  align-items: center; /* Center children horizontally */
+}
+
+
+/* Ensure proper styling for the input fields, buttons, and other elements within the Login component */
+
+/* Adjust the z-index of other components if necessary to avoid overlap */
+
+/* Moved header styles to the top */
+header {
+  height: 10vh;
+  background-color: #ffffff;
+  position: fixed; /* Make the header fixed on top */
+  top: 0;
+  left: 0;
+  width: 100%; /* Stretch the header across the entire width */
+  z-index: 2; /* Set a higher z-index to ensure it appears above everything except the side-nav */
+}
+
+header a p {
+  position: absolute;
+  left: 280px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.logo-text {
+  text-align: center;
+  color: #ffffff;
+  font-size: 18px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+
+.menu-bar {
+  display: flex; /* Make header a flex container */
+  justify-content: center; /* Center content horizontally */
+  align-items: center; /* Optional: Center content vertically (if needed) */
+}
+
+.header-link {
+  color: #000000;
+  display: flex;
+  margin-top: auto;
+  margin-bottom: auto;
+  text-decoration: none;
+  justify-content: center; /* Center content horizontally */
+  align-items: center; /* Optional: Center content vertically (if needed) */
+}
+
+/* Styles for the rest of the content */
+.board {
+  width: 100vw; /* Set width to 100% viewport width */
+  height: 100vh; /* Set height to 100% viewport height */
+  background: #fdf7f2;
+  padding-top: 10vh; /* Add space below the header */
+  position: relative; /* Needed for proper positioning of child elements */
+}
+.side-nav {
+  transition: width 0.5s ease-in-out;
+  width: 250px;
+  height: 100%; /* Limit maximum height */
+  background: #841516;
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 20px 30px;
+  z-index: 3; /* Set the highest z-index to ensure it appears on top of everything */
+  overflow-y: auto; /* Enable vertical scrolling when content overflows */
+}
+
+/* Hide scrollbar */
+.side-nav::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome, Safari, and Opera */
+}
+
+.side-nav {
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+@media only screen and (max-width: 880px) {
+  .side-nav {
+    width: 110px; /* Adjust width for small devices */
+  }
+}
+
+
+
+.box-container {
+  display: flex;
+  padding-top: 40px;
+  margin-left: 260px;
+  margin-right: 20px; /* Adjusted margin-right */
+  justify-content: space-between;
+  /* Added overflow property */
+  overflow-x: hidden;
+}
+
+.status-box {
+  position: relative;
+  width: 20rem; /* Set the width to 100px */
+  height: 11rem;
+  margin: 0px 2rem;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #841516;
+}
+
+.guests-numbers {
+  font-size: 4rem;
+  color: #ffffff;
+}
+
+.banner-text {
+  color: #ffffff;
+  font-size: 22px;
+  font-style: italic;
+  position: absolute;
+  top: 0;
+  left: 10px;
+  padding: 5px;
+}
+
+.profile {
+  margin-left: auto;
+  padding-right: 40px;
+  margin-top: auto;
+  margin-bottom: auto;
+  text-align: center;
+}
+
+.profile-img {
+  height: 50px;
+  border-radius: 50%;
+  left: 350px;
+}
+
+.logo {
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 50px;
+}
+
+.logo-img {
+  height: 60px;
+  width: 250px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.nav-links {
+  margin-left: auto;
+  margin-right: auto;
+  list-style: none;
+  position: relative;
+}
+
+.nav-links li {
+  margin-left: 20%;
+  padding: 12px 0;
+}
+.nav-links li a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.nav-links li a img {
+  height: 1.3rem;
+  margin-right: 15px;
+}
+
+.nav-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.log-out {
+  margin-top: 40px;
+}
+
+.nav-links li:hover a {
+  filter: invert(100%);
+  transition: 0.3s;
+}
+
+.logo-icon {
+  display: none;
+  width: 45px;
+}
+
+@media only screen and (max-width: 880px) {
+  .side-nav {
+    width: 110px;
+    transition: width 0.5s ease-in-out;
+  }
+
+  .logo-icon {
+    display: block;
+  }
+
+  .logo-img {
+    display: none;
+  }
+
+  .nav-links li a p {
+    display: none;
+  }
+
+  .nav-links li a img {
+    margin-right: 30%;
+  }
+
+  .nav-links li a {
+    justify-content: center;
+  }
+
+  header a p {
+    position: absolute;
+    left: 140px;
+  }
+
+  .logo-text {
+    display: none;
+  }
+
+  .box-container {
+    margin-left: 6rem;
+    margin-right: 0.75rem;
+  }
+
+  .status-box {
+    height: 8rem;
+    width: 50rem;
+    margin-right: 0.1rem;
+  }
+
+  .guests-numbers {
+    font-size: 3.5rem;
+  }
+
+  .banner-text {
+    font-size: 1.1rem
+
+  }
+  
+}
+
+
+
+.loadingSpinnerContainer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 5000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.loadingSpinner {
+  width: 64px;
+  height: 64px;
+  border: 8px solid;
+  border-color: wheat transparent #841617 transparent;
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Register and Login styling */
+* {
+  font-family: "EB+Garamond";
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #841516;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Ensure the body takes up the full height of the viewport */
+}
+
+.link-to-register {
+  margin-top: 1.5rem;
+  font-size: 14px;
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: inherit; /* Inherit color from parent */
+  cursor: pointer;
+  transition: color 0.3s; /* Add transition effect for color change */
+}
+
+.link-to-register:hover {
+  color: #600507; /* Change color on hover */
+}
+
+.register-container{
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 37rem; /* Change to auto to allow content to dictate height */
+    width: 24rem;
+    background-color: #ffffff;
+    padding: 2rem; /* Add padding to the container */
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5); /* Adding box shadow */
+}
+
+.center-image {
+    width: 6rem;
+  }
+
+  h4{
+    margin-top: 0.7rem;
+    font-size: 17px;
+    font-style: italic;
+    color: #841516;
+  }
+  
+  form {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+  }
+  
+  label {
+    margin-top: 0.7rem;
+    margin-right: auto;
+    font-weight: bold;
+    font-style: italic;
+    margin-bottom: 10px;
+
+  }
+  
+  input[type="text"],
+  input[type="password"],
+  input[type="email"] {
+    padding: 16px;
+    border: 2px solid #841516;
+    border-radius: 5px;
+    height: 0.4rem;
+    font-size: 18px;
+  }
+  
+  input:focus{
+    outline: none;
+  
+  }
+  a {
+    margin-left: auto;
+    text-decoration: none;
+    color: #000000;
+    font-size: 12px;
+    margin-top: 5px;
+    margin-bottom: 0.7rem;
+  }
+  .submit-btn{
+    margin-top: 0.7rem;
+  }
+  .submit-btn button{ 
+    padding: 13px 20px;
+    background-color: #841516;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    width: 19rem;
+    min-height: 2.5rem;
+    cursor: pointer;
+    font-style: italic;
+    font-weight: bold;
+    margin-top: 10px;
+}  
+
+/* CheckIn/Out Forms Styling */
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  backdrop-filter: blur(8px); /* Apply blur effect to the background */
+  z-index: 1;
+  }
+  
+  .form-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: .15rem solid #841617;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  }
+  .form-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: .15rem solid #841617;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  }
+  .checkin-form {
+  margin-left: auto;
+  margin-right: auto;
+  border: 3px solid #841617;
+  width: 38rem;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 5px;
+  }
+  
+  .checkout-form {
+    margin-left: auto;
+    margin-right: auto;
+    border: 3px solid #841617;
+    width: 20rem;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 5px;
+    }
+
+  #check-in-form {
+    margin: 0; /* Reset margin */
+    padding: 0; /* Reset padding */
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+  
+  .guest-banner {
+    text-align: center; /* Align the heading in the center */
+    margin-bottom: 20px; /* Add margin to separate it from the rest of the form */
+    width: 100%;
+    height: 100%; /* Set the width to 100% */
+    padding: 0; /* Remove padding */
+    margin: 0; /* Remove margin */
+    top: 0;
+    background: #841617;
+    background-color: #841617;
+    display: flex;
+    align-items: center;
+  }
+  
+  .guest-banner img {
+    padding-left: 10px;
+    height: 30px;
+    background-color: #841617;
+  }
+  .guest-banner h3 {
+    margin: auto;
+    background-color: #841617;
+    color: #ffffff;
+    padding: 10px 0px;
+    font-style: italic;
+    text-align: center; /* Center align text */
+    flex-grow: 1; 
+  }
+  .inline-label {
+    display: inline-block;
+    width: 200px; /* Adjust the width as needed */
+    margin-bottom: 10px;
+  }
+  
+  .form-group {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    margin-left: 10px;
+    margin-bottom: 15px;
+  }
+  .selected-container {
+    display: flex;
+  }
+  
+  .guests-box-container {
+    display: flex;
+    width: 100%;
+    margin-top: -1rem;
+    margin-left: 2rem;
+  }
+  
+  .guests-box-container input[type='text'] {
+    margin-right: 1.2rem; /* Add some spacing between the inputs */
+    width: 17rem;
+  }
+  
+  .unique-select{
+    margin-top: 1rem;
+    width: 35.2rem;
+  }
+  .guest-contact{
+  
+  margin-left: -7px;
+  margin-top: .5rem;
+  width: 35.3rem;
+  border: 2px solid #841617;
+  border-radius: 7px;
+  padding: 0.6rem 1rem; /* top/bottom: 0.6rem, left/right: 0rem */
+  margin-bottom: 1.1rem;
+  }
+  .selected-container select {
+    flex: 1; /* Expand to fill available space */
+    margin-right: 1.2rem; /* Small space between select elements */
+    width: 18rem; /* Adjust width to fit half of the container width with space between them */
+  }
+  .selected-container input {
+
+      border: 2px solid #841617;
+      padding: .6rem 2rem .6rem 1rem;
+      width: 6rem;
+      border-radius: 7px;
+      color: #565656;
+      appearance: none;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+       /* Expand to fill available space */
+      margin-right: 1.2rem; /* Small space between select elements */
+      
+  }
+  select{
+  border: 2px solid #841617;
+  padding: .6rem 2rem .6rem 1rem;
+  border-radius: 7px;
+  color: #565656;
+  appearance: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  }
+  .custom-select{
+    display: inline-block;
+    width: 100%;
+    position: relative;
+  }
+  /* Add this to your existing CSS file or create a new one */
+  .custom-select input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 1.1rem;
+  }
+  
+  /* Style your other form elements as needed */
+  
+  .custom-select select{
+  background: #fff url("./images/icons/arrow.svg") no-repeat 96%;
+  background-size: 17px;
+  
+  }
+  .button-container {
+  display: flex;
+  width: 100%;
+  margin-top: 0.35rem;
+  margin-left: -.3rem;
+  padding-bottom: 1.2rem;
+  justify-content: space-between; /* This aligns buttons to opposite ends */
+  }
+  /* CheckInForm.css */
+  
+  .guest-profile-box {
+    justify-content: center;
+    align-items: center;
+    margin-top: 1.1rem;
+    display: flex;
+    margin-right: .6rem;
+  }
+  
+  .guest-profile-box select {
+    margin-right: 10px; /* Add some spacing between the elements */
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 1.1rem;
+  }
+.guest-profile-box input[type='text']{
+  height: 40px;
+  border: 2px solid #841617;
+}
+  .guest-profile-box p {
+    padding-bottom: 20px;
+    font-weight: bold;
+    margin-right: 1rem;
+     /* Add some spacing between the text and select/input */
+  }
+  .guest-profile-box input[type='text']{
+    width: 18.7rem;
+  }
+  .guest-profile-box select {
+    width: 8rem;
+    margin-right: 1.2rem;
+  }
+  
+  .button-container button {
+  border-radius: 0.5rem;
+  cursor: pointer;
+  padding: 10px 20px;
+  font-size: 18px;
+  width: 12rem; /* Ensure both buttons have the same width */
+  }
+  
+  .cancel-button {
+  display: flex;
+  justify-content: center; /* Center content horizontally */
+  align-items: center; 
+  background-color: #ffffff;
+  border: 2px solid #841617;
+  color: #000000;
+  margin-left: 1.1rem;
+  transition: 0.4s ease;
+  }
+  
+  .proceed-button {
+  border: none;
+  margin-right: 1.5rem;
+  background-color: #841617;
+  color: #ffffff;
+  }
+  .cancel-button:hover {
+  background-color: #ffead0;
+  }
+  .proceed-button:hover{
+    background-color: #a31515;
+  }
+  
+  
