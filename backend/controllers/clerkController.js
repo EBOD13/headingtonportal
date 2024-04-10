@@ -78,6 +78,6 @@ const getCurrentClerk = asyncHandler(async(req, res) =>{
     res.status(200).json({id:_id, name, email, clerkID})
 });
 
-const generateJWTtoken = id => jwt.sign({id}, process.env.JWT_SECRET, {expiresIn:'10d'})
+const generateJWTtoken = id => jwt.sign({id}, process.env.JWT_SECRET, {expiresIn:'1m'})
 
 module.exports = {registerClerk, loginClerk, getCurrentClerk}
