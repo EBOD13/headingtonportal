@@ -2,6 +2,8 @@ const asyncHandler = require("express-async-handler")
 const jwt = require("jsonwebtoken")
 const Clerk = require("../models/clerkModel")
 const bcrypt = require("bcryptjs")
+const sendMail = require('../notification/emails/registeredClerkEmail')
+
 
 const registerClerk = asyncHandler(async(req, res) =>{
     const {name, password, email} = req.body
@@ -32,6 +34,12 @@ const registerClerk = asyncHandler(async(req, res) =>{
     const salt = await bcrypt.genSalt(16)
     const hashedPassword = await bcrypt.hash(password, salt)
     const clerk = await Clerk.create({name, password:hashedPassword, email, clerkID: userID })
+    const capitalize = (str) =>{
+        const capitalized = str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        return capitalized
+      }
+    sendMail(capitalize(name), email, userID)
+    
 
     if(clerk){
         res.status(201).json({_id: clerk.id, name: clerk.name, email: clerk.email, clerkID: clerk.clerkID, token: generateJWTtoken(clerk._id)})
@@ -78,6 +86,6 @@ const getCurrentClerk = asyncHandler(async(req, res) =>{
     res.status(200).json({id:_id, name, email, clerkID})
 });
 
-const generateJWTtoken = id => jwt.sign({id}, process.env.JWT_SECRET, {expiresIn:'1m'})
+const generateJWTtoken = id => jwt.sign({id}, process.env.JWT_SECRET, {expiresIn:'15d'})
 
 module.exports = {registerClerk, loginClerk, getCurrentClerk}

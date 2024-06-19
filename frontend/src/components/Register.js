@@ -40,7 +40,13 @@ const onSubmit = e => {
         toast.error('Passwords are different');
     } else {
         const clerkData = { name: name.toLowerCase(), email, password }; // Corrected line
-        dispatch(register(clerkData));
+        try{
+        const registerUser = dispatch(register(clerkData));
+        console.log(registerUser)
+        }
+        catch(error){
+            console.log(error)
+        }
     }
 }
 

@@ -9,9 +9,13 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.6.8",
+    "gridfs-stream": "^1.1.1",
     "jquery": "^3.7.1",
     "mongodb": "^6.4.0",
     "mongoose": "^8.2.1",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.13",
+    "phone-number-validator": "^1.0.0",
     "react": "^18.2.0",
     "react-countup": "^6.5.3",
     "react-dom": "^18.2.0",
@@ -21,14 +25,18 @@
     "react-scripts": "^5.0.1",
     "react-select": "^5.8.0",
     "redux": "^5.0.1",
+    "request": "^2.88.2",
     "select2": "^4.1.0-rc.0",
+    "twilio": "^5.0.3",
+    "validator": "^13.11.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "email": "email dev --dir src/emails"
   },
   "eslintConfig": {
     "extends": [

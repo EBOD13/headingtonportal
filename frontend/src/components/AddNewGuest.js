@@ -1,108 +1,126 @@
 import React, { useEffect, useState } from 'react';
 import imageList from './ImageGallery';
 import { useDispatch, useSelector } from 'react-redux';
-import {registerGuest, resetGuest} from '../features/guests/guestSlice'
+import { registerGuest, resetGuest } from '../features/guests/guestSlice';
 import { getResidentByRoom } from '../features/residents/residentSlice';
-import { toast } from 'react-hot-toast'
+import { toast } from 'react-hot-toast';
 import mongoose from 'mongoose';
+import axios from 'axios'; // Import Axios
 
 function AddNewGuest() {
   const [showOverlay, setShowOverlay] = useState(true);
-  const [hosts, setHosts] = useState([])
-  const [formData, setFormData] = useState({lastName:'', firstName:'', host:'', contact:'', studentAtOU:'', IDNumber:'', flagged: false, checkIn:'', isCheckedIn: true})
-  let {lastName, firstName, host, room, contact, studentAtOU, IDNumber, flagged, checkIn, isCheckedIn } = formData
-  const dispatch = useDispatch()
-  
+  const [hosts, setHosts] = useState([]);
+  const [formData, setFormData] = useState({ lastName: '', firstName: '', host: '', contact: '', studentAtOU: '', IDNumber: '', flagged: false, checkIn: '', isCheckedIn: true });
+  const { lastName, firstName, host, room, contact, studentAtOU, IDNumber, flagged, checkIn, isCheckedIn } = formData;
+  const dispatch = useDispatch();
+
   useEffect(() => {
     const fetchResidentByRoom = async () => {
       try {
-        if (room && room.length === 4) { // Only fetch residents if a room is selected
+        if (room && room.length === 4) {
           const residents = await dispatch(getResidentByRoom(room.toUpperCase()));
-          if (Array.isArray(residents.payload)) { // Check if residents.payload is an array
+          if (Array.isArray(residents.payload)) {
             const residentsList = residents.payload.map(resident => ({ id: resident._id, name: resident.name }));
             setHosts(residentsList);
-          } 
+          }
         } else {
-          setHosts([]); // Clear hosts if no room is selected
+          setHosts([]);
         }
       } catch (error) {
         console.error('Error fetching residents:', error);
       }
     };
-  
+
     fetchResidentByRoom();
   }, [room, dispatch]);
-  
-  
+
   const onChangeContact = e => {
+    const re = /^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/;
     const guestContact = e.target.value;
-    let formattedContact = guestContact; // Default to the input value
-  
-    // Check if the input value contains digits
-    if (/^\d+$/.test(guestContact)) {
-      // Format the contact number if it contains 10 digits
-      if (guestContact.length === 10) {
-        const areaCode = guestContact.slice(0, 3);
-        const middleDigits = guestContact.slice(3, 6);
-        const lastDigits = guestContact.slice(6);
-        formattedContact = `${areaCode}-${middleDigits}-${lastDigits}`;
-      }
+    let formattedContact = guestContact;
+
+    if (re.test(guestContact)) {
+      const parts = guestContact.match(re);
+      formattedContact = `${parts[1]}-${parts[2]}-${parts[3]}`;
     }
-  
-    // Update the formData state with the formatted contact
+
     setFormData(prevState => ({
       ...prevState,
       contact: formattedContact
     }));
   };
-  
-  
-  const onChange = e =>{
-    setFormData(prevState =>({
+
+  const onChange = e => {
+    setFormData(prevState => ({
       ...prevState,
       [e.target.name]: e.target.value
-    }))
-  }
+    }));
+  };
 
-  const toBoolean = (stringValue) =>{
-    switch(stringValue?.toLowerCase()?.trim()){
+  const toBoolean = (stringValue) => {
+    switch (stringValue?.toLowerCase()?.trim()) {
       case 'yes':
         return true;
       case 'no':
-        return false
+        return false;
+      default:
+        return undefined; // Handle undefined case
     }
-  }
+  };
   const onSubmit = async (e) => {
     e.preventDefault();
     const studentAtOU = toBoolean(formData.studentAtOU);
-    const name = firstName.toLowerCase() + " " + lastName.toLowerCase();
+    const name = `${firstName.toLowerCase()} ${lastName.toLowerCase()}`; // Template literals for readability
     const selectedHostId = e.target.elements.host.value;
     const hostID = new mongoose.Types.ObjectId(selectedHostId);
-
-    const guestData = { name, host:hostID, contact: formData.contact, IDNumber, studentAtOU };
   
     try {
-      const response = await dispatch(registerGuest(guestData));
-      dispatch(resetGuest())
-     
-      // Check for specific error message
-      if (response?.error?.message === "Rejected") {
-        // Show error message to the user
-        toast.error(response.payload)
-        // You can use react-hot-toast or any other method to display the message
-        // toast.error("Guest already exists. Please enter different details.");
-      }
-      else{
-        toast.success(response.payload.message)
-        setShowOverlay(false)
+      const number = formData.contact;
+  
+      // Use Axios to make the API request
+      const apiKey = 'g3KKlxKwGZVwVFLjitRkkiUUUyM8oGPdJZpXlLqX'; // Replace 'YOUR_API_KEY' with your actual API key
+      const apiUrl = `https://api.api-ninjas.com/v1/validatephone?number=${number}`;
+      const axiosConfig = {
+        headers: {
+          'X-Api-Key': apiKey
+        }
+      };
+  
+      // Use try-catch to handle potential errors with the API request
+      try {
+        const response = await axios.get(apiUrl, axiosConfig);
+  
+        // Check if the number is valid
+        if (response.data.is_valid) {
+          // If the number is valid, proceed with guest registration
+          const guestData = { name, host: hostID, contact: formData.contact, IDNumber, studentAtOU };
+          const registrationResponse = await dispatch(registerGuest(guestData));
+          dispatch(resetGuest());
+  
+          // Check for specific error message
+          if (registrationResponse?.error?.message === "Rejected") {
+            toast.error(registrationResponse.payload);
+          } else {
+            toast.success(registrationResponse.payload.message);
+            setShowOverlay(false);
+          }
+        } else {
+          // If the number is not valid, display an error message
+          toast.error('Invalid Phone Number');
+        }
+      } catch (error) {
+        // Handle API request error
+        console.error('Error validating phone number:', error);
+        toast.error('Error validating phone number. Please try again later.');
       }
     } catch (error) {
+      // Handle other potential errors
       console.error('Error registering guest:', error);
-      // Handle other errors here if needed
+      toast.error('Error registering guest. Please try again later.');
     }
-
   };
   
+
   const closeOverlay = () => {
     setShowOverlay(false);
     window.location.reload();
