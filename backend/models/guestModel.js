@@ -32,6 +32,9 @@ const guestSchema = new mongoose.Schema({
     checkout:{
         type: Date
     },
+    room:{
+        type: String
+    },
     isCheckedIn:{
         type: Boolean, default: true
     },

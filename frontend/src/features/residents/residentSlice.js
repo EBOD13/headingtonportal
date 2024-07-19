@@ -33,6 +33,20 @@ export const getGuestsByHost = createAsyncThunk(
     }
 )
 
+/* This slice allows us to communicate with the server and get the list of all residents in the system
+by using the thunkAPI and the clerk token */
+export const getAllResidents = createAsyncThunk(
+    'residents/getallresidents',
+    async(_, thunkAPI) => {
+        try{
+            const token = thunkAPI.getState().auth.clerk.token;
+            return await residentService.getAllResidents(token)
+        }catch (error){
+            return thunkAPI.rejectWithValue(error.message || "Error fetching residents by room");
+        }
+    }
+)
+
 export const residentSlice = createSlice({
 name: 'resident',
 initialState,
@@ -55,6 +69,14 @@ extraReducers: (builder) =>{
         state.message = action.payload
     })
     .addCase(getGuestsByHost.pending, (state) =>{ // Change getGuestByHost to getGuestsByHost
+        state.isLoading = false
+    })
+    .addCase(getAllResidents.rejected, (state, action) =>{
+        state.isLoading = false
+        state.isError = true
+        state.message = action.payload
+    })
+    .addCase(getAllResidents.pending, (state) =>{ // Change getGuestByHost to getGuestsByHost
         state.isLoading = false
     })
 }

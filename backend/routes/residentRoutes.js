@@ -8,7 +8,6 @@ router.post("/", protect, registerResident);
 router.put('/:id', protect, updateResident);
 router.delete("/:id", protect, deleteResident);
 router.get("/:room", protect, getResidentByRoom);
-router.get("/guests/:hostId", protect, getGuestsByHost); // Change the parameter name to hostId
-
+router.get("/guests/:hostId", protect, getGuestsByHost); 
 
 module.exports = router;

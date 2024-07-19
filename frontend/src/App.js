@@ -1,5 +1,6 @@
 import logo from './logo.svg';
 import Login from './components/Login'
+import ResidentsRooster from './components/ResidentsRooster';
 import Register from './components/Register';
 import CheckOutForm from './components/CheckOutForm';
 import Dashboard from './components/Dashboard';
@@ -16,7 +17,8 @@ function App() {
       <Router>
       <div className="container">
         <Routes>
-          <Route path='/login' element={<Login />} /> {/* Render Login component first */}
+          <Route path='/login' element={<Login />} /> 
+          <Route path='/residents_rooster' element={<ResidentsRooster />} /> 
           <Route path='/' element={<Dashboard />} />
           <Route path='/register' element={<Register />} />
         </Routes>

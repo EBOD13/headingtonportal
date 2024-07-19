@@ -5,7 +5,7 @@ import { registerGuest, resetGuest } from '../features/guests/guestSlice';
 import { getResidentByRoom } from '../features/residents/residentSlice';
 import { toast } from 'react-hot-toast';
 import mongoose from 'mongoose';
-import axios from 'axios'; // Import Axios
+import axios from 'axios';
 
 function AddNewGuest() {
   const [showOverlay, setShowOverlay] = useState(true);
@@ -34,22 +34,6 @@ function AddNewGuest() {
     fetchResidentByRoom();
   }, [room, dispatch]);
 
-  const onChangeContact = e => {
-    const re = /^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/;
-    const guestContact = e.target.value;
-    let formattedContact = guestContact;
-
-    if (re.test(guestContact)) {
-      const parts = guestContact.match(re);
-      formattedContact = `${parts[1]}-${parts[2]}-${parts[3]}`;
-    }
-
-    setFormData(prevState => ({
-      ...prevState,
-      contact: formattedContact
-    }));
-  };
-
   const onChange = e => {
     setFormData(prevState => ({
       ...prevState,
@@ -64,21 +48,22 @@ function AddNewGuest() {
       case 'no':
         return false;
       default:
-        return undefined; // Handle undefined case
+        return undefined;
     }
   };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     const studentAtOU = toBoolean(formData.studentAtOU);
-    const name = `${firstName.toLowerCase()} ${lastName.toLowerCase()}`; // Template literals for readability
+    const name = `${firstName.toLowerCase()} ${lastName.toLowerCase()}`;
     const selectedHostId = e.target.elements.host.value;
     const hostID = new mongoose.Types.ObjectId(selectedHostId);
-  
+
     try {
-      const number = formData.contact;
+      const number = '+1' + formData.contact;
   
       // Use Axios to make the API request
-      const apiKey = 'g3KKlxKwGZVwVFLjitRkkiUUUyM8oGPdJZpXlLqX'; // Replace 'YOUR_API_KEY' with your actual API key
+      const apiKey = '95AHo81aT51ptHSAqYH1vCUemuWJ0kcigTNgQH4s'; // Replace 'YOUR_API_KEY' with your actual API key
       const apiUrl = `https://api.api-ninjas.com/v1/validatephone?number=${number}`;
       const axiosConfig = {
         headers: {
@@ -86,40 +71,29 @@ function AddNewGuest() {
         }
       };
   
-      // Use try-catch to handle potential errors with the API request
-      try {
-        const response = await axios.get(apiUrl, axiosConfig);
+      const response = await axios.get(apiUrl, axiosConfig);
+      console.log(response.data)
   
-        // Check if the number is valid
-        if (response.data.is_valid) {
-          // If the number is valid, proceed with guest registration
-          const guestData = { name, host: hostID, contact: formData.contact, IDNumber, studentAtOU };
-          const registrationResponse = await dispatch(registerGuest(guestData));
-          dispatch(resetGuest());
+      // Check if the number is valid
+      if (response.data.is_valid) {
+        const guestData = { name, host: hostID, contact: formData.contact, IDNumber, studentAtOU, room:room };
+        const registrationResponse = await dispatch(registerGuest(guestData));
+        dispatch(resetGuest());
   
-          // Check for specific error message
-          if (registrationResponse?.error?.message === "Rejected") {
-            toast.error(registrationResponse.payload);
-          } else {
-            toast.success(registrationResponse.payload.message);
-            setShowOverlay(false);
-          }
+        if (registrationResponse?.error?.message === "Rejected") {
+          toast.error(registrationResponse.payload);
         } else {
-          // If the number is not valid, display an error message
-          toast.error('Invalid Phone Number');
+          toast.success(registrationResponse.payload.message);
+          setShowOverlay(false);
         }
-      } catch (error) {
-        // Handle API request error
-        console.error('Error validating phone number:', error);
-        toast.error('Error validating phone number. Please try again later.');
+      } else {
+        toast.error('Invalid Phone Number');
       }
     } catch (error) {
-      // Handle other potential errors
-      console.error('Error registering guest:', error);
-      toast.error('Error registering guest. Please try again later.');
+      console.error('Error validating phone number or registering guest:', error);
+      toast.error('Error validating phone number or registering guest. Please try again later.');
     }
-  };
-  
+  }
 
   const closeOverlay = () => {
     setShowOverlay(false);
@@ -139,41 +113,41 @@ function AddNewGuest() {
               <div className="form-group">
                 <div className="custom-select" style={{ marginLeft: 0 }}>
                   <div className="selected-container">
-                    <input name="room" id="room" value={room} onChange={onChange} maxlength="4" placeholder='Select Host' style={{ width: '10rem' }}>
+                    <input name="room" id="room" value={room} onChange={onChange} maxLength="4" placeholder='Select Host' style={{ width: '10rem' }}>
                     </input>
-                    <select name="host" id="host" >
-                    <option value="" disabled selected>Select Host</option>
-                    {hosts.map((host) => (
-                      <option value={host.id} key={host.id}>{host.name}</option>
-                    ))}
-                  </select>
+                    <select name="host" id="host">
+                      <option value="" disabled selected>Select Host</option>
+                      {hosts.map((host) => (
+                        <option value={host.id} key={host.id}>{host.name}</option>
+                      ))}
+                    </select>
                   </div>
-                 <div className='guest-profile-box'>
-                   <p> Guest's Profile</p>
-                   <select className='' name='studentAtOU' id="studentAtOU" onChange={onChange}>
-                     <option value=""> OU Student? </option>
-                     <option value="yes"> Yes </option>
-                     <option value="no"> No </option>
-                   </select>
-                   <input type='text' placeholder="Guest's ID Number" className='id-number' name='IDNumber' id='IDNumber' onChange={onChange}></input>
-                 </div>
+                  <div className='guest-profile-box'>
+                    <p>Guest's Profile</p>
+                    <select className='' name='studentAtOU' id="studentAtOU" onChange={onChange}>
+                      <option value="">OU Student?</option>
+                      <option value="yes">Yes</option>
+                      <option value="no">No</option>
+                    </select>
+                    <input type='text' placeholder="Guest's ID Number" className='id-number' name='IDNumber' id='IDNumber' onChange={onChange}></input>
+                  </div>
                 </div>
               </div>
 
               <div className='guests-box-container'>
-                
                 <input type='text' placeholder="Guest's First Name" id='firstName' name='firstName' value={firstName} onChange={onChange}></input>
                 <input type='text' placeholder="Guest's Last Name" id="lastName" name='lastName' value={lastName} onChange={onChange}></input>
               </div>
-              <input type="text" className="guest-contact" placeholder="Guest's Contact" id='contact' name='contact' value={contact} onChange={onChangeContact} maxLength='12'
-              onKeyPress={(event) =>{
-                if(!/[0-9]/.test(event.key)){
-                  event.preventDefault();
-                }
-              }}/>
+              <input type="tel" className="guest-contact" placeholder="Guest's Contact" id='contact' name='contact' value={contact} onChange={onChange} maxLength='10'
+                onKeyDown={(event) => {
+                  // Allow digits, Backspace, and Delete
+                  if (!/[0-9]/.test(event.key) && event.key !== 'Backspace' && event.key !== 'Delete') {
+                    event.preventDefault();
+                  }
+                }}/>
               <div className="button-container">
                 <button type="button" className="cancel-button" onClick={closeOverlay}>Cancel</button>
-                <button type="submit" className="proceed-button" >Proceed</button>
+                <button type="submit" className="proceed-button">Proceed</button>
               </div>
             </form>
           </div>

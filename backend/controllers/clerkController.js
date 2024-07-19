@@ -2,8 +2,8 @@ const asyncHandler = require("express-async-handler")
 const jwt = require("jsonwebtoken")
 const Clerk = require("../models/clerkModel")
 const bcrypt = require("bcryptjs")
+const dotenv = require("dotenv").config();
 const sendMail = require('../notification/emails/registeredClerkEmail')
-
 
 const registerClerk = asyncHandler(async(req, res) =>{
     const {name, password, email} = req.body
@@ -79,8 +79,6 @@ const loginClerk = asyncHandler(async (req, res) => {
         res.status(401).json({ message: "Invalid credentials" }); // Unauthorized if credentials are invalid
     }
 });
-
-
 const getCurrentClerk = asyncHandler(async(req, res) =>{
     const {_id, name, email, clerkID} = await Clerk.findById(req.clerk.id)
     res.status(200).json({id:_id, name, email, clerkID})

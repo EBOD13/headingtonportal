@@ -1,15 +1,19 @@
-import React, { useEffect, useState, useReducer } from 'react';
+import React, { useEffect, useState, useReducer, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import imageList from "./ImageGallery";
 import CheckInForm from "./CheckInForm";
 import CheckOutForm from './CheckOutForm';
 import AddNewGuest from './AddNewGuest';
 import AppLogout from './AppLogout';
-import { logout, reset } from '../features/auth/authSlice';
+import { Link } from 'react-router-dom';
+import { readSheet} from '../features/sheets/sheetSlice';
+import { logout, reset} from '../features/auth/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
-import { getCheckedInGuests, resetGuest } from '../features/guests/guestSlice';
+import { getCheckedInGuests, getAllGuests } from '../features/guests/guestSlice';
+import { getAllResidents, } from '../features/residents/residentSlice';
 import CountUp from 'react-countup';
-
+import ResidentsRooster from './ResidentsRooster';
+import axios, { all } from 'axios';
 
 
 const importAll = (r) => {
@@ -22,8 +26,14 @@ const images = importAll(require.context("../images/icons", false, /\.(png|jpe?g
 
 const Dashboard = () => {
 
+  const [avatarUrls, setAvatarUrls] = useState({});
   const [reducerValue, forceUpdate] = useReducer(x => x +1, 0)
   const [checkedInGuestsCount, setCheckedInGuestsCount] = useState(0);
+  const [allGuests, setAllGuests] = useState([]);
+  const [allCheckedInGuests, setAllCheckedInGuests] = useState([]);
+  const timerRef = useRef(null);
+
+
   const logoutFn = () => {
     dispatch(logout())
     dispatch(reset())
@@ -36,30 +46,79 @@ const animationConfig ={
 }
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const {clerk} = useSelector(state => state.auth)
 
+  // useSelector hook to extract clerk state from the auth slice
+  const {clerk} = useSelector(state => state.auth) /* Checks the clerk property from the auth slice  */
+  // const {residents, isLoading, isError, message} = useSelector(state => state.residents)
+
+
+  // Handles the blurring effect applied on the text
+  const [isBlurred, setIsBlurred] = useState(true);
+
+  /* Sets a one minute timer to re-blur everything after a lack of activity*/
+  const handleClick = () => {
+    clearTimeout(timerRef.current);
+    if (!isBlurred) {
+      setIsBlurred(true);
+    } else {
+      setIsBlurred(false);
+      timerRef.current = setTimeout(() => {
+        setIsBlurred(true);
+      }, 60000); // 1 minute = 60000 milliseconds
+    }
+  };
+
+  useEffect(() => {
+    // Clean up the timer when the component unmounts
+    return () => clearTimeout(timerRef.current);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!clerk) {
         navigate('/login');
-        return; // Exit early if clerk is not available
+        return;
       }
-
       try {
+        
         const guestsList = await dispatch(getCheckedInGuests());
+        const allGuestsResponse = await dispatch(getAllGuests());
+        // const readData = await dispatch(readSheet());
+        // console.log(readData)
+
+        if (allGuestsResponse.payload && Array.isArray(allGuestsResponse.payload)) {
+          const allGuestsList = allGuestsResponse.payload.map(guest => ({
+            name: guest.name,
+            flagged: guest.flagged,
+          }));
+          setAllGuests(allGuestsList);
+          
+          // Fetch avatars for each guest
+          const avatarPromises = allGuestsList.map(guest => {
+            return axios.get(`https://ui-avatars.com/api/?background=f4eee0&name=${guest.name}`)
+              .then(response => ({ [guest.name]: response.request.responseURL }))
+              .catch(error => {
+                console.error(`Error fetching avatar for ${guest.name}:`, error);
+                return { [guest.name]: '' }; // Return empty string on error
+              });
+          });
+
+          const avatars = await Promise.all(avatarPromises);
+          const avatarUrls = avatars.reduce((acc, curr) => ({ ...acc, ...curr }), {});
+          setAvatarUrls(avatarUrls);
+        } else {
+          console.error('Payload is not an array or does not exist');
+        }
+        setAllCheckedInGuests(guestsList.payload.rooms)
         setCheckedInGuestsCount(guestsList.payload.count);
-        forceUpdate();
+        forceUpdate(value => value + 1); // Force update the component
       } catch (error) {
-        console.error('Error fetching checked-in guests:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
     fetchData();
-
-
   }, [clerk, navigate, dispatch, reducerValue]);
-
   const [showCheckInForm, setShowCheckInForm] = useState(false);
   const [showCheckOutForm, setShowCheckOutForm] = useState(false);
   const [showAddNewGuest, setShowAddNewGuest] = useState(false);
@@ -90,7 +149,12 @@ const animationConfig ={
     event.preventDefault(); 
     toggleAddNewGuest();
   };
-  
+  const capitalize = (str) =>{
+    const capitalized = str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    return capitalized
+  }  
+
+  /* Function to get random images for the guests profile */
   return (
     <AppLogout>
     <>
@@ -110,26 +174,134 @@ const animationConfig ={
       </head>
      
         <header className="menu-bar">
-          <a href="#" className="header-link">
+          <Link to="/" className="header-link">
             <p>Dashboard</p>
-          </a>
+          </Link>
           <a href="card.html" className="profile">
             <img src={imageList["avatar.png"]} className="profile-img" id="user_profile" alt="User Profile" />
           </a>
         </header>
         
       <div className="board">
-            <div className="box-container">
-                <div className="status-box"><p className="banner-text">North Guests</p>
-                <br/><p className="guests-numbers">13</p></div>
-                <div className="status-box"><p className="banner-text">South Guests</p>
-                <br/><p className="guests-numbers">11</p></div>
-                <div className="status-box"><p className="banner-text">Current Guests</p>
-                <br/>
-                <p className="guests-numbers"><CountUp duration={1.5} start={0} end={checkedInGuestsCount}/>
-                </p></div>
-            </div>
+        <div className="top-container">
 
+            {/* The notice section of the page*/}
+            <table className="status-box">
+              <thead>
+                  <tr>
+                      <th>Notice</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr>
+                      <td>John Doe</td>
+                  </tr>
+                  <tr>
+                      <td>John Doe</td>
+                  </tr>
+              </tbody>
+        </table>
+      {/* The event section of the page*/}
+      <table className="status-box">
+              <thead>
+                  <tr>
+                      <th>Events</th>
+                  </tr>
+              </thead>
+              <tbody>
+                <tr >
+                  <td>John Doe</td>
+                </tr>
+              </tbody>
+        </table>
+
+{/* Inbox section where we communicate with our supervisors and guests */}
+<table className="status-box">
+              <thead>
+                  <tr>
+                      <th>Inbox</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr>
+                      <td>John Doe</td>
+                  </tr>
+                  <tr>
+                      <td>John Doe</td>
+                  </tr>
+              </tbody>
+        </table>
+ {/* Middle Section Container*/}
+      </div>
+      <div className='middle-container'>
+      <table className="large-box">
+  <thead>
+    <tr>
+      <th colSpan="2">Rooms with Guests</th> {/* Use colSpan to span both columns */}
+    </tr>
+  </thead>
+  <tbody className={isBlurred ? 'blurry-text' : 'clear-text'} onClick={handleClick}>
+    <tr onClick={handleClick}>
+      <td>John Doe</td>
+      <td>Room 1</td>
+    </tr>
+    <tr>
+      <td>Jane Doe</td>
+      <td>Room 2</td>
+    </tr>
+  </tbody>
+</table>
+<table className="status-box">
+              <thead>
+                  <tr>
+                      <th>Activity Log</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr>
+                      <td>John Doe</td>
+                  </tr>
+                  <tr>
+                      <td>John Doe</td>
+                  </tr>
+              </tbody>
+        </table>
+
+        </div>
+
+{/* Lower Section Container*/}
+<div className='middle-container'>
+<table className="large-box" style={{ height: '5rem' }}>
+  <thead>
+    <tr>
+      <th colSpan="2">Notes</th> {/* Use colSpan to span both columns */}
+    </tr>
+  </thead>
+  <tbody >
+    <tr>
+    <td colSpan="2">
+    <textarea className="full-width-textarea" rows="3" />
+      </td>
+    </tr>
+  </tbody>
+</table>
+<table className="status-box" style={{ height: '5rem' }}>
+              <thead>
+                  <tr>
+                      <th>Incident</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr>
+                      <td>John Doe</td>
+                  </tr>
+                  <tr>
+                      <td>John Doe</td>
+                  </tr>
+              </tbody>
+        </table>
+
+        </div>
           <div className="side-nav">
             <a href="#" className="logo">
               <img src={imageList["OU_Banner.png"]} className="logo-img" alt="OU Banner" />
@@ -163,10 +335,10 @@ const animationConfig ={
                 {showAddNewGuest && <AddNewGuest onClose={toggleAddNewGuest} />}
               </li>
               <li>
-                <a href="#">
-                  <img src={imageList["residents.svg"]} className="icons" alt="Residents" />
-                  <p className="nav-text">Residents</p>
-                </a>
+              <Link to="/residents_rooster">
+                <img src={imageList["residents.svg"]} className="icons" alt="Residents" />
+                <p className="nav-text">Residents</p>
+              </Link>
               </li>
               <li>
                 <a href="#">
@@ -193,9 +365,13 @@ const animationConfig ={
                 </a>
               </li>
             </ul>
-
           </div>
+          <div>
+
+            </div>
+            
         </div>
+        
     </>
     </AppLogout>
   );

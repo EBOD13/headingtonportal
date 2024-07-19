@@ -6,13 +6,23 @@ const express = require("express");
 const router = express.Router();
 
 const getCheckedInGuests = asyncHandler(async (req, res) => {
-    const guests = await Guest.find({ isCheckedIn: true });
-    const checkedInGuestsCount = await Guest.countDocuments({ isCheckedIn: true });
-    res.status(200).json({ guests: guests, count: checkedInGuestsCount });
+  const guests = await Guest.find({ isCheckedIn: true }).select('room name'); // Include room in the query
+  const checkedInGuestsCount = await Guest.countDocuments({ isCheckedIn: true });
+  const rooms = guests.map(guest => guest.room); // Extract room numbers into an array
+  res.status(200).json({ rooms, guests: guests, count: checkedInGuestsCount});
 });
 
+// const getCheckedInGuests = asyncHandler(async (req, res) => {
+//   const guests = await Guest.find({ isCheckedIn: true }).select('room'); // Include room in the query
+//   const checkedInGuestsCount = await Guest.countDocuments({ isCheckedIn: true });
+  
+//   const rooms = guests.map(guest => guest.room); // Extract room numbers into an array
+
+//   res.status(200).json({ rooms, count: checkedInGuestsCount });
+// });
+
 const registerGuest = asyncHandler(async (req, res) => {
-    const { name, host, contact, studentAtOU, IDNumber } = req.body;
+    const { name, host, contact, studentAtOU, IDNumber, room } = req.body;
 
     if (!name || !IDNumber || !contact || !host) {
         res.status(400).json({ message: "All fields are required" });
@@ -35,7 +45,8 @@ const registerGuest = asyncHandler(async (req, res) => {
             IDNumber: IDNumber,
             flagged: false,
             isCheckedIn: true,
-            checkIn: Date.now()
+            checkIn: Date.now(),
+            room: room
         });
 
         if (!guest) {
@@ -71,22 +82,22 @@ const checkInGuest = asyncHandler(async (req, res) => {
         res.status(400).json({ message: `Guest does not exist ${guestId}` });
         throw new Error("Guest does not exist");
       }
-  
+      if (guest.flagged == true) {
+        res.status(400).json({message: "Visitation Revoked for this guest"});
+      }
+      else{
       guest.isCheckedIn = true;
       const guestCheckIn = await guest.save();
       res.status(200).json(guestCheckIn);
+      }
     } catch (error) {
       res.status(500).json({ message: 'Internal Server Error' });
     }
   });
   
-
-
-
-
+  /* Function to check out visitor */
   const checkOutGuest = asyncHandler(async (req, res) => {
     const { guestId } = req.params;
-  
     try {
       const guest = await Guest.findById(guestId);
   
@@ -104,6 +115,13 @@ const checkInGuest = asyncHandler(async (req, res) => {
       return res.status(500).json({ message: 'Internal Server Error' });
     }
   });
+
+  /* Function to get the list of all visitors currently in the system */
+  const getGuests = asyncHandler(async(req, res)=>{
+    const guests = await Guest.find();
+    res.status(200).json(guests)
+    
+});
   
   
-module.exports = { registerGuest, checkInGuest, checkOutGuest, getCheckedInGuests };
+module.exports = { registerGuest, checkInGuest, checkOutGuest, getCheckedInGuests, getGuests};

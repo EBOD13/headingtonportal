@@ -3,7 +3,10 @@ const express = require("express");
 const dotenv = require("dotenv").config();
 const connectDB = require('./database/database')
 const port = process.env.PORT || 5000;
-
+const { google } = require('googleapis');
+const bodyParser = require('body-parser');
+// Require the fs module to read the credential file we have 
+const fs = require('fs');
 
  // Call the main function of connecting to the database before anything else works
 
@@ -15,6 +18,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 
+app.use(`/api/sheets`, require('./routes/sheetRoutes'))
 app.use(`/api/clerks`, require('./routes/clerkRoutes'))
 app.use('/api/residents', require('./routes/residentRoutes'))
 app.use('/api/guests', require("./routes/guestRoutes"))

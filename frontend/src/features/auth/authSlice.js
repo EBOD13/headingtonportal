@@ -11,6 +11,7 @@ const initialState = {
     message: ""
 }
 
+// Slice function to register the clerk using an async Thunk 
 export const register = createAsyncThunk(
     'auth/register',
     async(clerk, thunkAPI) =>{
@@ -38,7 +39,6 @@ export const login = createAsyncThunk(
     }
 )
 
-
 export const logout = createAsyncThunk('auth/logout', async() => await authService.logout())
 
 export const authSlice = createSlice({
@@ -50,7 +50,7 @@ export const authSlice = createSlice({
             state.isSuccess = false
             state.isError = false
             state.message = ''
-          },
+        },
     },
     extraReducers: builder =>{
         builder

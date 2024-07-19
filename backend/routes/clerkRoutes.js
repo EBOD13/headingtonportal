@@ -6,6 +6,6 @@ const {registerClerk, loginClerk, getCurrentClerk} = require("../controllers/cle
 
 router.post("/", registerClerk)
 router.post("/login", loginClerk)
-router.get("/current", protect, getCurrentClerk) // Fix this one!
+router.get("/current", protect, getCurrentClerk)
 
 module.exports = router

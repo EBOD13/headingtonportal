@@ -10,6 +10,7 @@ const initialState = {
 }
 
 
+
 export const registerGuest = createAsyncThunk(
     'guests/register',
     async(guestData, thunkAPI)=>{
@@ -138,8 +139,18 @@ export const guestSlice = createSlice({
         })
     }
 
-
 })
+export const getAllGuests = createAsyncThunk(
+    'guests/getallguests',
+    async(_, thunkAPI) => {
+        try{
+            const token = thunkAPI.getState().auth.clerk.token;
+            return await guestService.getAllGuests(token)
+        }catch (error){
+            return thunkAPI.rejectWithValue(error.message || "Error fetching residents by room");
+        }
+    }
+)
 
 export const {resetGuest} = guestSlice.actions
 export default guestSlice.reducer

@@ -115,35 +115,15 @@ header a p {
   scrollbar-width: none; /* Hide scrollbar for Firefox */
 }
 
-@media only screen and (max-width: 880px) {
-  .side-nav {
-    width: 110px; /* Adjust width for small devices */
-  }
-}
 
-
-
-.box-container {
+.top-container {
   display: flex;
-  padding-top: 40px;
-  margin-left: 260px;
+  padding-top: 2rem;
+  margin-left: 16rem;
   margin-right: 20px; /* Adjusted margin-right */
   justify-content: space-between;
   /* Added overflow property */
   overflow-x: hidden;
-}
-
-.status-box {
-  position: relative;
-  width: 20rem; /* Set the width to 100px */
-  height: 11rem;
-  margin: 0px 2rem;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: #841516;
 }
 
 .guests-numbers {
@@ -233,65 +213,6 @@ header a p {
   display: none;
   width: 45px;
 }
-
-@media only screen and (max-width: 880px) {
-  .side-nav {
-    width: 110px;
-    transition: width 0.5s ease-in-out;
-  }
-
-  .logo-icon {
-    display: block;
-  }
-
-  .logo-img {
-    display: none;
-  }
-
-  .nav-links li a p {
-    display: none;
-  }
-
-  .nav-links li a img {
-    margin-right: 30%;
-  }
-
-  .nav-links li a {
-    justify-content: center;
-  }
-
-  header a p {
-    position: absolute;
-    left: 140px;
-  }
-
-  .logo-text {
-    display: none;
-  }
-
-  .box-container {
-    margin-left: 6rem;
-    margin-right: 0.75rem;
-  }
-
-  .status-box {
-    height: 8rem;
-    width: 50rem;
-    margin-right: 0.1rem;
-  }
-
-  .guests-numbers {
-    font-size: 3.5rem;
-  }
-
-  .banner-text {
-    font-size: 1.1rem
-
-  }
-  
-}
-
-
 
 .loadingSpinnerContainer {
   position: fixed;
@@ -684,4 +605,331 @@ body {
     background-color: #a31515;
   }
   
+  .residents-container {
+    margin-left: 17%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px; 
+    gap: 20px;
+  }
   
+  .resident-rooster {
+    width: 100%;
+    border-collapse: separate; /* Use separate to allow border radius */
+    border-spacing: 0; /* Ensure no spacing between cells */
+    text-align: center;
+    border: 2px solid #841516;
+    border-radius: 15px; /* Border radius for inner table */
+    overflow: hidden; /* Ensure rounding effects are applied */
+  }
+  
+  .resident-rooster thead {
+    background-color: #841617;
+    color: white;
+    height: 25px; /* Set the height of the thead */
+  }
+  
+  .resident-rooster th, .resident-rooster td {
+    padding: 8px;
+    text-align: center;
+    height: 25px; /* Set the height of th and td elements */
+  }
+  .resident-rooster td {
+    border: none; /* Remove borders from individual cells */
+  }
+  .resident-table {
+    width: 100%; /* Full width for inner table */
+    margin-bottom: 10px;
+    border-collapse: separate; /* Use separate to allow border radius */
+    border-spacing: 0; /* Ensure no spacing between cells */
+    text-align: center;
+    height: 45px;
+    border: 2px solid #841516;
+    border-radius: 8px; /* Border radius for inner table */
+    overflow: hidden; /* Ensure rounding effects are applied */
+  }
+  
+  .resident-image {
+    border-radius: 50%;
+    margin-left: 10px;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 2px;
+    width: 55%;
+    height: auto;
+  }
+  
+  .resident-profile, .resident-room {
+    width: 30%;
+  }
+  
+  .resident-name {
+    width: 40%;
+  }
+  
+  .resident-link {
+    text-decoration: none;
+    color: black;
+  }
+  
+
+  .scrollable {
+    max-height: auto; /* Adjust as necessary */
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+   -ms-overflow-style: none;  /* IE and Edge */
+  }
+  .middle-text {
+    display: flex;
+    font-stretch: extra-expanded;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+  .status-box {
+    border-collapse: separate; /* Allow border radius to take effect */
+    width: 30%; /* Full width for the table */
+    border-radius: 10px; /* Border radius for the table */
+    border-spacing: 0; /* Ensure no spacing between cells */
+    border: 2px solid #841617; /* Border color */
+    margin: 0 1rem; /* Horizontal margin for spacing */
+    overflow: hidden; /* Ensure rounding effects are applied */
+    background-color: white; /* Set a background color */
+    height: 13rem;
+}
+
+.status-box thead {
+  background-color: #841617;
+  color: white;
+}
+
+.status-box th,
+.status-box td {
+    padding: 8px;
+    height: 10px; /* Set the height of th and td elements */
+}
+.status-box th {
+  position: sticky; /* Make the header sticky */
+  top: 0; /* Stick to the top */
+  z-index: 1; /* Ensure it's above other content */
+}
+.status-box tbody {
+  display: block; /* Allow scrolling */
+  max-height: calc(13rem - 20px); /* Subtract header height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  width: 100%;
+}
+.status-box thead {
+  display: block; /* Allow scrolling */
+  max-height: 10rem; /* Subtract header height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  width: 100%;
+}
+
+.status-box td {
+    padding: 8px;
+    text-align: center;
+}
+
+.status-box tbody tr {
+    border-bottom: 2px solid #841516; /* Line at the bottom of each row */
+}
+
+.status-box tbody tr:last-child td {
+    border-bottom: none; /* Remove the line for the last row */
+}
+
+.status-box tr {
+  display: table; /* Ensure rows act like table rows */
+  table-layout: fixed; /* Maintain consistent widths */
+  width: 100%; /* Full width for rows */
+}
+
+.status-table { 
+  width: 100%; /* Set inner table to full width */
+  margin-bottom: 10px;
+  border-collapse: collapse; /* Collapse borders */
+  border-spacing: 0; /* No spacing between cells */
+  text-align: center;
+  height: 30px; /* Adjust height as needed */
+  border: none; /* Remove any default borders */
+  border-bottom: 1px solid #841617;;
+}
+.middle-container{
+  display: flex;
+  padding-top: 1.5rem;
+  margin-left: 16rem;
+  margin-right: 2rem; /* Adjusted margin-right */
+  justify-content: space-between;
+  /* Added overflow property */
+  overflow-x: hidden;
+
+}
+
+/* This section allows me to blur the text that I have on the screen*/
+
+.blurry-text {
+  filter: blur(5px); /* Adjust the blur intensity as needed */
+  transition: filter 0.3s ease; /* Smooth transition when removing blur */
+  cursor: pointer; /* Show pointer cursor to indicate it can be clicked */
+}
+
+.clear-text {
+  filter: blur(0); /* Remove the blur */
+}
+  .guest-image {
+    border-radius: 50%;
+    margin-left: 10px;
+    text-align: center;
+    width: 75%;
+    height: auto;
+    border: 2px solid #841617;
+  }
+  .guest-name{
+    font-size: 150%;
+  }
+
+  /* This section is about the middle section of the dashboard that displays the residents in the rooms*/
+  .large-box{
+    border-collapse: separate; /* Allow border radius to take effect */
+    width: 64.5%; /* Full width for the table */
+    border-radius: 10px; /* Border radius for the table */
+    border-spacing: 0; /* Ensure no spacing between cells */
+    border: 2px solid #841617; /* Border color */
+    margin: 0 1rem; /* Horizontal margin for spacing */
+    overflow: hidden; /* Ensure rounding effects are applied */
+    background-color: white; /* Set a background color */
+    height: 13rem;
+}
+
+.large-box thead {
+  background-color: #841617;
+  color: white;
+}
+
+.large-box th,
+.large-box td {
+    padding: 8px;
+    height: 10px; /* Set the height of th and td elements */
+}
+.large-box th {
+  position: sticky; /* Make the header sticky */
+  top: 0; /* Stick to the top */
+  z-index: 1; /* Ensure it's above other content */
+}
+.large-box tbody {
+  display: block; /* Allow scrolling */
+  max-height: calc(13rem - 20px); /* Subtract header height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  width: 100%;
+}
+.large-box thead {
+  display: block; /* Allow scrolling */
+  max-height: 10rem; /* Subtract header height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  width: 100%;
+}
+
+.large-box td {
+    padding: 8px;
+    text-align: center;
+}
+.large-box td:first-child {
+  border-right: 2px solid #841516; /* Red border to separate columns */
+}
+
+.large-box tbody tr {
+    border-bottom: 2px solid #841516; /* Line at the bottom of each row */
+}
+
+.large-box tbody tr:last-child td {
+    border-bottom: none; /* Remove the line for the last row */
+}
+
+.large-box tr {
+  display: table; /* Ensure rows act like table rows */
+  table-layout: fixed; /* Maintain consistent widths */
+  width: 100%; /* Full width for rows */
+}
+
+
+/* Lower section*/
+.full-width-input {
+  width: 100%; /* Full width for the input */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  padding: 8px; /* Padding for the input */
+  border: none; /* Remove default input border */
+  outline: none; /* Remove default input outline */
+}
+
+  /* This section helps with the auto adjusting of elements after the screen changes size*/
+  @media only screen and (max-width: 900px) {
+    .top-container, .middle-container{
+      margin-left: 7rem;
+    } */
+    .guest-name {
+      font-size: 110%;
+    }
+    .side-nav {
+      width: 110px;
+      transition: width 0.5s ease-in-out;
+    }
+  
+    .logo-icon {
+      display: block;
+    }
+  
+    .logo-img {
+      display: none;
+    }
+  
+    .nav-links li a p {
+      display: none;
+    }
+  
+    .nav-links li a img {
+      margin-right: 30%;
+    }
+  
+    .nav-links li a {
+      justify-content: center;
+    }
+  
+    header a p {
+      position: absolute;
+      left: 140px;
+    }
+  
+    .logo-text {
+      display: none;
+    }
+  
+    .status-box {
+      height: 8rem;
+      width: 50rem;
+      margin-right: 0.1rem;
+    }
+  
+    .guests-numbers {
+      font-size: 3.5rem;
+    }
+  
+    .banner-text {
+      font-size: 1.1rem
+  
+    }
+    
+  }
+  @media only screen and (max-width: 880px) {
+    .top-container, .middle-container{
+      margin-left: 7rem;
+    } 
+    .middle-container .status-box {
+      width: 33%;
+    }
+    .side-nav {
+      width: 110px; /* Adjust width for small devices */
+    }
+  }

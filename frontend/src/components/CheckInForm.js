@@ -5,29 +5,48 @@ import { useDispatch, useSelector } from 'react-redux';
 import { checkInGuest, resetGuest } from '../features/guests/guestSlice'
 import { getResidentByRoom, getGuestsByHost } from '../features/residents/residentSlice';
 import mongoose from 'mongoose';
+import {appendToSheet, readSheet} from '../features/sheets/sheetSlice';
 
 function CheckInForm() {
+  const [columnNames, setColumnNames] = useState([]);
   const [showOverlay, setShowOverlay] = useState(true);
   const [hosts, setHosts] = useState([])
   const [guests, setGuests] = useState([])
   const [formData, setFormData] = useState({ room: '', host: '', guest: '', guestContact: '' })
   const { room, host, contact, guest, guestContact } = formData
+  const [selectedHost, setSelectedHost] = useState(null);
+  const [selectedGuest, setSelectedGuest] = useState(null);
+
+  // Get the time now
+  const now = new Date();
+  const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  const [sheetFormData, setSheetFormData] = useState({ resident: '', guest: '', room: "", date: '', timeIn:'', timeOut: "" })
 
   const dispatch = useDispatch()
 
+  // Update the value of our form data and store the name of the guest for future use
   const onChange = e => {
+    const { name, value } = e.target;
+  
     setFormData(prevState => ({
       ...prevState,
-      [e.target.name]: e.target.value
-    }))
-  }
+      [name]: value
+    }));
+  
+    // If the field updated is 'guest', find and store the selected guest details
+    if (name === 'guest') {
+      const guestDetails = guests.find(guest => guest.id === value);
+      setSelectedGuest(guestDetails); // Store selected guest details
+    }
+  };
   const onChangeRoom = e => {
     // Reset the host select to its default state
     setFormData(prevState => ({
       ...prevState,
       [e.target.name]: e.target.value,
       host: '',
-      guest: '' // Reset the selected host to empty
+      guest: '' 
     }));
 }
 
@@ -73,24 +92,64 @@ function CheckInForm() {
   }
   const onHostSelect = async (e) => {
     const selectedHostId = e.target.value;
-    setFormData((prevState) => ({
-        ...prevState,
-        host: selectedHostId // Set the selected host ID
+    setFormData(prevState => ({
+      ...prevState,
+      host: selectedHostId // Set the selected host ID
     }));
+  
+    // Find the selected host from the hosts list
+    const hostDetails = hosts.find(host => host.id === selectedHostId);
+    setSelectedHost(hostDetails); // Store selected host details
+  
     await fetchGuestsByHost(selectedHostId);
-};
+  };
+  useEffect(() => {
+    if (sheetFormData) {
+      // Convert sheetFormData to array of arrays
+      const formattedData = [
+        [
+          sheetFormData.resident,
+          sheetFormData.guest,
+          sheetFormData.room,
+          sheetFormData.date,
+          sheetFormData.timeIn,
+          sheetFormData.timeOut
+        ]
+      ];
 
-const onSubmit = async (e) => {
-  e.preventDefault();
+      // Dispatch the formatted data to append to the sheet
+      dispatch(appendToSheet({ values: formattedData }));
+    }
+  }, [sheetFormData, dispatch]);
 
-  // Ensure formData.guest has the correct guestId
-  const guestId = formData.guest; // Assuming guest is already the ID
-  // Dispatch checkInGuest action with guestId
-  const response = await dispatch(checkInGuest(guestId));
-  if (response.meta.requestStatus === 'fulfilled')
-  toast.success("Guest checked in successfully")
-  setShowOverlay(false)
-};
+  
+  const onSubmit = async (e) => {
+    e.preventDefault();
+
+    const now = new Date();
+    const timeIn = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    const guestId = formData.guest;
+
+    const response = await dispatch(checkInGuest(guestId));
+    if (response.error && response.error.message === "Rejected") {
+      toast.error("Visitation for this guest has been revoked. \nPlease reach out to the Assistant Director for assistance.");
+      setShowOverlay(false);
+    } else if (response.meta.requestStatus === 'fulfilled') {
+      toast.success("Guest checked in successfully");
+
+      setSheetFormData({
+        resident: selectedHost ? selectedHost.name.toLowerCase() : '',
+        guest: selectedGuest ? selectedGuest.name : '',
+        room: formData.room,
+        date: new Date().toLocaleDateString(),
+        timeIn: timeIn,
+        timeOut: ""
+      });
+
+      setShowOverlay(false);
+    }
+  };
 
 
   const capitalize = (str) =>{

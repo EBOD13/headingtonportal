@@ -7,8 +7,9 @@ const getResidents = asyncHandler(async(req, res)=>{
         const residents = await Resident.find();
         res.status(200).json(residents)
         
-});const getGuestsByHost = asyncHandler(async (req, res) => {
-    const { hostId } = req.params; // Corrected parameter name
+});
+const getGuestsByHost = asyncHandler(async (req, res) => {
+    const { hostId } = req.params; 
 
     try {
 const resident = await Resident.findById(hostId)
