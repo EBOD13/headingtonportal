@@ -6,6 +6,10 @@ import { checkInGuest, resetGuest } from '../features/guests/guestSlice'
 import { getResidentByRoom, getGuestsByHost } from '../features/residents/residentSlice';
 import mongoose from 'mongoose';
 import {appendToSheet, readSheet} from '../features/sheets/sheetSlice';
+import { selectActivities } from '../features/activity/activitySlice';
+import { addActivity } from '../features/activity/activitySlice'; // Import the addActivity action
+
+
 
 function CheckInForm() {
   const [columnNames, setColumnNames] = useState([]);
@@ -146,9 +150,12 @@ function CheckInForm() {
         timeIn: timeIn,
         timeOut: ""
       });
+      // Log activity
+      dispatch(addActivity(`Checked in: ${selectedGuest ? capitalize(selectedGuest.name) : 'Unknown Guest'} at ${timeIn}`));
 
       setShowOverlay(false);
     }
+    
   };
 
 

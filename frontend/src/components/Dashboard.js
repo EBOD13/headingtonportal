@@ -14,7 +14,7 @@ import { getAllResidents, } from '../features/residents/residentSlice';
 import CountUp from 'react-countup';
 import ResidentsRooster from './ResidentsRooster';
 import axios, { all } from 'axios';
-
+import { selectActivities } from '../features/activity/activitySlice';
 
 const importAll = (r) => {
   let images = {};
@@ -26,14 +26,19 @@ const images = importAll(require.context("../images/icons", false, /\.(png|jpe?g
 
 const Dashboard = () => {
 
+  const activities = useSelector(selectActivities);
   const [avatarUrls, setAvatarUrls] = useState({});
+  const [notice, setNotice] = useState([]);
   const [reducerValue, forceUpdate] = useReducer(x => x +1, 0)
   const [checkedInGuestsCount, setCheckedInGuestsCount] = useState(0);
   const [allGuests, setAllGuests] = useState([]);
   const [allCheckedInGuests, setAllCheckedInGuests] = useState([]);
+  const [activityLog, setActivityLog] = useState([]); // Track and log all the checking and checkout activities
+
   const timerRef = useRef(null);
 
 
+  
   const logoutFn = () => {
     dispatch(logout())
     dispatch(reset())
@@ -68,6 +73,8 @@ const animationConfig ={
     }
   };
 
+
+
   useEffect(() => {
     // Clean up the timer when the component unmounts
     return () => clearTimeout(timerRef.current);
@@ -79,38 +86,48 @@ const animationConfig ={
         navigate('/login');
         return;
       }
+
       try {
-        
         const guestsList = await dispatch(getCheckedInGuests());
         const allGuestsResponse = await dispatch(getAllGuests());
-        // const readData = await dispatch(readSheet());
-        // console.log(readData)
 
+        // Process checked-in guests
+        if (guestsList.payload && Array.isArray(guestsList.payload.guests)) {
+          const allCheckedInGuestsList = guestsList.payload.guests.map(guest => ({
+            name: guest.name,
+            room: guest.room,
+          }));
+          setAllCheckedInGuests(allCheckedInGuestsList);
+          setCheckedInGuestsCount(guestsList.payload.count);
+        } else {
+          console.error('Checked-in guests payload is not an array or does not exist');
+        }
+
+        // Process all guests
         if (allGuestsResponse.payload && Array.isArray(allGuestsResponse.payload)) {
           const allGuestsList = allGuestsResponse.payload.map(guest => ({
             name: guest.name,
             flagged: guest.flagged,
           }));
           setAllGuests(allGuestsList);
-          
+
           // Fetch avatars for each guest
-          const avatarPromises = allGuestsList.map(guest => {
-            return axios.get(`https://ui-avatars.com/api/?background=f4eee0&name=${guest.name}`)
+          const avatarPromises = allGuestsList.map(guest =>
+            axios.get(`https://ui-avatars.com/api/?background=f4eee0&name=${guest.name}`)
               .then(response => ({ [guest.name]: response.request.responseURL }))
               .catch(error => {
                 console.error(`Error fetching avatar for ${guest.name}:`, error);
                 return { [guest.name]: '' }; // Return empty string on error
-              });
-          });
+              })
+          );
 
           const avatars = await Promise.all(avatarPromises);
           const avatarUrls = avatars.reduce((acc, curr) => ({ ...acc, ...curr }), {});
           setAvatarUrls(avatarUrls);
         } else {
-          console.error('Payload is not an array or does not exist');
+          console.error('All guests payload is not an array or does not exist');
         }
-        setAllCheckedInGuests(guestsList.payload.rooms)
-        setCheckedInGuestsCount(guestsList.payload.count);
+
         forceUpdate(value => value + 1); // Force update the component
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -149,10 +166,12 @@ const animationConfig ={
     event.preventDefault(); 
     toggleAddNewGuest();
   };
-  const capitalize = (str) =>{
-    const capitalized = str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    return capitalized
-  }  
+
+    // Function to capitalize the string ( write it as a title with the first letter capitalized)
+    const capitalize = (str) =>{
+      const capitalized = str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      return capitalized
+    }
 
   /* Function to get random images for the guests profile */
   return (
@@ -193,13 +212,19 @@ const animationConfig ={
                   </tr>
               </thead>
               <tbody>
-                  <tr>
-                      <td>John Doe</td>
-                  </tr>
-                  <tr>
-                      <td>John Doe</td>
-                  </tr>
-              </tbody>
+                {/* If the length of the notice is 0, we set a default notice, otherwise, we add more of them*/}
+        {notice.length === 0 ? (
+          <tr>
+            <td style={{ border: '0px solid white' }}> No notice! All good</td>
+          </tr>
+        ) : (
+          notice.filter(n => n).map((n, index) => (
+            <tr key={index}>
+              <td>{n}</td>
+            </tr>
+          ))
+        )}
+      </tbody>
         </table>
       {/* The event section of the page*/}
       <table className="status-box">
@@ -237,17 +262,17 @@ const animationConfig ={
       <table className="large-box">
   <thead>
     <tr>
-      <th colSpan="2">Rooms with Guests</th> {/* Use colSpan to span both columns */}
+      <th colSpan="2">Guests in Residence</th> {/* Use colSpan to span both columns */}
     </tr>
   </thead>
   <tbody className={isBlurred ? 'blurry-text' : 'clear-text'} onClick={handleClick}>
     <tr onClick={handleClick}>
-      <td>John Doe</td>
-      <td>Room 1</td>
-    </tr>
-    <tr>
-      <td>Jane Doe</td>
-      <td>Room 2</td>
+    {allCheckedInGuests.map(guest => (
+      <tr key={guest.name}>
+        <td>{capitalize(guest.name)}</td>
+        <td>{capitalize(guest.room)}</td>
+      </tr>
+))}
     </tr>
   </tbody>
 </table>
@@ -258,9 +283,12 @@ const animationConfig ={
                   </tr>
               </thead>
               <tbody>
-                  <tr>
-                      <td>John Doe</td>
-                  </tr>
+                  {activities.map((activity, index) => (
+                    <tr>
+                        <td key={index}>{activity}</td>
+                        </tr>
+                      ))}
+                  
                   <tr>
                       <td>John Doe</td>
                   </tr>
