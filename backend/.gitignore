@@ -6,3 +6,6 @@ node_modules/
 
 # Ignore log files
 *.log
+
+# Ignore the google config file
+backend/config/google-credentials.json
