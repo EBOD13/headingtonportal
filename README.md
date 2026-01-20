@@ -8,7 +8,7 @@
 
 **Headington Portal** is a full-stack visitor management system built to replace the slow, manual Excel-based visitor logging process used in athletic student housing.
 
-During your time working the front desk of an athlete residence hall, you identified two major problems:
+During my time working the front desk of an athlete residence hall, I identified two major problems:
 
 1. **Manual Excel tracking** slowed operations during peak periods (move-in, game days, parents weekend).
 2. **Holding physical IDs** (driver’s licenses) created liability and risk if a visitor forgot their ID.
