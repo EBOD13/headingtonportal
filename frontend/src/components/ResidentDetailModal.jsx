@@ -1,7 +1,10 @@
 // frontend/src/components/ResidentDetailModal.jsx
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import './ResidentDetailModal.css';
 import { useGuestsByHost } from '../hooks/useResidentsQuery';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateResidentStatus } from '../features/residents/residentSlice';
+import { toast } from 'react-hot-toast';
 
 // Using lucide-react instead of custom SVG icons
 import {
@@ -17,6 +20,7 @@ import {
   XCircle,
   UserPlus,
 } from 'lucide-react';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 
 // ============================================================================
 // Helper Functions
@@ -114,9 +118,19 @@ const VisitorCard = ({ visitor }) => (
 // ============================================================================
 // Main Component
 // ============================================================================
-
 const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
+  const dispatch = useDispatch();
+  const isAdmin = useIsAdmin();
+
   const hostId = resident?._id;
+
+  // --- Status state for select (derive initial from resident) ---
+  const [statusValue, setStatusValue] = useState(resident?.active ? 'active' : 'inactive');
+
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
+  useEffect(() => {
+  setStatusValue(resident?.active ? 'active' : 'inactive');
+}, [resident?.active]);
 
   // Use hook to fetch guests + stats for this host
   const {
@@ -183,16 +197,35 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
       return;
     }
 
-    // Pass prefilled data for the new guest form
     onAddNewGuest({
       room: resident.roomNumber,
       hostId: resident._id,
       hostName: resident.name,
     });
 
-    // Close this modal so the AddNewGuest modal can open
     onClose();
   };
+
+  // --- Handle status change ---
+  const handleStatusChange = async (e) => {
+  const newValue = e.target.value; // 'active' | 'inactive'
+  const active = newValue === 'active';
+  const id = resident._id || resident.id;
+
+  setStatusValue(newValue);
+  setIsSavingStatus(true);
+
+  try {
+    await dispatch(
+      updateResidentStatus({
+        id,
+        updates: { active },
+      })
+    ).unwrap();
+  } finally {
+    setIsSavingStatus(false);
+  }
+};
 
   if (!resident) return null;
 
@@ -210,12 +243,38 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
             <div className="modal-avatar">
               {getInitials(resident.name)}
             </div>
-            <div className="modal-title">
+            <div className="modal-title-row">
+
               <h2>{capitalize(resident.name)}</h2>
-              <span className="modal-room">
+
+                <span className="modal-room">
                 <MapPin size={16} />
                 Room {resident.roomNumber}
+                
               </span>
+                {isAdmin && (
+              <div className="resident-status-wrapper">
+                <select
+                  id="resident-status-select"
+                  className="resident-status-select"
+                  value={statusValue}
+                  onChange={handleStatusChange}
+                  disabled={isSavingStatus}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+                {isSavingStatus && (
+                  <span className="resident-status-saving">
+                    Saving...
+                  </span>
+                )}
+              </div>
+            )}
+
+              
+            
+
             </div>
           </div>
           <button className="modal-close" onClick={onClose}>
@@ -250,6 +309,8 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
                 value={resident.phoneNumber}
               />
             </div>
+
+            
           </section>
 
           {/* Visitor Stats */}

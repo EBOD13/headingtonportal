@@ -1,11 +1,11 @@
 // frontend/src/components/ResidentsRooster.jsx
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 import { useResidents } from '../hooks/useResidentsQuery';
+import { useAppShellHeader } from './AppShell';
 
-import imageList from './ImageGallery';
 import ResidentDetailModal from './ResidentDetailModal';
 import AddNewGuest from './AddNewGuest';
 
@@ -17,76 +17,142 @@ import './ResidentsRooster.css';
 
 import {
   Users,
-  Bell,
   Search,
   X,
   MapPin,
   ChevronRight,
   AlertCircle,
   RefreshCw,
+  ArrowUpDown,
+  SortAsc,
+  SortDesc,
+  Flag,
+  Filter,
 } from 'lucide-react';
 
 const Icons = {
   Users,
-  Bell,
   Search,
   X,
   MapPin,
   ChevronRight,
   AlertCircle,
   RefreshCw,
+  ArrowUpDown,
+  SortAsc,
+  SortDesc,
+  Flag,
+  Filter,
 };
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const SORT_OPTIONS = [
+  { value: 'name-asc', label: 'Name (A-Z)', icon: SortAsc },
+  { value: 'name-desc', label: 'Name (Z-A)', icon: SortDesc },
+  { value: 'room-asc', label: 'Room (Low-High)', icon: SortAsc },
+  { value: 'room-desc', label: 'Room (High-Low)', icon: SortDesc },
+];
+
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'All Residents' },
+  { value: 'flagged', label: 'Flagged Only' },
+  { value: 'not-flagged', label: 'Not Flagged' },
+];
 
 // ============================================================================
 // Sub-components
 // ============================================================================
 
-const ResidentsHeader = ({
-  searchTerm,
-  onSearchChange,
-}) => {
-  return (
-    <header className="header">
-      <div className="header-left">
-        <div className="header-title">
-          <h1>Residents Directory</h1>
-        </div>
+const ToolbarSection = ({ 
+  searchTerm, 
+  onSearchChange, 
+  sortBy, 
+  onSortChange,
+  filterBy,
+  onFilterChange,
+  totalCount,
+  filteredCount,
+}) => (
+  <div className="residents-toolbar">
+    {/* Search */}
+    <div className="toolbar-search">
+      <div className="search-box">
+        <Icons.Search size={18} />
+        <input
+          type="text"
+          placeholder="Search by name or room..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+        {searchTerm && (
+          <button
+            className="search-clear"
+            onClick={() => onSearchChange('')}
+            type="button"
+          >
+            <Icons.X size={14} />
+          </button>
+        )}
       </div>
-      <div className="header-right">
-        <div className="search-box">
-          <Icons.Search size={18} />
-          <input
-            type="text"
-            placeholder="Search by name or room..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-          {searchTerm && (
-            <button
-              className="search-clear"
-              onClick={() => onSearchChange('')}
-              type="button"
-            >
-              <Icons.X size={14} />
-            </button>
-          )}
-        </div>
-        <button className="icon-btn" type="button">
-          <Icons.Bell size={20} />
-        </button>
-        <div className="user-menu">
-          <img
-            src={imageList['avatar.png']}
-            alt="Profile"
-            className="user-avatar"
-          />
-        </div>
-      </div>
-    </header>
-  );
-};
+    </div>
 
-const ResidentCard = ({ resident, onClick, index }) => {
+    {/* Controls */}
+    <div className="toolbar-controls">
+      {/* Sort Dropdown */}
+      <div className="toolbar-control">
+        <label htmlFor="sort-select">
+          <Icons.ArrowUpDown size={16} />
+          <span className="control-label">Sort</span>
+        </label>
+        <select 
+          id="sort-select"
+          value={sortBy} 
+          onChange={(e) => onSortChange(e.target.value)}
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Filter Dropdown */}
+      <div className="toolbar-control">
+        <label htmlFor="filter-select">
+          <Icons.Filter size={16} />
+          <span className="control-label">Filter</span>
+        </label>
+        <select 
+          id="filter-select"
+          value={filterBy} 
+          onChange={(e) => onFilterChange(e.target.value)}
+        >
+          {FILTER_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Results Count */}
+      <div className="toolbar-count">
+        <span>
+          {filteredCount === totalCount 
+            ? `${totalCount} residents` 
+            : `${filteredCount} of ${totalCount}`
+          }
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
+const ResidentCard = ({ resident, onClick, index, wingType }) => {
   const capitalize = (str) => {
     if (!str) return '';
     return str
@@ -105,43 +171,33 @@ const ResidentCard = ({ resident, onClick, index }) => {
   };
 
   return (
-    <div
+    <button
       className={`resident-card ${resident.flagged ? 'flagged' : ''}`}
       onClick={() => onClick(resident)}
       style={{ animationDelay: `${index * 30}ms` }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick(resident)}
+      type="button"
     >
-      <div className="resident-avatar">
+      <div className={`resident-avatar ${wingType}`}>
         {getInitials(resident.name)}
       </div>
       <div className="resident-info">
         <span className="resident-name">{capitalize(resident.name)}</span>
         <span className="resident-room">
-          <Icons.MapPin size={14} />
+          <Icons.MapPin size={12} />
           Room {resident.roomNumber}
         </span>
       </div>
-      {resident.flagged && (
-        <span className="flagged-badge">Flagged</span>
-      )}
-      <Icons.ChevronRight size={18} />
-    </div>
+      {resident.flagged && <span className="flagged-badge">Flagged</span>}
+      <Icons.ChevronRight size={16} className="resident-chevron" />
+    </button>
   );
 };
 
-const WingSection = ({
-  title,
-  residents,
-  wingType,
-  onResidentClick,
-  isLoading,
-}) => (
+const WingSection = ({ title, residents, wingType, onResidentClick, isLoading }) => (
   <div className={`wing-section wing--${wingType}`}>
     <div className="wing-header">
       <h2>{title}</h2>
-      <span className="wing-count">{residents.length}</span>
+      <span className={`wing-count wing-count--${wingType}`}>{residents.length}</span>
     </div>
     <div className="wing-content">
       {isLoading ? (
@@ -162,6 +218,7 @@ const WingSection = ({
               resident={resident}
               onClick={onResidentClick}
               index={index}
+              wingType={wingType}
             />
           ))}
         </div>
@@ -188,9 +245,9 @@ const ErrorState = ({ message, onRetry }) => (
 
 const ResidentsRooster = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('name-asc');
+  const [filterBy, setFilterBy] = useState('all');
   const [selectedResident, setSelectedResident] = useState(null);
-  
-  // State for AddNewGuest modal
   const [showAddNewGuest, setShowAddNewGuest] = useState(false);
   const [addNewGuestData, setAddNewGuestData] = useState({
     room: '',
@@ -200,6 +257,17 @@ const ResidentsRooster = () => {
 
   const navigate = useNavigate();
   const { clerk } = useSelector((state) => state.auth);
+
+  // Configure the AppShell header
+  const { setHeaderConfig } = useAppShellHeader();
+
+  useEffect(() => {
+    setHeaderConfig({
+      title: 'Residents',
+      subtitle: 'Directory',
+    });
+    return () => setHeaderConfig({});
+  }, [setHeaderConfig]);
 
   // React Query hook to fetch residents
   const {
@@ -217,39 +285,65 @@ const ResidentsRooster = () => {
   // Normalize residents data
   const residents = useMemo(() => {
     if (!residentsData) return [];
-    return Array.isArray(residentsData)
-      ? residentsData
-      : residentsData.data || [];
+    return Array.isArray(residentsData) ? residentsData : residentsData.data || [];
   }, [residentsData]);
 
-  // Filter residents based on search term
+  // Filter residents based on search term and filter option
   const filteredResidents = useMemo(() => {
-    if (!searchTerm.trim()) return residents;
+    let result = residents;
 
-    const term = searchTerm.toLowerCase();
-    return residents.filter(
-      (resident) =>
-        resident.name?.toLowerCase().includes(term) ||
-        resident.roomNumber?.toLowerCase().includes(term) ||
-        resident.email?.toLowerCase().includes(term)
-    );
-  }, [residents, searchTerm]);
+    // Apply text search
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (resident) =>
+          resident.name?.toLowerCase().includes(term) ||
+          resident.roomNumber?.toLowerCase().includes(term) ||
+          resident.email?.toLowerCase().includes(term)
+      );
+    }
 
-  // Split residents by wing
+    // Apply filter
+    if (filterBy === 'flagged') {
+      result = result.filter((r) => r.flagged);
+    } else if (filterBy === 'not-flagged') {
+      result = result.filter((r) => !r.flagged);
+    }
+
+    return result;
+  }, [residents, searchTerm, filterBy]);
+
+  // Sort function
+  const sortResidents = useCallback((residentsToSort) => {
+    const sorted = [...residentsToSort];
+    
+    switch (sortBy) {
+      case 'name-asc':
+        return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      case 'name-desc':
+        return sorted.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+      case 'room-asc':
+        return sorted.sort((a, b) => (a.roomNumber || '').localeCompare(b.roomNumber || ''));
+      case 'room-desc':
+        return sorted.sort((a, b) => (b.roomNumber || '').localeCompare(a.roomNumber || ''));
+      default:
+        return sorted;
+    }
+  }, [sortBy]);
+
+  // Split residents by wing and apply sorting
   const northWingResidents = useMemo(
-    () =>
-      filteredResidents
-        .filter((r) => r.roomNumber?.toUpperCase().startsWith('N'))
-        .sort((a, b) => a.roomNumber.localeCompare(b.roomNumber)),
-    [filteredResidents]
+    () => sortResidents(
+      filteredResidents.filter((r) => r.roomNumber?.toUpperCase().startsWith('N'))
+    ),
+    [filteredResidents, sortResidents]
   );
 
   const southWingResidents = useMemo(
-    () =>
-      filteredResidents
-        .filter((r) => r.roomNumber?.toUpperCase().startsWith('S'))
-        .sort((a, b) => a.roomNumber.localeCompare(b.roomNumber)),
-    [filteredResidents]
+    () => sortResidents(
+      filteredResidents.filter((r) => r.roomNumber?.toUpperCase().startsWith('S'))
+    ),
+    [filteredResidents, sortResidents]
   );
 
   // Handlers
@@ -265,7 +359,14 @@ const ResidentsRooster = () => {
     setSearchTerm(value);
   }, []);
 
-  // Handler for opening AddNewGuest from ResidentDetailModal
+  const handleSortChange = useCallback((value) => {
+    setSortBy(value);
+  }, []);
+
+  const handleFilterChange = useCallback((value) => {
+    setFilterBy(value);
+  }, []);
+
   const handleAddNewGuestFromResident = useCallback((data) => {
     setAddNewGuestData({
       room: data.room || '',
@@ -273,16 +374,11 @@ const ResidentsRooster = () => {
       hostName: data.hostName || '',
     });
     setShowAddNewGuest(true);
-    // ResidentDetailModal closes itself via onClose
   }, []);
 
   const handleCloseAddNewGuest = useCallback(() => {
     setShowAddNewGuest(false);
-    setAddNewGuestData({
-      room: '',
-      hostId: '',
-      hostName: '',
-    });
+    setAddNewGuestData({ room: '', hostId: '', hostName: '' });
   }, []);
 
   // Redirect if not authenticated
@@ -292,14 +388,21 @@ const ResidentsRooster = () => {
   }
 
   return (
-    <div className="page residents-page">
-      {/* Page header */}
-      <ResidentsHeader
+    <div className="residents-page">
+      {/* Toolbar with Search, Sort, Filter */}
+      <ToolbarSection
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
+        sortBy={sortBy}
+        onSortChange={handleSortChange}
+        filterBy={filterBy}
+        onFilterChange={handleFilterChange}
+        totalCount={residents.length}
+        filteredCount={filteredResidents.length}
       />
 
-      <main className="main-content">
+      {/* Main Content */}
+      <div className="residents-content">
         {isError ? (
           <ErrorState
             message={error?.message || 'Unable to fetch residents'}
@@ -330,7 +433,7 @@ const ResidentsRooster = () => {
             />
           </div>
         )}
-      </main>
+      </div>
 
       {/* Resident Detail Modal */}
       {selectedResident && (
@@ -341,7 +444,7 @@ const ResidentsRooster = () => {
         />
       )}
 
-      {/* Add New Guest Modal - opened from ResidentDetailModal */}
+      {/* Add New Guest Modal */}
       {showAddNewGuest && (
         <AddNewGuest
           onClose={handleCloseAddNewGuest}

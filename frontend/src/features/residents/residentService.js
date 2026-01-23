@@ -12,41 +12,32 @@ const buildConfig = (token) => ({
 
 // ==============================
 // Get ALL residents
-// GET /api/residents
 // ==============================
 const getAllResidents = async (token) => {
   const config = buildConfig(token);
   const response = await api.get(API_URL, config);
-  // Expecting an array of residents
   return response.data;
 };
 
 // ==============================
+// Update resident (status, details, etc.)
+// ==============================
+const updateResident = async (id, updates, token) => {
+  const config = buildConfig(token);
+  const res = await api.put(`${API_URL}${id}`, updates, config);
+  return res.data;
+};
+// ==============================
 // Get resident(s) by room
-// GET /api/residents/:roomNumber
-// (roomNumber like "N101", "S222")
 // ==============================
 const getResidentByRoom = async (roomNumber, token) => {
   const config = buildConfig(token);
   const response = await api.get(`${API_URL}${roomNumber}`, config);
-  // Backend might return array or single object; slice will handle both
   return response.data;
 };
 
 // ==============================
 // Get guests by host ID
-// GET /api/residents/guests/:hostId
-// Expected backend response shape (recommended):
-//   {
-//     success: true,
-//     guestNames: [
-//       { id: "<guestId>", name: "john erickson", lastRoom: "N101" },
-//       ...
-//     ]
-//   }
-//
-// If your backend returns a different shape, the slice will
-// normalize it.
 // ==============================
 const getGuestsByHost = async (hostId, token) => {
   const config = buildConfig(token);
@@ -58,6 +49,7 @@ const residentService = {
   getResidentByRoom,
   getGuestsByHost,
   getAllResidents,
+  updateResident
 };
 
 export default residentService;

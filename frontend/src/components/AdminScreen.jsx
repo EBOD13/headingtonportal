@@ -1,7 +1,8 @@
 // frontend/src/components/AdminScreen.jsx
-import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useCurrentClerk, useIsAdmin } from '../hooks/useIsAdmin';
+import { useClerksAdmin } from '../hooks/useClerksAdmin';
 import './AdminScreen.css';
 
 // ============================================================================
@@ -30,18 +31,6 @@ const Icons = {
 };
 
 // ============================================================================
-// Helper to detect admin
-// ============================================================================
-const useIsAdmin = () => {
-  const { clerk } = useSelector((state) => state.auth);
-  return Boolean(
-    clerk?.isAdmin === true ||
-      clerk?.role === 'admin' ||
-      clerk?.role === 'superadmin'
-  );
-};
-
-// ============================================================================
 // Sub-components
 // ============================================================================
 const AdminStatCard = ({ icon: Icon, label, value, description }) => (
@@ -59,7 +48,12 @@ const AdminStatCard = ({ icon: Icon, label, value, description }) => (
   </div>
 );
 
-const AdminUserRow = ({ clerk, index }) => {
+const AdminUserRow = ({
+  clerk,
+  index,
+  onToggleAdmin,
+  isTogglingForThisRow,
+}) => {
   const isAdmin = Boolean(
     clerk.isAdmin === true ||
       clerk.role === 'admin' ||
@@ -99,26 +93,32 @@ const AdminUserRow = ({ clerk, index }) => {
         <button
           type="button"
           className={`admin-toggle-btn ${isAdmin ? 'on' : 'off'}`}
-          // NOTE: This is UI-only for now; wiring to backend can be done next
           onClick={(e) => {
             e.preventDefault();
-            // placeholder — wire to backend later
-            console.log(
-              '[AdminScreen] Toggle admin for',
-              clerk._id || clerk.id
-            );
+            if (!isTogglingForThisRow) {
+              onToggleAdmin(clerk);
+            }
           }}
+          disabled={isTogglingForThisRow}
         >
           {isAdmin ? (
             <Icons.ToggleRight size={20} />
           ) : (
             <Icons.ToggleLeft size={20} />
           )}
-          <span>{isAdmin ? 'Admin' : 'Standard'}</span>
+          <span>
+            {isTogglingForThisRow
+              ? 'Updating...'
+              : isAdmin
+              ? 'Admin'
+              : 'Standard'}
+          </span>
         </button>
       </td>
       <td>
-        <span className="admin-user-status online">Active</span>
+        <span className="admin-user-status online">
+          Active
+        </span>
       </td>
     </tr>
   );
@@ -128,95 +128,106 @@ const AdminUserRow = ({ clerk, index }) => {
 // Main Component
 // ============================================================================
 const AdminScreen = () => {
-  // 🔹 ALL hooks at the top, no conditions
-  const { clerk } = useSelector((state) => state.auth);
   const isAdmin = useIsAdmin();
+  const currentClerk = useCurrentClerk();
 
-  // For now, fake a tiny list using the logged-in clerk as an example.
-  // Later we can replace this with a real "useClerks()" hook calling your backend.
-  const clerks = useMemo(() => {
-    if (!clerk) return [];
-    return [
-      {
-        id: clerk.id || clerk._id || 'me',
-        name: clerk.name || clerk.fullName || 'Current Clerk',
-        email: clerk.email,
-        role: clerk.role || (clerk.isAdmin ? 'admin' : 'clerk'),
-        isAdmin: clerk.isAdmin,
-      },
-      // add more mock rows if you want the layout to feel fuller
-    ];
-  }, [clerk]);
+  const {
+    clerks,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    toggleAdmin,
+    isUpdatingRole,
+  } = useClerksAdmin();
 
-  const totalClerks = clerks.length;
-  const adminCount = clerks.filter(
-    (c) => c.role === 'admin' || c.isAdmin
+  const [searchTerm, setSearchTerm] = useState('');
+  const [togglingId, setTogglingId] = useState(null);
+
+
+  // Filter clerks by search term
+  const filteredClerks = useMemo(() => {
+    if (!Array.isArray(clerks)) return [];
+    if (!searchTerm.trim()) return clerks;
+
+    const term = searchTerm.toLowerCase();
+    return clerks.filter((c) => {
+      const name = (c.name || '').toLowerCase();
+      const email = (c.email || '').toLowerCase();
+      return name.includes(term) || email.includes(term);
+    });
+  }, [clerks, searchTerm]);
+
+  const totalClerks = filteredClerks.length;
+  const adminCount = filteredClerks.filter(
+    (c) =>
+      c.isAdmin === true ||
+      c.role === 'admin' ||
+      c.role === 'superadmin'
   ).length;
   const nonAdminCount = totalClerks - adminCount;
 
-  // 🔹 Guard AFTER hooks, so hooks always run in the same order
+  const handleToggleAdmin = async (targetClerk) => {
+    const id = targetClerk.id || targetClerk._id;
+    if (!id) return;
+    try {
+      setTogglingId(id);
+      await toggleAdmin(targetClerk);
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const currentUserRoleLabel = useMemo(() => {
+    if (!currentClerk) return 'Unknown';
+    if (
+      currentClerk.role === 'superadmin' ||
+      currentClerk.isSuperAdmin
+    ) {
+      return 'Super Admin';
+    }
+    if (
+      currentClerk.isAdmin === true ||
+      currentClerk.role === 'admin'
+    ) {
+      return 'Admin';
+    }
+    return 'Clerk';
+  }, [currentClerk]);
+
+
+    // Guard AFTER hooks so hooks order is stable
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 
   return (
     <div className="admin-container">
-      {/* Header */}
-      <header className="admin-header">
-        <div className="admin-header-left">
-          <h1>
-            <Icons.Shield size={26} />
-            Admin Control Center
-          </h1>
-          <p className="admin-subtitle">
-            Manage clerks, roles, and system configuration
-          </p>
-        </div>
-        <div className="admin-header-right">
-          <div className="admin-search">
-            <Icons.Search size={16} />
-            <input
-              type="text"
-              placeholder="Search clerks by name or email..."
-              // Wire later to real filtering
-              onChange={() => {}}
-            />
-          </div>
-          <button
-            type="button"
-            className="admin-icon-btn"
-            onClick={() => window.location.reload()}
-          >
-            <Icons.Refresh size={18} />
-          </button>
-        </div>
-      </header>
-
       {/* Top stats */}
       <section className="admin-stats">
         <AdminStatCard
           icon={Icons.Users}
           label="Total Clerks"
-          value={totalClerks}
+          value={isLoading ? '—' : totalClerks}
           description="Registered staff accounts with portal access"
         />
         <AdminStatCard
           icon={Icons.Shield}
           label="Admins"
-          value={adminCount}
+          value={isLoading ? '—' : adminCount}
           description="Users with elevated permissions"
         />
         <AdminStatCard
           icon={Icons.Activity}
           label="Non-Admin Clerks"
-          value={nonAdminCount}
+          value={isLoading ? '—' : nonAdminCount}
           description="Standard operational roles"
         />
         <AdminStatCard
           icon={Icons.Settings}
           label="Access Level"
-          value="Super Admin"
-          description="You can manage roles & system settings"
+          value={currentUserRoleLabel}
+          description="Your current permission level"
         />
       </section>
 
@@ -229,13 +240,24 @@ const AdminScreen = () => {
             <p>Review roles and manage elevated access.</p>
           </div>
           <div className="admin-table-wrapper">
-            {clerks.length === 0 ? (
+            {isLoading ? (
+              <div className="admin-empty-state">
+                <div className="spinner" />
+                <p>Loading clerks...</p>
+              </div>
+            ) : isError ? (
+              <div className="admin-empty-state admin-error">
+                <Icons.Activity size={40} />
+                <p>
+                  {error?.response?.data?.message ||
+                    error?.message ||
+                    'Failed to load clerks.'}
+                </p>
+              </div>
+            ) : filteredClerks.length === 0 ? (
               <div className="admin-empty-state">
                 <Icons.Users size={40} />
-                <p>
-                  No clerks found yet. Once users register, they will
-                  appear here.
-                </p>
+                <p>No clerks found. They will appear here once created.</p>
               </div>
             ) : (
               <table className="admin-table">
@@ -248,11 +270,17 @@ const AdminScreen = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {clerks.map((c, index) => (
+                  {filteredClerks.map((c, index) => (
                     <AdminUserRow
-                      key={c.id || index}
+                      key={c.id || c._id || index}
                       clerk={c}
                       index={index}
+                      onToggleAdmin={handleToggleAdmin}
+                      isTogglingForThisRow={
+                        isUpdatingRole &&
+                        togglingId &&
+                        (togglingId === c.id || togglingId === c._id)
+                      }
                     />
                   ))}
                 </tbody>
@@ -273,11 +301,10 @@ const AdminScreen = () => {
                 <Icons.Activity size={16} />
               </div>
               <div className="admin-activity-content">
-                <h3>Role management coming next</h3>
+                <h3>Role management live</h3>
                 <p>
-                  This panel will show recent admin events: role
-                  changes, flagged guests, and configuration updates
-                  pulled from your Activity collection.
+                  Use the table on the left to promote/demote clerks. Every
+                  change is persisted through your backend.
                 </p>
               </div>
             </div>
@@ -287,17 +314,16 @@ const AdminScreen = () => {
                 <Icons.Settings size={16} />
               </div>
               <div className="admin-activity-content">
-                <h3>Connect to backend</h3>
+                <h3>Next step: audit logs</h3>
                 <p>
-                  Once wired, you&apos;ll be able to promote/demote
-                  clerks, lock accounts, and view audit logs—all from
-                  this screen.
+                  Wire this panel into your <code>Activity</code> collection to
+                  surface a timeline of high-privilege actions.
                 </p>
               </div>
             </div>
 
             <div className="admin-activity-note">
-              Tip: keep admin count small and review access regularly.
+              Tip: keep the number of admins small and review access regularly.
             </div>
           </div>
         </div>

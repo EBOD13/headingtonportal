@@ -1,13 +1,13 @@
 // frontend/src/components/Guests.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
 
 import { useGuests } from '../hooks/useGuestsQuery';
+import { useAppShellHeader } from './AppShell';
 import GuestDetailModal from './GuestDetailModal';
 
 import './Guests.css';
-import '../components/Sidebar.css';
 
 // ============================================================================
 // Icons (using lucide-react)
@@ -25,10 +25,10 @@ import {
   Filter,
   RefreshCw,
   Loader2,
-  Bell,
+  ArrowUpDown,
+  AlertCircle,
 } from 'lucide-react';
 
-// Map to your existing icon "API" so you don't have to change JSX everywhere
 const Icons = {
   User,
   Users,
@@ -41,73 +41,181 @@ const Icons = {
   Filter,
   Refresh: RefreshCw,
   Loader: Loader2,
-  Bell,
+  ArrowUpDown,
+  AlertCircle,
 };
 
 // ============================================================================
-// Small Components
+// Constants
+// ============================================================================
+
+const SORT_OPTIONS = [
+  { value: 'name', label: 'Name (A-Z)' },
+  { value: 'name-desc', label: 'Name (Z-A)' },
+  { value: 'room', label: 'Room' },
+  { value: 'check-in', label: 'Check-in Status' },
+  { value: 'recent', label: 'Recently Updated' },
+];
+
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'All Guests' },
+  { value: 'checked-in', label: 'Checked In' },
+  { value: 'checked-out', label: 'Checked Out' },
+  { value: 'flagged', label: 'Flagged' },
+];
+
+// ============================================================================
+// Sub-components
 // ============================================================================
 
 const LoadingSpinner = () => (
-  <div className="page-loading">
+  <div className="guests-loading">
     <div className="spinner">
-      <Icons.Loader />
+      <Icons.Loader size={48} />
     </div>
     <p>Loading guests...</p>
   </div>
 );
 
 const ErrorState = ({ message, onRetry }) => (
-  <div className="page-error">
+  <div className="guests-error">
+    <Icons.AlertCircle size={48} />
     <h3>Error Loading Guests</h3>
     <p>{message || 'Failed to load guests'}</p>
     {onRetry && (
-      <button className="btn btn-primary" onClick={onRetry}>
-        Try Again
+      <button className="btn btn-primary" onClick={onRetry} type="button">
+        <Icons.Refresh size={16} />
+        <span>Try Again</span>
       </button>
     )}
   </div>
 );
 
-// Header Component for Guests Page
-const GuestsHeader = ({ clerkName, onRefresh }) => {
-  return (
-    <header className="header guests-header">
-      <div className="header-left">
-        <div className="header-title">
-          <h1>
-            <Icons.Users />
-            Guest Management
-          </h1>
-          {clerkName && (
-            <span className="header-subtitle">Welcome, {clerkName}</span>
-          )}
-        </div>
+const ToolbarSection = ({
+  searchTerm,
+  onSearchChange,
+  sortBy,
+  onSortChange,
+  filterBy,
+  onFilterChange,
+  stats,
+  totalFiltered,
+}) => (
+  <div className="guests-toolbar">
+    {/* Search */}
+    <div className="toolbar-search">
+      <div className="search-box">
+        <Icons.Search size={18} />
+        <input
+          type="text"
+          placeholder="Search by name, room, or host..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+        {searchTerm && (
+          <button
+            className="search-clear"
+            onClick={() => onSearchChange('')}
+            type="button"
+          >
+            <Icons.X size={14} />
+          </button>
+        )}
+      </div>
+    </div>
+
+    {/* Controls */}
+    <div className="toolbar-controls">
+      {/* Sort Dropdown */}
+      <div className="toolbar-control">
+        <label htmlFor="guest-sort-select">
+          <Icons.ArrowUpDown size={16} />
+          <span className="control-label">Sort</span>
+        </label>
+        <select
+          id="guest-sort-select"
+          value={sortBy}
+          onChange={(e) => onSortChange(e.target.value)}
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="header-right">
-        <button className="icon-btn" onClick={onRefresh} title="Refresh">
-          <Icons.Refresh />
-        </button>
-        <button className="icon-btn" type="button">
-          <Icons.Bell />
-          <span className="badge">3</span>
-        </button>
+      {/* Filter Dropdown */}
+      <div className="toolbar-control">
+        <label htmlFor="guest-filter-select">
+          <Icons.Filter size={16} />
+          <span className="control-label">Filter</span>
+        </label>
+        <select
+          id="guest-filter-select"
+          value={filterBy}
+          onChange={(e) => onFilterChange(e.target.value)}
+        >
+          {FILTER_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
-    </header>
-  );
-};
 
-// Small, minimal guest card
+      {/* Results Count */}
+      <div className="toolbar-count">
+        <span>
+          {totalFiltered === stats.total
+            ? `${stats.total} guests`
+            : `${totalFiltered} of ${stats.total}`}
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
+const StatsCards = ({ stats }) => (
+  <div className="guests-stats">
+    <div className="stat-card stat-card--total">
+      <div className="stat-icon">
+        <Icons.Users size={20} />
+      </div>
+      <div className="stat-content">
+        <span className="stat-value">{stats.total}</span>
+        <span className="stat-label">Total Guests</span>
+      </div>
+    </div>
+
+    <div className="stat-card stat-card--checked-in">
+      <div className="stat-icon">
+        <Icons.LogIn size={20} />
+      </div>
+      <div className="stat-content">
+        <span className="stat-value">{stats.checkedIn}</span>
+        <span className="stat-label">Checked In</span>
+      </div>
+    </div>
+
+    <div className="stat-card stat-card--flagged">
+      <div className="stat-icon">
+        <Icons.Flag size={20} />
+      </div>
+      <div className="stat-content">
+        <span className="stat-value">{stats.flagged}</span>
+        <span className="stat-label">Flagged</span>
+      </div>
+    </div>
+  </div>
+);
+
 const GuestCard = ({ guest, onClick }) => {
   const capitalize = (str) => {
     if (!str) return '';
     return str
       .split(' ')
-      .map(
-        (word) =>
-          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-      )
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
   };
 
@@ -123,61 +231,82 @@ const GuestCard = ({ guest, onClick }) => {
       : '');
 
   return (
-    <div
+    <button
       className="guest-card"
       onClick={() => onClick(guest)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick(guest)}
+      type="button"
     >
       <div className="guest-card-header">
         <div className="guest-avatar">
-          <Icons.User />
+          <Icons.User size={18} />
         </div>
         <div className="guest-name">
           <h3>{name || 'Unnamed Guest'}</h3>
-          <div
-            className={`guest-status ${
-              guest.isCheckedIn ? 'checked-in' : 'checked-out'
-            }`}
-          >
+          <span className={`guest-status ${guest.isCheckedIn ? 'checked-in' : 'checked-out'}`}>
             {guest.isCheckedIn ? 'Checked In' : 'Checked Out'}
-          </div>
+          </span>
         </div>
         {guest.flagged && (
           <div className="guest-flagged">
-            <Icons.Flag />
+            <Icons.Flag size={14} />
           </div>
         )}
       </div>
 
       <div className="guest-card-body">
         <div className="guest-info-row">
-          <Icons.Building />
+          <Icons.Building size={14} />
           <span>Room {room}</span>
           {wing && <span className="guest-wing">{wing}</span>}
         </div>
-
         <div className="guest-info-row">
-          <Icons.Users />
+          <Icons.Users size={14} />
           <span>{hostName}</span>
         </div>
       </div>
-    </div>
+    </button>
   );
 };
 
+const EmptyState = ({ searchTerm, onClearSearch }) => (
+  <div className="guests-empty">
+    <Icons.Users size={48} />
+    <h3>No guests found</h3>
+    <p>
+      {searchTerm
+        ? 'No guests match your search criteria'
+        : 'No guests have been registered yet'}
+    </p>
+    {searchTerm && (
+      <button className="btn btn-secondary" onClick={onClearSearch} type="button">
+        Clear Search
+      </button>
+    )}
+  </div>
+);
+
 // ============================================================================
-// Main Guests Component – AppShell-friendly
+// Main Component
 // ============================================================================
 
 const Guests = () => {
   const { clerk } = useSelector((state) => state.auth);
 
   const [selectedGuest, setSelectedGuest] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('all'); // all, checked-in, checked-out, flagged
-  const [sortBy, setSortBy] = useState('name'); // name, room, check-in, recent
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterBy, setFilterBy] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
+
+  // Configure AppShell header
+  const { setHeaderConfig } = useAppShellHeader();
+
+  useEffect(() => {
+    setHeaderConfig({
+      title: 'Guests',
+      subtitle: 'Management',
+    });
+    return () => setHeaderConfig({});
+  }, [setHeaderConfig]);
 
   const {
     data: guests,
@@ -192,23 +321,25 @@ const Guests = () => {
     },
   });
 
-  // Stats for the top cards
+  // Stats
   const stats = useMemo(() => {
     if (!guests) return { total: 0, checkedIn: 0, flagged: 0 };
-    const total = guests.length;
-    const checkedIn = guests.filter((g) => g.isCheckedIn).length;
-    const flagged = guests.filter((g) => g.flagged).length;
-    return { total, checkedIn, flagged };
+    return {
+      total: guests.length,
+      checkedIn: guests.filter((g) => g.isCheckedIn).length,
+      flagged: guests.filter((g) => g.flagged).length,
+    };
   }, [guests]);
 
-  // Filter + sort guests for small cards grid
+  // Filter + sort
   const filteredGuests = useMemo(() => {
     if (!guests || guests.length === 0) return [];
 
     let filtered = [...guests];
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    // Text search
+    if (searchTerm) {
+      const query = searchTerm.toLowerCase();
       filtered = filtered.filter((guest) => {
         const name = guest.name || '';
         const room = guest.room || guest.hostRoom || '';
@@ -224,24 +355,28 @@ const Guests = () => {
       });
     }
 
-    switch (filter) {
+    // Apply filter
+    switch (filterBy) {
       case 'checked-in':
-        filtered = filtered.filter((guest) => guest.isCheckedIn);
+        filtered = filtered.filter((g) => g.isCheckedIn);
         break;
       case 'checked-out':
-        filtered = filtered.filter((guest) => !guest.isCheckedIn);
+        filtered = filtered.filter((g) => !g.isCheckedIn);
         break;
       case 'flagged':
-        filtered = filtered.filter((guest) => guest.flagged);
+        filtered = filtered.filter((g) => g.flagged);
         break;
       default:
         break;
     }
 
+    // Apply sort
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
           return (a.name || '').localeCompare(b.name || '');
+        case 'name-desc':
+          return (b.name || '').localeCompare(a.name || '');
         case 'room': {
           const roomA = (a.room || a.hostRoom || '').toString();
           const roomB = (b.room || b.hostRoom || '').toString();
@@ -263,9 +398,12 @@ const Guests = () => {
     });
 
     return filtered;
-  }, [guests, searchQuery, filter, sortBy]);
+  }, [guests, searchTerm, filterBy, sortBy]);
 
-  const handleSearchChange = (e) => setSearchQuery(e.target.value);
+  // Handlers
+  const handleSearchChange = (value) => setSearchTerm(value);
+  const handleSortChange = (value) => setSortBy(value);
+  const handleFilterChange = (value) => setFilterBy(value);
   const handleGuestClick = (guest) => setSelectedGuest(guest);
   const handleCloseModal = () => setSelectedGuest(null);
 
@@ -274,174 +412,75 @@ const Guests = () => {
     toast.success('Guest checked out successfully');
   };
 
-  const handleRefresh = () => {
-    refetch();
-    toast.success('Guest list refreshed');
-  };
-
-  // Loading / error states inside AppShell main content
+  // Loading state
   if (isLoading) {
     return (
-      <div className="page guests-page">
-        <GuestsHeader clerkName={clerk?.name} onRefresh={handleRefresh} />
-        <div className="page-content">
-          <LoadingSpinner />
-        </div>
+      <div className="guests-page">
+        <LoadingSpinner />
       </div>
     );
   }
 
+  // Error state
   if (isError) {
     return (
-      <div className="page guests-page">
-        <GuestsHeader clerkName={clerk?.name} onRefresh={handleRefresh} />
-        <div className="page-content">
-          <ErrorState
-            message={error?.message || 'Failed to load guests'}
-            onRetry={refetch}
-          />
-        </div>
+      <div className="guests-page">
+        <ErrorState
+          message={error?.message || 'Failed to load guests'}
+          onRetry={refetch}
+        />
       </div>
     );
   }
 
-  // Main UI
   return (
-    <div className="page guests-page">
-      <GuestsHeader clerkName={clerk?.name} onRefresh={handleRefresh} />
+    <div className="guests-page">
+      {/* Toolbar */}
+      <ToolbarSection
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        sortBy={sortBy}
+        onSortChange={handleSortChange}
+        filterBy={filterBy}
+        onFilterChange={handleFilterChange}
+        stats={stats}
+        totalFiltered={filteredGuests.length}
+      />
 
-      <div className="page-content">
-        <div className="guests-container">
-          {/* Stats Cards */}
-          <div className="stats-cards">
-            <div className="stat-card-total">
-              <div className="stat-icon">
-                <Icons.Users />
-              </div>
-              <div className="stat-content">
-                <div className="stat-value">{stats.total}</div>
-                <div className="stat-label">Total Guests</div>
-              </div>
+      {/* Main Content */}
+      <div className="guests-content">
+        {/* Stats Cards */}
+        <StatsCards stats={stats} />
+
+        {/* Guests Grid */}
+        <div className="guests-grid-container">
+          {filteredGuests.length > 0 ? (
+            <div className="guests-grid">
+              {filteredGuests.map((guest) => (
+                <GuestCard
+                  key={guest._id || guest.id}
+                  guest={guest}
+                  onClick={handleGuestClick}
+                />
+              ))}
             </div>
-
-            <div className="stat-card-checked-in">
-              <div className="stat-icon">
-                <Icons.LogIn />
-              </div>
-              <div className="stat-content">
-                <div className="stat-value">{stats.checkedIn}</div>
-                <div className="stat-label">Checked In</div>
-              </div>
-            </div>
-
-            <div className="stat-card-flagged">
-              <div className="stat-icon">
-                <Icons.Flag />
-              </div>
-              <div className="stat-content">
-                <div className="stat-value">{stats.flagged}</div>
-                <div className="stat-label">Flagged</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="guests-controls">
-            <div className="search-box">
-              <input
-                type="text"
-                placeholder="Search guests..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-              <div className="search-icon">
-                <Icons.Search />
-              </div>
-              {searchQuery && (
-                <button
-                  className="clear-search"
-                  onClick={() => setSearchQuery('')}
-                  title="Clear search"
-                  aria-label="Clear search"
-                >
-                  <Icons.X />
-                </button>
-              )}
-            </div>
-
-            <div className="controls-right">
-              <div className="filter-dropdown">
-                <Icons.Filter />
-                <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                >
-                  <option value="all">All Guests</option>
-                  <option value="checked-in">Checked In</option>
-                  <option value="checked-out">Checked Out</option>
-                  <option value="flagged">Flagged</option>
-                </select>
-              </div>
-
-              <div className="sort-dropdown">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                >
-                  <option value="name">Sort by Name</option>
-                  <option value="room">Sort by Room</option>
-                  <option value="check-in">Sort by Check-in</option>
-                  <option value="recent">Sort by Recent</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Guest Cards Grid - Inside Scrollable Container */}
-          <div className="guests-grid-scrollable-container">
-            {filteredGuests.length > 0 ? (
-              <div className="guests-grid">
-                {filteredGuests.map((guest) => (
-                  <GuestCard
-                    key={guest._id || guest.id}
-                    guest={guest}
-                    onClick={handleGuestClick}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="no-guests">
-                <div className="no-guests-content">
-                  <Icons.Users />
-                  <h3>No guests found</h3>
-                  <p>
-                    {searchQuery
-                      ? 'No guests match your search criteria'
-                      : 'No guests have been registered yet'}
-                  </p>
-                  {searchQuery && (
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => setSearchQuery('')}
-                    >
-                      Clear Search
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Guest Detail Modal */}
-          {selectedGuest && (
-            <GuestDetailModal
-              guest={selectedGuest}
-              onClose={handleCloseModal}
-              onCheckoutSuccess={handleCheckoutSuccess}
+          ) : (
+            <EmptyState
+              searchTerm={searchTerm}
+              onClearSearch={() => setSearchTerm('')}
             />
           )}
         </div>
       </div>
+
+      {/* Guest Detail Modal */}
+      {selectedGuest && (
+        <GuestDetailModal
+          guest={selectedGuest}
+          onClose={handleCloseModal}
+          onCheckoutSuccess={handleCheckoutSuccess}
+        />
+      )}
     </div>
   );
 };

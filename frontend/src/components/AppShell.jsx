@@ -1,6 +1,6 @@
 // frontend/src/components/AppShell.jsx
 import React, { useState, useCallback, createContext, useContext, useMemo } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, reset } from '../features/auth/authSlice';
 import CheckInForm from './CheckInForm';
@@ -13,6 +13,7 @@ import './AppShell.css';
 // ============================================================================
 import {
   Menu,
+  X,
   Home,
   Users,
   UserCheck,
@@ -21,10 +22,13 @@ import {
   LogOut,
   UserPlus,
   Shield,
+  Bell,
+  Search,
 } from 'lucide-react';
 
 const Icons = {
   Menu,
+  X,
   Home,
   Users,
   Guests: UserCheck,
@@ -33,11 +37,28 @@ const Icons = {
   LogOut,
   AddGuest: UserPlus,
   Admin: Shield,
+  Bell,
+  Search,
 };
 
 // ============================================================================
-// Modal Context - allows child components to open AddNewGuest modal
+// Route Configuration - Maps paths to page titles
 // ============================================================================
+const PAGE_CONFIG = {
+  '/': { title: 'Dashboard', icon: Icons.Home },
+  '/dashboard': { title: 'Dashboard', icon: Icons.Home },
+  '/residents': { title: 'Residents', icon: Icons.Users },
+  '/guests': { title: 'Guests', icon: Icons.Guests },
+  '/analytics': { title: 'Analytics', icon: Icons.Analytics },
+  '/settings': { title: 'Settings', icon: Icons.Settings },
+  '/admin': { title: 'Admin', icon: Icons.Admin },
+};
+
+// ============================================================================
+// Contexts
+// ============================================================================
+
+// Modal Context - allows child components to open modals
 const ModalContext = createContext(null);
 
 export const useAppShellModals = () => {
@@ -45,12 +66,92 @@ export const useAppShellModals = () => {
   if (!context) {
     console.warn('useAppShellModals must be used within AppShell');
     return {
-      openAddNewGuest: () => {
-        console.warn('openAddNewGuest called outside of AppShell context');
-      },
+      openAddNewGuest: () => {},
+      openCheckIn: () => {},
+      openCheckOut: () => {},
     };
   }
   return context;
+};
+
+// Header Context - allows pages to customize header
+const HeaderContext = createContext(null);
+
+export const useAppShellHeader = () => {
+  const context = useContext(HeaderContext);
+  if (!context) {
+    console.warn('useAppShellHeader must be used within AppShell');
+    return {
+      setHeaderConfig: () => {},
+      setHeaderActions: () => {},
+    };
+  }
+  return context;
+};
+
+// ============================================================================
+// Header Component
+// ============================================================================
+const AppShellHeader = ({ 
+  title, 
+  subtitle, 
+  onMenuClick, 
+  headerActions,
+  showSearch,
+  searchValue,
+  onSearchChange,
+  searchPlaceholder,
+}) => {
+  return (
+    <header className="app-shell-header">
+      <div className="app-shell-header-left">
+        <button 
+          className="app-shell-menu-btn" 
+          type="button" 
+          onClick={onMenuClick}
+          aria-label="Open menu"
+        >
+          <Icons.Menu size={20} />
+        </button>
+        <div className="app-shell-header-title">
+          <h1>{title}</h1>
+          {subtitle && <span className="app-shell-header-subtitle">{subtitle}</span>}
+        </div>
+      </div>
+
+      <div className="app-shell-header-right">
+        {/* Search box - shown if enabled */}
+        {showSearch && (
+          <div className="app-shell-search">
+            <Icons.Search size={18} />
+            <input
+              type="text"
+              placeholder={searchPlaceholder || 'Search...'}
+              value={searchValue || ''}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+            />
+            {searchValue && (
+              <button 
+                className="app-shell-search-clear"
+                onClick={() => onSearchChange?.('')}
+                type="button"
+              >
+                <Icons.X size={14} />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Custom header actions from page */}
+        {headerActions}
+
+        {/* Default notification bell */}
+        <button className="app-shell-icon-btn" type="button">
+          <Icons.Bell size={20} />
+        </button>
+      </div>
+    </header>
+  );
 };
 
 // ============================================================================
@@ -67,8 +168,13 @@ const AppShell = ({ children }) => {
     hostName: '',
   });
 
+  // Header customization state
+  const [headerConfig, setHeaderConfig] = useState({});
+  const [headerActions, setHeaderActions] = useState(null);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { clerk } = useSelector((state) => state.auth);
   const isAdmin = useMemo(
@@ -80,6 +186,22 @@ const AppShell = ({ children }) => {
       ),
     [clerk]
   );
+
+  // Get current page config based on route
+  const currentPageConfig = useMemo(() => {
+    const path = location.pathname;
+    return PAGE_CONFIG[path] || PAGE_CONFIG['/dashboard'];
+  }, [location.pathname]);
+
+  // Merge default page config with custom header config
+  const finalHeaderConfig = useMemo(() => ({
+    title: headerConfig.title || currentPageConfig.title,
+    subtitle: headerConfig.subtitle || (clerk?.name ? `Welcome, ${clerk.name}` : ''),
+    showSearch: headerConfig.showSearch || false,
+    searchValue: headerConfig.searchValue || '',
+    onSearchChange: headerConfig.onSearchChange || null,
+    searchPlaceholder: headerConfig.searchPlaceholder || 'Search...',
+  }), [headerConfig, currentPageConfig, clerk]);
 
   const toggleSidebar = useCallback(() => {
     setSidebarOpen((prev) => !prev);
@@ -137,27 +259,38 @@ const AppShell = ({ children }) => {
     });
   }, []);
 
+  // Context values
   const modalContextValue = useMemo(
     () => ({
       openAddNewGuest: handleOpenAddNewGuest,
+      openCheckIn: openCheckInOverlay,
+      openCheckOut: openCheckOutOverlay,
     }),
-    [handleOpenAddNewGuest]
+    [handleOpenAddNewGuest, openCheckInOverlay, openCheckOutOverlay]
+  );
+
+  const headerContextValue = useMemo(
+    () => ({
+      setHeaderConfig,
+      setHeaderActions,
+    }),
+    []
   );
 
   const navItems = useMemo(() => {
     const base = [
-      { to: '/dashboard', label: 'Dashboard', icon: <Icons.Home /> },
-      { to: '/residents', label: 'Residents', icon: <Icons.Users /> },
-      { to: '/guests', label: 'Guests', icon: <Icons.Guests /> },
-      { to: '/analytics', label: 'Analytics', icon: <Icons.Analytics /> },
-      { to: '/settings', label: 'Settings', icon: <Icons.Settings /> },
+      { to: '/dashboard', label: 'Dashboard', icon: <Icons.Home size={18} /> },
+      { to: '/residents', label: 'Residents', icon: <Icons.Users size={18} /> },
+      { to: '/guests', label: 'Guests', icon: <Icons.Guests size={18} /> },
+      { to: '/analytics', label: 'Analytics', icon: <Icons.Analytics size={18} /> },
+      { to: '/settings', label: 'Settings', icon: <Icons.Settings size={18} /> },
     ];
 
     if (isAdmin) {
       base.push({
         to: '/admin',
         label: 'Admin',
-        icon: <Icons.Admin />,
+        icon: <Icons.Admin size={18} />,
       });
     }
 
@@ -166,124 +299,140 @@ const AppShell = ({ children }) => {
 
   return (
     <ModalContext.Provider value={modalContextValue}>
-      <div className="app-shell">
-        {/* SIDEBAR */}
-        <aside
-          className={`app-shell-sidebar ${sidebarOpen ? 'open' : ''}`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="app-shell-sidebar-header">
-            <div className="app-shell-logo">HH</div>
-            <div className="app-shell-brand">
-              <span>Headington</span>
-              <small>Residence Portal</small>
-            </div>
-          </div>
-
-          <nav className="app-shell-nav">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/dashboard' || item.to === '/'}
-                className={({ isActive }) =>
-                  `app-shell-nav-item ${isActive ? 'active' : ''}`
-                }
-                onClick={closeSidebar}
-              >
-                <span className="app-shell-nav-icon">{item.icon}</span>
-                <span className="app-shell-nav-label">{item.label}</span>
-              </NavLink>
-            ))}
-
-            <div className="app-shell-sidebar-actions">
-              <button
-                type="button"
-                className="app-shell-action-btn primary"
-                onClick={openCheckInOverlay}
-              >
-                <span className="app-shell-nav-icon">
-                  <Icons.Guests />
-                </span>
-                <span className="app-shell-nav-label">Check-In Guest</span>
-              </button>
-
-              <button
-                type="button"
-                className="app-shell-action-btn"
-                onClick={openCheckOutOverlay}
-              >
-                <span className="app-shell-nav-icon">
-                  <Icons.LogOut />
-                </span>
-                <span className="app-shell-nav-label">Check-Out Guest</span>
-              </button>
-
-              <button
-                type="button"
-                className="app-shell-action-btn"
-                onClick={openAddNewGuestOverlay}
-              >
-                <span className="app-shell-nav-icon">
-                  <Icons.AddGuest />
-                </span>
-                <span className="app-shell-nav-label">Add New Guest</span>
-              </button>
-            </div>
-          </nav>
-
-          <div className="app-shell-sidebar-footer">
-            <button className="app-shell-logout-btn" onClick={handleLogout}>
-              <span className="app-shell-nav-icon">
-                <Icons.LogOut />
-              </span>
-              <span className="app-shell-nav-label">Logout</span>
-            </button>
-          </div>
-        </aside>
-
-        {/* MOBILE OVERLAY */}
-        <div
-          className={`app-shell-overlay ${sidebarOpen ? 'visible' : ''}`}
-          onClick={closeSidebar}
-        />
-
-        {/* MAIN CONTENT AREA */}
-        <div className="app-shell-body">
-          <button
-            className="app-shell-hamburger"
-            type="button"
-            onClick={toggleSidebar}
+      <HeaderContext.Provider value={headerContextValue}>
+        <div className="app-shell">
+          {/* SIDEBAR */}
+          <aside
+            className={`app-shell-sidebar ${sidebarOpen ? 'open' : ''}`}
+            onClick={(e) => e.stopPropagation()}
           >
-            <Icons.Menu />
-          </button>
+            <div className="app-shell-sidebar-header">
+              <div className="app-shell-logo">HH</div>
+              <div className="app-shell-brand">
+                <span>Headington</span>
+                <small>Residence Portal</small>
+              </div>
+              {/* Close button for mobile */}
+              <button 
+                className="app-shell-sidebar-close"
+                onClick={closeSidebar}
+                type="button"
+                aria-label="Close menu"
+              >
+                <Icons.X size={20} />
+              </button>
+            </div>
 
-          <main className="app-shell-content app-shell-page">
-            {children}
-          </main>
+            <nav className="app-shell-nav">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/dashboard' || item.to === '/'}
+                  className={({ isActive }) =>
+                    `app-shell-nav-item ${isActive ? 'active' : ''}`
+                  }
+                  onClick={closeSidebar}
+                >
+                  <span className="app-shell-nav-icon">{item.icon}</span>
+                  <span className="app-shell-nav-label">{item.label}</span>
+                </NavLink>
+              ))}
+
+              <div className="app-shell-sidebar-actions">
+                <button
+                  type="button"
+                  className="app-shell-action-btn"
+                  onClick={openCheckInOverlay}
+                >
+                  <span className="app-shell-nav-icon">
+                    <Icons.Guests size={18} />
+                  </span>
+                  <span className="app-shell-nav-label">Check-In Guest</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="app-shell-action-btn"
+                  onClick={openCheckOutOverlay}
+                >
+                  <span className="app-shell-nav-icon">
+                    <Icons.LogOut size={18} />
+                  </span>
+                  <span className="app-shell-nav-label">Check-Out Guest</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="app-shell-action-btn"
+                  onClick={openAddNewGuestOverlay}
+                >
+                  <span className="app-shell-nav-icon">
+                    <Icons.AddGuest size={18} />
+                  </span>
+                  <span className="app-shell-nav-label">Add New Guest</span>
+                </button>
+              </div>
+            </nav>
+
+            <div className="app-shell-sidebar-footer">
+              <button className="app-shell-logout-btn" onClick={handleLogout}>
+                <span className="app-shell-nav-icon">
+                  <Icons.LogOut size={18} />
+                </span>
+                <span className="app-shell-nav-label">Logout</span>
+              </button>
+            </div>
+          </aside>
+
+          {/* MOBILE OVERLAY */}
+          <div
+            className={`app-shell-overlay ${sidebarOpen ? 'visible' : ''}`}
+            onClick={closeSidebar}
+          />
+
+          {/* MAIN CONTENT AREA */}
+          <div className="app-shell-body">
+            {/* Unified Header */}
+            <AppShellHeader
+              title={finalHeaderConfig.title}
+              subtitle={finalHeaderConfig.subtitle}
+              onMenuClick={toggleSidebar}
+              headerActions={headerActions}
+              showSearch={finalHeaderConfig.showSearch}
+              searchValue={finalHeaderConfig.searchValue}
+              onSearchChange={finalHeaderConfig.onSearchChange}
+              searchPlaceholder={finalHeaderConfig.searchPlaceholder}
+            />
+
+            {/* Page content */}
+            <main className="app-shell-content">
+              {children}
+            </main>
+          </div>
+
+          {/* Overlays */}
+          {showCheckIn && (
+            <CheckInForm
+              onClose={() => setShowCheckIn(false)}
+              onAddNewGuest={handleAddNewGuestFromCheckIn}
+            />
+          )}
+
+          {showCheckOut && (
+            <CheckOutForm onClose={() => setShowCheckOut(false)} />
+          )}
+
+          {showAddNewGuest && (
+            <AddNewGuest
+              onClose={handleCloseAddNewGuest}
+              initialRoom={addNewGuestData.room}
+              initialHostId={addNewGuestData.hostId}
+              initialHostName={addNewGuestData.hostName}
+            />
+          )}
         </div>
-
-        {/* Overlays */}
-        {showCheckIn && (
-          <CheckInForm
-            onClose={() => setShowCheckIn(false)}
-            onAddNewGuest={handleAddNewGuestFromCheckIn}
-          />
-        )}
-
-        {showCheckOut && (
-          <CheckOutForm onClose={() => setShowCheckOut(false)} />
-        )}
-
-        {showAddNewGuest && (
-          <AddNewGuest
-            onClose={handleCloseAddNewGuest}
-            initialRoom={addNewGuestData.room}
-            initialHostId={addNewGuestData.hostId}
-            initialHostName={addNewGuestData.hostName}
-          />
-        )}
-      </div>
+      </HeaderContext.Provider>
     </ModalContext.Provider>
   );
 };

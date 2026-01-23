@@ -117,6 +117,26 @@ export const getAllResidents = createAsyncThunk(
   }
 );
 
+// Update Resident Status
+export const updateResidentStatus = createAsyncThunk(
+  'residents/updateStatus',
+  async ({ id, updates }, thunkAPI) => {
+    try {
+      const token = getAuthToken(thunkAPI);
+      const updated = await residentService.updateResident(id, updates, token);
+      return updated;
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to update resident';
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+
+
 // ==============================
 // Slice
 // ==============================
@@ -216,6 +236,54 @@ export const residentSlice = createSlice({
         state.guestsStatsByHost = null;
         state.message = action.payload || 'Failed to fetch guests';
       })
+
+      // =========================
+      // Update Resident Status
+      // =========================
+      .addCase(updateResidentStatus.pending, (state) =>{
+        state.isLoading = true;
+        state.isError = false;
+        state.isSuccess = false;
+        state.message = '';
+      })
+
+      .addCase(updateResidentStatus.fulfilled, (state, action) => {
+  state.isLoading = false;
+  state.isSuccess = true;
+  state.isError = false;
+
+  const updated = action.payload;
+  const id = updated._id || updated.id;
+
+  // Update in residents list 
+  if (Array.isArray(state.residents) && id) {
+    const idx = state.residents.findIndex(
+      (res) => (res._id || res.id) === id
+    );
+    if (idx !== -1) {
+      state.residents[idx] = updated;
+    }
+  }
+
+  // Update in selectedResidents (modal source)
+  if (Array.isArray(state.selectedResidents) && id) {
+    const idx = state.selectedResidents.findIndex(
+      (r) => (r._id || r.id) === id
+    );
+    if (idx !== -1) {
+      state.selectedResidents[idx] = updated;
+    }
+  }
+
+  state.message = 'Resident updated successfully';
+      })
+      .addCase(updateResidentStatus.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.isSuccess = false;
+        state.message = action.payload || 'Failed to update resident';
+      })
+
 
       // =========================
       // Get All Residents

@@ -386,42 +386,6 @@ const Settings = () => {
 
   return (
     <div className="settings-container">
-      {/* Header */}
-      <div className="settings-header">
-        <div className="header-left">
-          <h1>
-            <Icons.Settings />
-            Settings
-          </h1>
-          <p className="subtitle">Configure your application preferences</p>
-        </div>
-        <div className="header-right">
-          <div className="header-actions">
-            <button 
-              className="btn btn-outline"
-              onClick={handleExportSettings}
-            >
-              <Icons.Download />
-              Export
-            </button>
-            <button 
-              className="btn btn-outline"
-              onClick={handleResetDefaults}
-            >
-              <Icons.Refresh />
-              Reset
-            </button>
-            <button 
-              className="btn btn-primary"
-              onClick={handleSaveSettings}
-              disabled={isSaving}
-            >
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Settings Tabs */}
       <div className="settings-tabs">
         {['profile', 'notifications', 'privacy', 'appearance', 'system', 'danger'].map(tab => (

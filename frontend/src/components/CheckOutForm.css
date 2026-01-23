@@ -18,6 +18,9 @@
   padding: 1rem;
   animation: fadeIn 0.2s ease;
 }
+.checkout-content{
+  padding: 1rem;
+}
 
 .checkin-modal {
   background: #ffffff;

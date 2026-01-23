@@ -588,3 +588,63 @@
   outline: 2px solid #841617;
   outline-offset: 2px;
 }
+
+
+/* ----------------------------------------------------------------------------
+   Resident Status Select
+   ---------------------------------------------------------------------------- */
+
+/* Row holding name + status */
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Wrapper for select + status-saving */
+.resident-status-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Beautiful select */
+.resident-status-select {
+  appearance: none;
+  padding: 0.45rem 1.8rem 0.45rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: white;
+  cursor: pointer;
+  position: relative;
+  backdrop-filter: blur(4px);
+  transition: all 0.25s ease;
+}
+
+/* Add custom dropdown arrow */
+.resident-status-select {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='12' width='12' xmlns='http://www.w3.org/2000/svg'><path d='M2 4l4 4 4-4z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 12px;
+}
+
+.resident-status-select:hover {
+  background: rgba(255,255,255,0.28);
+  border-color: rgba(255,255,255,0.5);
+}
+
+.resident-status-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Saving text */
+.resident-status-saving {
+  font-size: 0.75rem;
+  color: #ffe1e5;
+  font-style: italic;
+}

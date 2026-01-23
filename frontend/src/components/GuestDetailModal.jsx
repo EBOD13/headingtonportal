@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import './GuestDetailModal.css';
 import { useGuestActions } from '../hooks/useGuestsQuery';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 
 // ============================================================================
 // Icons (reusing from ResidentDetailModal)
@@ -211,6 +212,7 @@ const VisitTimeline = ({ checkIn, checkout }) => {
 
 const GuestDetailModal = ({ guest, onClose, onCheckoutSuccess }) => {
   const { checkOut, isLoading: isActionLoading } = useGuestActions();
+  const isAdmin = useIsAdmin();
   
   // Handle checkout
     const handleCheckout = async () => {
@@ -256,6 +258,11 @@ const GuestDetailModal = ({ guest, onClose, onCheckoutSuccess }) => {
     <div className="modal-overlay guest-modal-overlay" onClick={onClose}>
       <div className="modal-container guest-modal-container" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
+        {/* {isAdmin && (
+      <span className="admin-view-pill">
+        Admin · Can see all guest stats
+      </span>
+    )} */}
         <div className="modal-header guest-modal-header">
           <div className="modal-guest-info">
             <div className={`modal-avatar guest-avatar ${isFlagged ? 'flagged' : ''}`}>
