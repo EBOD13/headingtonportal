@@ -36,8 +36,8 @@ const useIsAdmin = () => {
   const { clerk } = useSelector((state) => state.auth);
   return Boolean(
     clerk?.isAdmin === true ||
-    clerk?.role === 'admin' ||
-    clerk?.role === 'superadmin'
+      clerk?.role === 'admin' ||
+      clerk?.role === 'superadmin'
   );
 };
 
@@ -62,8 +62,8 @@ const AdminStatCard = ({ icon: Icon, label, value, description }) => (
 const AdminUserRow = ({ clerk, index }) => {
   const isAdmin = Boolean(
     clerk.isAdmin === true ||
-    clerk.role === 'admin' ||
-    clerk.role === 'superadmin'
+      clerk.role === 'admin' ||
+      clerk.role === 'superadmin'
   );
 
   const initials = useMemo(() => {
@@ -79,12 +79,14 @@ const AdminUserRow = ({ clerk, index }) => {
     <tr className={index % 2 === 0 ? 'admin-row-alt' : ''}>
       <td>
         <div className="admin-user-cell">
-          <div className="admin-avatar">
-            {initials}
-          </div>
+          <div className="admin-avatar">{initials}</div>
           <div className="admin-user-meta">
-            <span className="admin-user-name">{clerk.name || 'Unknown'}</span>
-            <span className="admin-user-email">{clerk.email || 'No email'}</span>
+            <span className="admin-user-name">
+              {clerk.name || 'Unknown'}
+            </span>
+            <span className="admin-user-email">
+              {clerk.email || 'No email'}
+            </span>
           </div>
         </div>
       </td>
@@ -101,17 +103,22 @@ const AdminUserRow = ({ clerk, index }) => {
           onClick={(e) => {
             e.preventDefault();
             // placeholder — wire to backend later
-            console.log('[AdminScreen] Toggle admin for', clerk._id || clerk.id);
+            console.log(
+              '[AdminScreen] Toggle admin for',
+              clerk._id || clerk.id
+            );
           }}
         >
-          {isAdmin ? <Icons.ToggleRight size={20} /> : <Icons.ToggleLeft size={20} />}
+          {isAdmin ? (
+            <Icons.ToggleRight size={20} />
+          ) : (
+            <Icons.ToggleLeft size={20} />
+          )}
           <span>{isAdmin ? 'Admin' : 'Standard'}</span>
         </button>
       </td>
       <td>
-        <span className="admin-user-status online">
-          Active
-        </span>
+        <span className="admin-user-status online">Active</span>
       </td>
     </tr>
   );
@@ -121,13 +128,9 @@ const AdminUserRow = ({ clerk, index }) => {
 // Main Component
 // ============================================================================
 const AdminScreen = () => {
+  // 🔹 ALL hooks at the top, no conditions
   const { clerk } = useSelector((state) => state.auth);
   const isAdmin = useIsAdmin();
-
-  // Basic front-end guard: if you're not admin, shove you back to dashboard.
-  if (!isAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   // For now, fake a tiny list using the logged-in clerk as an example.
   // Later we can replace this with a real "useClerks()" hook calling your backend.
@@ -146,8 +149,15 @@ const AdminScreen = () => {
   }, [clerk]);
 
   const totalClerks = clerks.length;
-  const adminCount = clerks.filter((c) => c.role === 'admin' || c.isAdmin).length;
+  const adminCount = clerks.filter(
+    (c) => c.role === 'admin' || c.isAdmin
+  ).length;
   const nonAdminCount = totalClerks - adminCount;
+
+  // 🔹 Guard AFTER hooks, so hooks always run in the same order
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="admin-container">
@@ -222,7 +232,10 @@ const AdminScreen = () => {
             {clerks.length === 0 ? (
               <div className="admin-empty-state">
                 <Icons.Users size={40} />
-                <p>No clerks found yet. Once users register, they will appear here.</p>
+                <p>
+                  No clerks found yet. Once users register, they will
+                  appear here.
+                </p>
               </div>
             ) : (
               <table className="admin-table">
@@ -236,7 +249,11 @@ const AdminScreen = () => {
                 </thead>
                 <tbody>
                   {clerks.map((c, index) => (
-                    <AdminUserRow key={c.id || index} clerk={c} index={index} />
+                    <AdminUserRow
+                      key={c.id || index}
+                      clerk={c}
+                      index={index}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -258,9 +275,9 @@ const AdminScreen = () => {
               <div className="admin-activity-content">
                 <h3>Role management coming next</h3>
                 <p>
-                  This panel will show recent admin events: role changes,
-                  flagged guests, and configuration updates pulled from your
-                  Activity collection.
+                  This panel will show recent admin events: role
+                  changes, flagged guests, and configuration updates
+                  pulled from your Activity collection.
                 </p>
               </div>
             </div>
@@ -272,8 +289,9 @@ const AdminScreen = () => {
               <div className="admin-activity-content">
                 <h3>Connect to backend</h3>
                 <p>
-                  Once wired, you&apos;ll be able to promote/demote clerks,
-                  lock accounts, and view audit logs—all from this screen.
+                  Once wired, you&apos;ll be able to promote/demote
+                  clerks, lock accounts, and view audit logs—all from
+                  this screen.
                 </p>
               </div>
             </div>
