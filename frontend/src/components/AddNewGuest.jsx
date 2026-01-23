@@ -6,69 +6,32 @@ import { useGuestActions } from '../hooks/useGuestsQuery';
 import './AddNewGuest.css';
 
 // ============================================================================
-// Icons
+// Icons (using lucide-react)
 // ============================================================================
+import {
+  X,
+  UserPlus,
+  Building2,
+  User,
+  GraduationCap,
+  CreditCard,
+  Phone,
+  AlertCircle,
+  Check,
+  Loader2,
+} from 'lucide-react';
+
 const Icons = {
-  X: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  ),
-  UserPlus: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="8.5" cy="7" r="4" />
-      <line x1="20" y1="8" x2="20" y2="14" />
-      <line x1="23" y1="11" x2="17" y2="11" />
-    </svg>
-  ),
-  Building: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
-  ),
-  User: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  ),
-  GraduationCap: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-      <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-    </svg>
-  ),
-  IdCard: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="4" width="20" height="16" rx="2" />
-      <path d="M8 12h8M8 8h8M8 16h2" />
-    </svg>
-  ),
-  Phone: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-    </svg>
-  ),
-  AlertCircle: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
-  ),
-  Check: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  ),
-  Loader: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12a9 9 0 11-6.219-8.56" />
-    </svg>
-  ),
+  X,
+  UserPlus,
+  Building: Building2,
+  User,
+  GraduationCap,
+  IdCard: CreditCard,
+  Phone,
+  AlertCircle,
+  Check,
+  Loader: Loader2,
 };
 
 // ============================================================================
@@ -78,7 +41,7 @@ const FormField = ({ icon: Icon, label, children, hint, error, loading = false }
   <div className={`form-field ${error ? 'error' : ''} ${loading ? 'loading' : ''}`}>
     <label className="form-label">
       <div className="label-icon">
-        <Icon />
+        <Icon size={16} />
       </div>
       <span>{label}</span>
     </label>
@@ -88,7 +51,7 @@ const FormField = ({ icon: Icon, label, children, hint, error, loading = false }
     {hint && <div className="field-hint">{hint}</div>}
     {error && (
       <div className="field-error">
-        <Icons.AlertCircle /> {error}
+        <Icons.AlertCircle size={14} /> {error}
       </div>
     )}
   </div>
@@ -96,7 +59,7 @@ const FormField = ({ icon: Icon, label, children, hint, error, loading = false }
 
 const LoadingSpinner = () => (
   <div className="spinner">
-    <Icons.Loader />
+    <Icons.Loader size={18} />
   </div>
 );
 
@@ -179,7 +142,6 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
     }
   };
 
-  // Auto-fill initial room/host from props
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
@@ -199,7 +161,6 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
     }
 
     if (!host) errors.host = 'Select a host';
-
     if (!firstName.trim()) errors.firstName = 'First name is required';
     if (!lastName.trim()) errors.lastName = 'Last name is required';
 
@@ -225,9 +186,7 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
     try {
       const response = await fetch(
         `https://api.api-ninjas.com/v1/validatephone?number=${number}`,
-        {
-          headers: { 'X-Api-Key': apiKey },
-        }
+        { headers: { 'X-Api-Key': apiKey } }
       );
 
       if (!response.ok) {
@@ -236,13 +195,7 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
       }
 
       const data = await response.json();
-      console.log('Phone validation response:', data);
-
-      if (data.is_valid === false) {
-        return false;
-      }
-
-      return true;
+      return data.is_valid !== false;
     } catch (error) {
       console.error('Phone validation error (non-blocking):', error);
       return true;
@@ -255,14 +208,12 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-
       const firstError = Object.keys(errors)[0];
       const element = document.querySelector(`[name="${firstError}"]`);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         element.focus();
       }
-
       return;
     }
 
@@ -285,15 +236,10 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
         room,
       };
 
-      console.log('Submitting guestData:', guestData);
-
       const result = await register(guestData);
-
-      console.log('Register guest result:', result);
 
       if (result?.success) {
         toast.success(result.message || 'Guest registered successfully!');
-
         setFormData({
           lastName: '',
           firstName: '',
@@ -326,7 +272,7 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [closeOverlay]);
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -344,18 +290,18 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
         <div className="modal-header addguest-header">
           <div className="modal-title">
             <h2>
-              <Icons.UserPlus />
+              <Icons.UserPlus size={20} />
               Register New Guest
             </h2>
             <p className="modal-subtitle">Add a new visitor to the system</p>
           </div>
           <button className="modal-close" onClick={closeOverlay}>
-            <Icons.X />
+            <Icons.X size={18} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="modal-content addguest-content">
+        <div className="addguest-content">
           <form onSubmit={onSubmit} className="addguest-form">
             {/* Room Input */}
             <FormField
@@ -378,15 +324,11 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
                   autoFocus={!initialRoom}
                   disabled={isLoading}
                 />
-                {room &&
-                  room.length === 4 &&
-                  !formErrors.room &&
-                  !roomError &&
-                  hosts?.length > 0 && (
-                    <span className="input-status valid">
-                      <Icons.Check />
-                    </span>
-                  )}
+                {room && room.length === 4 && !formErrors.room && !roomError && hosts?.length > 0 && (
+                  <span className="input-status valid">
+                    <Icons.Check size={16} />
+                  </span>
+                )}
               </div>
             </FormField>
 
@@ -414,24 +356,17 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
                       : 'Select a host'}
                   </option>
                   {hosts?.map((hostItem) => (
-                    <option
-                      value={hostItem._id || hostItem.id}
-                      key={hostItem._id || hostItem.id}
-                    >
+                    <option value={hostItem._id || hostItem.id} key={hostItem._id || hostItem.id}>
                       {hostItem.name
                         .split(' ')
-                        .map(
-                          (word) =>
-                            word.charAt(0).toUpperCase() +
-                            word.slice(1).toLowerCase()
-                        )
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
                         .join(' ')}
                     </option>
                   ))}
                 </select>
                 {host && (
                   <span className="input-status selected">
-                    <Icons.Check />
+                    <Icons.Check size={16} />
                   </span>
                 )}
               </div>
@@ -466,7 +401,7 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
             <FormField
               icon={Icons.Phone}
               label="Phone Number"
-              hint="10 digits"
+              hint="10 digits, numbers only"
               error={formErrors.contact}
             >
               <input
@@ -480,13 +415,7 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
                 onKeyDown={(e) => {
                   if (
                     !/\d/.test(e.key) &&
-                    e.key !== 'Backspace' &&
-                    e.key !== 'Delete' &&
-                    e.key !== 'Tab' &&
-                    e.key !== 'ArrowLeft' &&
-                    e.key !== 'ArrowRight' &&
-                    e.key !== 'Home' &&
-                    e.key !== 'End'
+                    !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)
                   ) {
                     e.preventDefault();
                   }
@@ -495,18 +424,9 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
             </FormField>
 
             {/* Student Status and ID */}
-            <div className="guest-profile-fields">
-              <FormField
-                icon={Icons.GraduationCap}
-                label="OU Student?"
-                error={formErrors.studentAtOU}
-              >
-                <select
-                  name="studentAtOU"
-                  value={studentAtOU}
-                  onChange={onChange}
-                  disabled={isLoading}
-                >
+            <div className="student-fields">
+              <FormField icon={Icons.GraduationCap} label="OU Student?" error={formErrors.studentAtOU}>
+                <select name="studentAtOU" value={studentAtOU} onChange={onChange} disabled={isLoading}>
                   <option value="">Select status</option>
                   <option value="yes">Yes</option>
                   <option value="no">No</option>
@@ -530,7 +450,7 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
             {/* Register error */}
             {registerError && (
               <div className="register-error">
-                <Icons.AlertCircle />
+                <Icons.AlertCircle size={16} />
                 <span>{registerMessage}</span>
               </div>
             )}
@@ -547,12 +467,7 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
 
         {/* Footer */}
         <div className="modal-footer addguest-footer">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={closeOverlay}
-            disabled={isLoading}
-          >
+          <button type="button" className="btn btn-secondary" onClick={closeOverlay} disabled={isLoading}>
             Cancel
           </button>
           <button
@@ -568,7 +483,7 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
               </>
             ) : (
               <>
-                <Icons.UserPlus />
+                <Icons.UserPlus size={18} />
                 Register Guest
               </>
             )}

@@ -18,24 +18,6 @@
   padding: 1rem;
   animation: fadeIn 0.2s ease;
 }
-.checkin-form {
-  margin-left: auto;
-  margin-right: auto;
-  width: 38rem;
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 5px;
-  overflow-y: auto; /* Keep scroll functionality */
-  
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  
-  /* Hide scrollbar for IE, Edge and Firefox */
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
 
 .checkin-modal {
   background: #ffffff;
@@ -83,12 +65,13 @@
 
 .checkin-header .modal-title {
   flex: 1;
+  min-width: 0;
 }
 
 .checkin-header .modal-title h2 {
   font-size: clamp(1.1rem, 2vw, 1.3rem);
   font-weight: 600;
-  margin-bottom: 0.25rem;
+  margin: 0 0 0.25rem 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -134,26 +117,31 @@
 }
 
 /* ----------------------------------------------------------------------------
-   Content
+   Form Content - THIS IS THE KEY FIX
    ---------------------------------------------------------------------------- */
-.checkin-content {
-  padding: 1.5rem;
+.checkin-form {
   flex: 1;
   overflow-y: auto;
-  min-height: 0;
-}
-
-.checkin-content::-webkit-scrollbar {
-  width: 4px;
-}
-
-.checkin-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.checkin-content::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
-  border-radius: 2px;
+  padding: 1.5rem;
+  min-height: 0; /* Important for flex overflow */
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #d4d4d8;
+    border-radius: 2px;
+  }
+  
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: thin;
 }
 
 /* ----------------------------------------------------------------------------
@@ -163,7 +151,7 @@
   margin-bottom: 1.25rem;
 }
 
-.form-field:last-child {
+.form-field:last-of-type {
   margin-bottom: 0;
 }
 
@@ -196,17 +184,19 @@
 
 .field-input {
   position: relative;
+  width: 100%;
 }
 
 .input-with-icon,
 .select-wrapper {
   position: relative;
+  width: 100%;
 }
 
 .input-with-icon input,
 .select-wrapper select {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 2.5rem 0.75rem 1rem; /* Right padding for status icon */
   font-size: 0.9rem;
   border: 2px solid #e4e4e7;
   border-radius: 10px;
@@ -214,11 +204,13 @@
   color: #27272a;
   transition: all 0.2s ease;
   appearance: none;
+  box-sizing: border-box;
 }
 
 .input-with-icon input:focus,
 .select-wrapper select:focus {
   outline: none;
+  border-color: #841617;
   background: white;
   box-shadow: 0 0 0 3px rgba(132, 22, 23, 0.1);
 }
@@ -234,36 +226,44 @@
   letter-spacing: 0.05em;
 }
 
+/* Select dropdown arrow */
 .select-wrapper::after {
   content: "";
   position: absolute;
-  right: 1rem;
+  right: 2.5rem; /* Position before the status icon */
   top: 50%;
   transform: translateY(-50%);
   width: 0;
   height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 4px solid #71717a;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #71717a;
   pointer-events: none;
+}
+
+/* When there's a status icon, adjust arrow position */
+.select-wrapper:has(.input-status)::after {
+  right: 2.5rem;
 }
 
 .input-status {
   position: absolute;
-  right: 1rem;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
 }
 
 .input-status svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
-.input-status.valid {
+.input-status.valid,
+.input-status.selected {
   color: #22c55e;
 }
 
@@ -273,8 +273,8 @@
 .field-hint {
   font-size: 0.75rem;
   color: #71717a;
-  margin-top: 0.25rem;
-  padding-left: 2.25rem;
+  margin-top: 0.375rem;
+  padding-left: 0;
 }
 
 .field-error {
@@ -283,14 +283,24 @@
   gap: 0.375rem;
   font-size: 0.75rem;
   color: #ef4444;
-  margin-top: 0.25rem;
-  padding-left: 2.25rem;
+  margin-top: 0.375rem;
+  padding-left: 0;
 }
 
 .field-error svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
+}
+
+.form-field.error .input-with-icon input,
+.form-field.error .select-wrapper select {
+  border-color: #ef4444;
+}
+
+.form-field.error .input-with-icon input:focus,
+.form-field.error .select-wrapper select:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 /* ----------------------------------------------------------------------------
@@ -304,12 +314,17 @@
   padding: 0.875rem;
   background: #f8fafc;
   border-radius: 10px;
-  margin: 1rem 0;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #52525b;
 }
 
 .spinner {
   width: 18px;
   height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   animation: spin 1s linear infinite;
 }
 
@@ -342,19 +357,20 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 500;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
   flex: 1;
-  min-height: 42px;
+  min-height: 44px;
 }
 
 .btn svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .btn:disabled {
@@ -382,19 +398,85 @@
 }
 
 /* ----------------------------------------------------------------------------
+   Add New Guest Option
+   ---------------------------------------------------------------------------- */
+.add-guest-option {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fffbeb;
+  border-radius: 10px;
+  border: 1px solid #fde68a;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.add-guest-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+.add-guest-message svg {
+  width: 18px;
+  height: 18px;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.btn-outline {
+  background: transparent;
+  color: #841617;
+  border: 2px solid #841617;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: #841617;
+  color: white;
+}
+
+.btn-outline svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ----------------------------------------------------------------------------
    Responsive Breakpoints
    ---------------------------------------------------------------------------- */
-/* Small phones */
-@media (max-width: 360px) {
+@media (max-width: 480px) {
+  .checkin-overlay {
+    padding: 0.5rem;
+  }
+
   .checkin-modal {
-    max-width: 95vw;
+    max-width: 100%;
+    max-height: 90vh;
     border-radius: 12px;
   }
   
-  .checkin-header,
-  .checkin-content,
+  .checkin-header {
+    padding: 1rem 1.25rem;
+  }
+  
+  .checkin-form {
+    padding: 1.25rem;
+  }
+  
   .checkin-footer {
-    padding: 1rem;
+    padding: 1rem 1.25rem;
   }
   
   .form-field {
@@ -414,83 +496,9 @@
   .btn {
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
+    min-height: 40px;
   }
-}
 
-/* Tablets and small desktops */
-@media (min-width: 768px) {
-  .checkin-modal {
-    max-width: 480px;
-  }
-}
-
-/* ----------------------------------------------------------------------------
-   Accessibility
-   ---------------------------------------------------------------------------- */
-.modal-close:focus-visible,
-.btn:focus-visible,
-.input-with-icon input:focus,
-.select-wrapper select:focus {
-  /* outline: 2px solid #841617; */
-  outline-offset: 2px;
-}
-
-/* ----------------------------------------------------------------------------
-   Add New Guest Option
-   ---------------------------------------------------------------------------- */
-.add-guest-option {
-  margin: 1rem 0;
-  padding: 1rem;
-  background: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  text-align: center;
-  animation: fadeIn 0.3s ease;
-}
-
-.add-guest-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  color: #64748b;
-  font-size: 0.875rem;
-}
-
-.add-guest-message svg {
-  width: 16px;
-  height: 16px;
-  color: #f59e0b;
-}
-
-.btn-outline {
-  background: transparent;
-  color: #841617;
-  border: 1px solid #841617;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-outline:hover:not(:disabled) {
-  background: #841617;
-  color: white;
-}
-
-.btn-outline svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
   .add-guest-option {
     padding: 0.75rem;
   }
@@ -499,5 +507,51 @@
     flex-direction: column;
     text-align: center;
     gap: 0.25rem;
+  }
+}
+
+/* Small phones */
+@media (max-width: 360px) {
+  .checkin-modal {
+    border-radius: 10px;
+  }
+  
+  .checkin-header,
+  .checkin-form,
+  .checkin-footer {
+    padding: 0.875rem 1rem;
+  }
+
+  .input-with-icon input,
+  .select-wrapper select {
+    padding: 0.625rem 2rem 0.625rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Accessibility
+   ---------------------------------------------------------------------------- */
+.modal-close:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid #841617;
+  outline-offset: 2px;
+}
+
+.input-with-icon input:focus-visible,
+.select-wrapper select:focus-visible {
+  outline: none;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .checkin-overlay,
+  .checkin-modal,
+  .add-guest-option {
+    animation: none;
+  }
+  
+  .spinner {
+    animation: none;
   }
 }

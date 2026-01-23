@@ -3,82 +3,20 @@ import React, { useEffect, useMemo } from 'react';
 import './ResidentDetailModal.css';
 import { useGuestsByHost } from '../hooks/useResidentsQuery';
 
-// ============================================================================
-// Icons
-// ============================================================================
-const Icons = {
-  X: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  ),
-  User: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  ),
-  MapPin: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  ),
-  Mail: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-      <polyline points="22,6 12,13 2,6" />
-    </svg>
-  ),
-  Phone: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-    </svg>
-  ),
-  Users: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  ),
-  AlertTriangle: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  ),
-  Clock: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  ),
-  CheckCircle: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
-  ),
-  XCircle: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <line x1="15" y1="9" x2="9" y2="15" />
-      <line x1="9" y1="9" x2="15" y2="15" />
-    </svg>
-  ),
-  UserPlus: () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="8.5" cy="7" r="4" />
-      <line x1="20" y1="8" x2="20" y2="14" />
-      <line x1="23" y1="11" x2="17" y2="11" />
-    </svg>
-  ),
-};
+// Using lucide-react instead of custom SVG icons
+import {
+  X,
+  User,
+  MapPin,
+  Mail,
+  Phone,
+  Users,
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  XCircle,
+  UserPlus,
+} from 'lucide-react';
 
 // ============================================================================
 // Helper Functions
@@ -120,7 +58,7 @@ const getInitials = (name) => {
 const InfoItem = ({ icon: Icon, label, value }) => (
   <div className="info-item">
     <div className="info-icon">
-      <Icon />
+      <Icon size={18} />
     </div>
     <div className="info-content">
       <span className="info-label">{label}</span>
@@ -139,14 +77,14 @@ const VisitorCard = ({ visitor }) => (
         <span className="visitor-name">{capitalize(visitor.name)}</span>
         {visitor.flagged && (
           <span className="visitor-flag">
-            <Icons.AlertTriangle />
+            <AlertTriangle size={14} />
             Flagged
           </span>
         )}
       </div>
       <div className="visitor-details">
         <span className="visitor-visits">
-          <Icons.Clock />
+          <Clock size={14} />
           {visitor.visitCount || 1} visit
           {(visitor.visitCount || 1) !== 1 ? 's' : ''}
         </span>
@@ -159,12 +97,12 @@ const VisitorCard = ({ visitor }) => (
       <div className="visitor-status">
         {visitor.isCheckedIn ? (
           <span className="status checked-in">
-            <Icons.CheckCircle />
+            <CheckCircle size={14} />
             Currently Here
           </span>
         ) : (
           <span className="status checked-out">
-            <Icons.XCircle />
+            <XCircle size={14} />
             Checked Out
           </span>
         )}
@@ -177,7 +115,7 @@ const VisitorCard = ({ visitor }) => (
 // Main Component
 // ============================================================================
 
-const ResidentDetailModal = ({ resident, onClose }) => {
+const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
   const hostId = resident?._id;
 
   // Use hook to fetch guests + stats for this host
@@ -238,6 +176,24 @@ const ResidentDetailModal = ({ resident, onClose }) => {
     };
   }, []);
 
+  // Handle Add Visitor click - opens AddNewGuest modal with prefilled data
+  const handleAddVisitor = () => {
+    if (!onAddNewGuest) {
+      console.warn('[ResidentDetailModal] onAddNewGuest callback not provided');
+      return;
+    }
+
+    // Pass prefilled data for the new guest form
+    onAddNewGuest({
+      room: resident.roomNumber,
+      hostId: resident._id,
+      hostName: resident.name,
+    });
+
+    // Close this modal so the AddNewGuest modal can open
+    onClose();
+  };
+
   if (!resident) return null;
 
   const visitorErrorMessage =
@@ -257,13 +213,13 @@ const ResidentDetailModal = ({ resident, onClose }) => {
             <div className="modal-title">
               <h2>{capitalize(resident.name)}</h2>
               <span className="modal-room">
-                <Icons.MapPin />
+                <MapPin size={16} />
                 Room {resident.roomNumber}
               </span>
             </div>
           </div>
           <button className="modal-close" onClick={onClose}>
-            <Icons.X />
+            <X size={20} />
           </button>
         </div>
 
@@ -274,22 +230,22 @@ const ResidentDetailModal = ({ resident, onClose }) => {
             <h3>Contact Information</h3>
             <div className="info-grid">
               <InfoItem
-                icon={Icons.User}
+                icon={User}
                 label="Full Name"
                 value={capitalize(resident.name)}
               />
               <InfoItem
-                icon={Icons.MapPin}
+                icon={MapPin}
                 label="Room Number"
                 value={resident.roomNumber}
               />
               <InfoItem
-                icon={Icons.Mail}
+                icon={Mail}
                 label="Email"
                 value={resident.email}
               />
               <InfoItem
-                icon={Icons.Phone}
+                icon={Phone}
                 label="Phone"
                 value={resident.phoneNumber}
               />
@@ -318,7 +274,7 @@ const ResidentDetailModal = ({ resident, onClose }) => {
           {/* Visitors List */}
           <section className="modal-section visitors-section">
             <h3>
-              <Icons.Users />
+              <Users size={18} />
               Visitors History
             </h3>
             <div className="visitors-list">
@@ -329,12 +285,12 @@ const ResidentDetailModal = ({ resident, onClose }) => {
                 </div>
               ) : visitorErrorMessage ? (
                 <div className="visitors-error">
-                  <Icons.AlertTriangle />
+                  <AlertTriangle size={20} />
                   <p>{visitorErrorMessage}</p>
                 </div>
               ) : visitors.length === 0 ? (
                 <div className="visitors-empty">
-                  <Icons.Users />
+                  <Users size={24} />
                   <p>No visitors recorded</p>
                 </div>
               ) : (
@@ -354,15 +310,9 @@ const ResidentDetailModal = ({ resident, onClose }) => {
           <button
             className="btn btn-primary"
             type="button"
-            // You can wire this to open AddNewGuest prefilled with this resident as host
-            onClick={() => {
-              console.log(
-                '[ResidentDetailModal] Add Visitor clicked for resident:',
-                resident._id
-              );
-            }}
+            onClick={handleAddVisitor}
           >
-            <Icons.UserPlus />
+            <UserPlus size={18} />
             Add Visitor
           </button>
         </div>

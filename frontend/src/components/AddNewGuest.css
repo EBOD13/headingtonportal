@@ -1,6 +1,6 @@
 /* frontend/src/components/AddNewGuest.css */
 /* ============================================================================
-   AddNewGuest Styles - Modern Modal
+   AddNewGuest Styles - Clean & Responsive
    ============================================================================ */
 
 /* ----------------------------------------------------------------------------
@@ -9,39 +9,39 @@
 .addguest-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
   padding: 1rem;
-  animation: fadeIn 0.2s ease;
+  animation: addguestFadeIn 0.2s ease;
 }
 
 .addguest-modal {
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 16px;
   width: 100%;
   max-width: min(500px, 90vw);
   min-width: 280px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  animation: slideUp 0.3s ease;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: addguestSlideUp 0.3s ease;
   overflow: hidden;
   max-height: min(800px, 90vh);
 }
 
-@keyframes fadeIn {
+@keyframes addguestFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes slideUp {
+@keyframes addguestSlideUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -54,76 +54,78 @@
    ---------------------------------------------------------------------------- */
 .addguest-header {
   padding: 1.25rem 1.5rem;
-  background: #841617;
+  background: linear-gradient(135deg, #841617 0%, #6b1213 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-shrink: 0;
+}
+
+.addguest-header .modal-title {
+  flex: 1;
+  min-width: 0;
 }
 
 .addguest-header .modal-title h2 {
-  font-size: 1.2rem;
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
   font-weight: 600;
-  margin: 0;
+  margin: 0 0 0.25rem 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.addguest-header .modal-title h2 svg {
-  width: 20px;
-  height: 20px;
-}
-
-.modal-subtitle {
+.addguest-header .modal-subtitle {
   font-size: 0.8rem;
   opacity: 0.9;
-  margin: 0.25rem 0 0 0;
+  margin: 0;
 }
 
-.modal-close {
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.15);
+.addguest-modal .modal-close {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
-.modal-close:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.modal-close svg {
-  width: 16px;
-  height: 16px;
+.addguest-modal .modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* ----------------------------------------------------------------------------
    Content
    ---------------------------------------------------------------------------- */
 .addguest-content {
-  padding: 1.5rem;
   flex: 1;
-  overflow-y: auto; /* Keep scroll functionality */
-  
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  
-  /* Hide scrollbar for IE, Edge and Firefox */
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.addguest-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.addguest-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.addguest-content::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 2px;
 }
 
 .addguest-form {
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -132,25 +134,24 @@
 /* ----------------------------------------------------------------------------
    Form Fields
    ---------------------------------------------------------------------------- */
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
+.addguest-form .form-field {
+  margin-bottom: 0;
 }
 
-.form-label {
+.addguest-form .form-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #374151;
+  color: #27272a;
   font-size: 0.875rem;
 }
 
-.label-icon {
-  width: 24px;
-  height: 24px;
-  background: #f3f4f6;
+.addguest-form .label-icon {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #f4f4f5 0%, #e4e4e7 100%);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -158,67 +159,100 @@
   flex-shrink: 0;
 }
 
-.label-icon svg {
-  width: 14px;
-  height: 14px;
-  color: #6b7280;
+.addguest-form .label-icon svg {
+  color: #71717a;
 }
 
-.field-input {
+.addguest-form .field-input {
   position: relative;
+  width: 100%;
 }
 
-.field-input input,
-.field-input select {
+.addguest-form .input-with-icon,
+.addguest-form .select-wrapper {
+  position: relative;
   width: 100%;
-  padding: 0.75rem;
+}
+
+.addguest-form .input-with-icon input,
+.addguest-form .field-input input,
+.addguest-form .field-input select,
+.addguest-form .select-wrapper select {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
   font-size: 0.9rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #111827;
+  border: 2px solid #e4e4e7;
+  border-radius: 10px;
+  background: #fafafa;
+  color: #27272a;
   transition: all 0.2s ease;
   appearance: none;
+  box-sizing: border-box;
 }
 
-.field-input input:focus,
-.field-input select:focus {
+.addguest-form .input-with-icon input:focus,
+.addguest-form .field-input input:focus,
+.addguest-form .field-input select:focus,
+.addguest-form .select-wrapper select:focus {
   outline: none;
   border-color: #841617;
-  box-shadow: 0 0 0 2px rgba(132, 22, 23, 0.1);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(132, 22, 23, 0.1);
 }
 
-.field-input input:disabled,
-.field-input select:disabled {
-  background: #f9fafb;
-  color: #9ca3af;
+.addguest-form .input-with-icon input:disabled,
+.addguest-form .field-input input:disabled,
+.addguest-form .field-input select:disabled,
+.addguest-form .select-wrapper select:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-.room-input {
+.addguest-form .room-input {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.select-wrapper {
-  position: relative;
-}
-
-.select-wrapper::after {
+/* Select dropdown arrow */
+.addguest-form .select-wrapper::after,
+.addguest-form .field-input select + .select-arrow::after {
   content: "";
   position: absolute;
-  right: 0.75rem;
+  right: 2.5rem;
   top: 50%;
   transform: translateY(-50%);
   width: 0;
   height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 4px solid #6b7280;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #71717a;
   pointer-events: none;
 }
 
-.input-status {
+/* For selects without wrapper */
+.addguest-form .field-input {
+  position: relative;
+}
+
+.addguest-form .field-input select {
+  padding-right: 2.5rem;
+}
+
+.addguest-form .field-input:has(select)::after {
+  content: "";
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #71717a;
+  pointer-events: none;
+}
+
+.addguest-form .input-status {
   position: absolute;
   right: 0.75rem;
   top: 50%;
@@ -226,34 +260,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
 }
 
-.input-status svg {
-  width: 16px;
-  height: 16px;
-}
-
-.input-status.valid {
-  color: #10b981;
-}
-
-.input-status.selected {
-  color: #841617;
+.addguest-form .input-status.valid,
+.addguest-form .input-status.selected {
+  color: #22c55e;
 }
 
 /* ----------------------------------------------------------------------------
-   Name Fields Grid
+   Grid Fields
    ---------------------------------------------------------------------------- */
-.name-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-/* ----------------------------------------------------------------------------
-   Guest Profile Fields
-   ---------------------------------------------------------------------------- */
-.guest-profile-fields {
+.name-fields,
+.student-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
@@ -262,53 +281,74 @@
 /* ----------------------------------------------------------------------------
    Hints & Errors
    ---------------------------------------------------------------------------- */
-.field-hint {
+.addguest-form .field-hint {
   font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 0.125rem;
+  color: #71717a;
+  margin-top: 0.375rem;
 }
 
-.field-error {
+.addguest-form .field-error {
   display: flex;
   align-items: center;
   gap: 0.375rem;
   font-size: 0.75rem;
-  color: #dc2626;
-  margin-top: 0.125rem;
+  color: #ef4444;
+  margin-top: 0.375rem;
 }
 
-.field-error svg {
-  width: 14px;
-  height: 14px;
+.addguest-form .form-field.error .input-with-icon input,
+.addguest-form .form-field.error .field-input input,
+.addguest-form .form-field.error .field-input select,
+.addguest-form .form-field.error .select-wrapper select {
+  border-color: #ef4444;
 }
 
 /* ----------------------------------------------------------------------------
-   Progress Indicator
+   Progress & Error States
    ---------------------------------------------------------------------------- */
 .progress-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem;
+  padding: 0.875rem;
   background: #f8fafc;
-  border-radius: 8px;
-  margin: 0.5rem 0;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #52525b;
 }
 
-.spinner {
-  width: 16px;
-  height: 16px;
-  animation: spin 1s linear infinite;
+.register-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  color: #dc2626;
+  font-size: 0.875rem;
+  animation: addguestFadeIn 0.3s ease;
 }
 
-.spinner svg {
-  width: 16px;
-  height: 16px;
+.register-error svg {
+  flex-shrink: 0;
+}
+
+.addguest-form .spinner {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: addguestSpin 1s linear infinite;
+}
+
+.addguest-form .spinner svg {
   color: #841617;
 }
 
-@keyframes spin {
+@keyframes addguestSpin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
@@ -318,81 +358,65 @@
    ---------------------------------------------------------------------------- */
 .addguest-footer {
   padding: 1rem 1.5rem;
-  background: #f9fafb;
+  background: #fafafa;
+  border-top: 1px solid #e4e4e7;
   display: flex;
   gap: 0.75rem;
+  flex-shrink: 0;
 }
 
-.btn {
+.addguest-footer .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
+  gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
   flex: 1;
+  min-height: 44px;
 }
 
-.btn svg {
-  width: 16px;
-  height: 16px;
+.addguest-footer .btn svg {
+  flex-shrink: 0;
 }
 
-.btn:disabled {
+.addguest-footer .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.btn-secondary {
-  background: #ffffff;
-  color: #374151;
-  border: 1px solid #d1d5db;
+.addguest-footer .btn-secondary {
+  background: white;
+  color: #52525b;
+  border: 1px solid #e4e4e7;
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background: #f9fafb;
+.addguest-footer .btn-secondary:hover:not(:disabled) {
+  background: #f4f4f5;
 }
 
-.btn-primary {
-  background: #841617;
+.addguest-footer .btn-primary {
+  background: linear-gradient(135deg, #841617 0%, #6b1213 100%);
   color: white;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: #721417;
+.addguest-footer .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6b1213 0%, #5a1011 100%);
 }
 
 /* ----------------------------------------------------------------------------
    Responsive
    ---------------------------------------------------------------------------- */
-@media (max-width: 640px) {
-  .addguest-modal {
-    max-width: 95vw;
-  }
-  
-  .addguest-header,
-  .addguest-content,
-  .addguest-footer {
-    padding: 1rem;
-  }
-  
-  .addguest-form {
-    gap: 1rem;
-  }
-  
+@media (max-width: 580px) {
   .name-fields,
-  .guest-profile-fields {
+  .student-fields {
     grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .btn {
-    padding: 0.5rem 1rem;
+    gap: 1.25rem;
   }
 }
 
@@ -400,37 +424,77 @@
   .addguest-overlay {
     padding: 0.5rem;
   }
-  
+
   .addguest-modal {
+    max-width: 100%;
     max-height: 95vh;
+    border-radius: 12px;
+  }
+  
+  .addguest-header {
+    padding: 1rem 1.25rem;
+  }
+  
+  .addguest-form {
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+  
+  .addguest-footer {
+    padding: 1rem 1.25rem;
+  }
+  
+  .addguest-footer .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    min-height: 40px;
   }
 }
 
-/* Accessibility */
-.modal-close:focus-visible,
-.btn:focus-visible,
-.field-input input:focus,
-.field-input select:focus {
+@media (max-width: 360px) {
+  .addguest-modal {
+    border-radius: 10px;
+  }
+  
+  .addguest-header,
+  .addguest-form,
+  .addguest-footer {
+    padding: 0.875rem 1rem;
+  }
+
+  .addguest-form .input-with-icon input,
+  .addguest-form .field-input input,
+  .addguest-form .field-input select,
+  .addguest-form .select-wrapper select {
+    padding: 0.625rem 2rem 0.625rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Accessibility
+   ---------------------------------------------------------------------------- */
+.addguest-modal .modal-close:focus-visible,
+.addguest-footer .btn:focus-visible {
   outline: 2px solid #841617;
   outline-offset: 2px;
 }
 
-.register-error {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  color: #dc2626;
-  font-size: 0.875rem;
-  margin: 0.5rem 0;
-  animation: fadeIn 0.3s ease;
+.addguest-form .input-with-icon input:focus-visible,
+.addguest-form .field-input input:focus-visible,
+.addguest-form .field-input select:focus-visible,
+.addguest-form .select-wrapper select:focus-visible {
+  outline: none;
 }
 
-.register-error svg {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
+@media (prefers-reduced-motion: reduce) {
+  .addguest-overlay,
+  .addguest-modal,
+  .register-error {
+    animation: none;
+  }
+  
+  .addguest-form .spinner {
+    animation: none;
+  }
 }
