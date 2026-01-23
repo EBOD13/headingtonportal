@@ -40,19 +40,11 @@ export const getResidentByRoom = createAsyncThunk(
       const token = getAuthToken(thunkAPI);
 
       const formattedRoom = roomNumber.trim().toUpperCase();
-      console.log('[getResidentByRoom thunk] formattedRoom:', formattedRoom);
 
       const res = await residentService.getResidentByRoom(formattedRoom, token);
-      console.log(
-        '[getResidentByRoom thunk] service response type:',
-        Array.isArray(res) ? 'array' : typeof res,
-        'length:',
-        Array.isArray(res) ? res.length : undefined
-      );
 
       return res;
     } catch (error) {
-      console.error('[getResidentByRoom thunk] error:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
@@ -68,12 +60,7 @@ export const getGuestsByHost = createAsyncThunk(
   async (hostId, thunkAPI) => {
     try {
       const token = getAuthToken(thunkAPI);
-
-      console.log('[getGuestsByHost thunk] hostId:', hostId);
-
       const res = await residentService.getGuestsByHost(hostId, token);
-      console.log('[getGuestsByHost thunk] service raw response:', res);
-
       // Normalize backend response into:
       // { guestNames: [{ id, name, lastRoom }, ...] }
       let rawGuestArray = [];
@@ -99,7 +86,6 @@ export const getGuestsByHost = createAsyncThunk(
         stats: res?.stats || null,
       };
     } catch (error) {
-      console.error('[getGuestsByHost thunk] error:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
@@ -116,18 +102,12 @@ export const getAllResidents = createAsyncThunk(
     try {
       const token = getAuthToken(thunkAPI);
 
-      console.log('[getAllResidents thunk] fetching all residents');
+
       const res = await residentService.getAllResidents(token);
-      console.log(
-        '[getAllResidents thunk] response type:',
-        Array.isArray(res) ? 'array' : typeof res,
-        'length:',
-        Array.isArray(res) ? res.length : undefined
-      );
+
 
       return res;
     } catch (error) {
-      console.error('[getAllResidents thunk] error:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
@@ -163,7 +143,6 @@ export const residentSlice = createSlice({
       // Get Resident by Room
       // =========================
       .addCase(getResidentByRoom.pending, (state) => {
-        console.log('[residentSlice] getResidentByRoom.pending');
         state.isLoading = true;
         state.isError = false;
         state.isSuccess = false;
@@ -171,10 +150,6 @@ export const residentSlice = createSlice({
         state.selectedResidents = [];
       })
       .addCase(getResidentByRoom.fulfilled, (state, action) => {
-        console.log(
-          '[residentSlice] getResidentByRoom.fulfilled payload:',
-          action.payload
-        );
         state.isLoading = false;
         state.isSuccess = true;
 
@@ -192,10 +167,6 @@ export const residentSlice = createSlice({
           : 'No residents found';
       })
       .addCase(getResidentByRoom.rejected, (state, action) => {
-        console.log(
-          '[residentSlice] getResidentByRoom.rejected payload:',
-          action.payload
-        );
         state.isLoading = false;
         state.isError = true;
         state.isSuccess = false;
@@ -207,7 +178,7 @@ export const residentSlice = createSlice({
       // Get Guests by Host
       // =========================
       .addCase(getGuestsByHost.pending, (state) => {
-        console.log('[residentSlice] getGuestsByHost.pending');
+
         state.isLoading = true;
         state.isError = false;
         state.isSuccess = false;
@@ -216,10 +187,6 @@ export const residentSlice = createSlice({
         state.guestsStatsByHost = null;
       })
       .addCase(getGuestsByHost.fulfilled, (state, action) => {
-        console.log(
-          '[residentSlice] getGuestsByHost.fulfilled payload:',
-          action.payload
-        );
         state.isLoading = false;
         state.isSuccess = true;
 
@@ -242,10 +209,6 @@ export const residentSlice = createSlice({
           : 'No guests found';
       })
       .addCase(getGuestsByHost.rejected, (state, action) => {
-        console.log(
-          '[residentSlice] getGuestsByHost.rejected payload:',
-          action.payload
-        );
         state.isLoading = false;
         state.isError = true;
         state.isSuccess = false;
@@ -258,17 +221,12 @@ export const residentSlice = createSlice({
       // Get All Residents
       // =========================
       .addCase(getAllResidents.pending, (state) => {
-        console.log('[residentSlice] getAllResidents.pending');
         state.isLoading = true;
         state.isError = false;
         state.isSuccess = false;
         state.message = '';
       })
       .addCase(getAllResidents.fulfilled, (state, action) => {
-        console.log(
-          '[residentSlice] getAllResidents.fulfilled payload:',
-          action.payload
-        );
         state.isLoading = false;
         state.isSuccess = true;
 
@@ -279,10 +237,6 @@ export const residentSlice = createSlice({
         state.message = `Loaded ${state.residents.length} resident(s)`;
       })
       .addCase(getAllResidents.rejected, (state, action) => {
-        console.log(
-          '[residentSlice] getAllResidents.rejected payload:',
-          action.payload
-        );
         state.isLoading = false;
         state.isError = true;
         state.isSuccess = false;

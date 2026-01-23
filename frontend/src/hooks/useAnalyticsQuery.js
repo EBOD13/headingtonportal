@@ -71,7 +71,7 @@ export const useGuests = (options = {}) => {
     if (!clerkToken) return;
     if (hasFetchedRef.current) return;
 
-    console.log('[useGuests] Fetching guests...');
+    // console.log('[useGuests] Fetching guests...');
     hasFetchedRef.current = true;
     dispatch(getAllGuests());
   }, [dispatch, clerkToken, enabled]);
@@ -96,7 +96,7 @@ export const useGuests = (options = {}) => {
   // Manual refetch
   const refetch = useCallback(() => {
     if (!clerkToken) return;
-    console.log('[useGuests] Manual refetch');
+    // console.log('[useGuests] Manual refetch');
     dispatch(clearGuestError());
     dispatch(getAllGuests());
   }, [dispatch, clerkToken]);
@@ -148,7 +148,7 @@ export const useCheckedInGuests = (options = {}) => {
     if (!clerkToken) return;
     if (hasFetchedRef.current) return;
 
-    console.log('[useCheckedInGuests] Fetching checked-in guests...');
+    // console.log('[useCheckedInGuests] Fetching checked-in guests...');
     hasFetchedRef.current = true;
     dispatch(getCheckedInGuests());
   }, [dispatch, clerkToken, enabled]);
@@ -178,7 +178,7 @@ export const useCheckedInGuests = (options = {}) => {
 
   const refetch = useCallback(() => {
     if (!clerkToken) return;
-    console.log('[useCheckedInGuests] Manual refetch');
+    // console.log('[useCheckedInGuests] Manual refetch');
     dispatch(clearGuestError());
     dispatch(getCheckedInGuests());
   }, [dispatch, clerkToken]);

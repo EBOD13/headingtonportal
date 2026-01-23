@@ -25,8 +25,6 @@ const selectAuthToken = (state) => state.auth?.clerk?.token ?? null;
 const normalizeGuest = (g) => {
   if (!g) return null;
 
-  console.log('[normalizeGuest] Raw guest data:', g);
-
   // Extract critical properties with multiple fallbacks
   const name = g.name || g.guestName || (g.firstName && g.lastName ? `${g.firstName} ${g.lastName}`.trim() : 'Unknown Guest');
   const room = g.room || g.hostRoom || (g.host && g.host.roomNumber) || (g.host && g.host.room) || 'N/A';
@@ -64,7 +62,6 @@ const normalizeGuest = (g) => {
     createdAt: g.createdAt || g.registrationDate || new Date().toISOString(),
   };
 
-  console.log('[normalizeGuest] Normalized:', normalized);
   return normalized;
 };
 
@@ -96,21 +93,17 @@ export const useGuests = (options = {}) => {
   // Auto-fetch all guests ONCE when enabled and token exists
   useEffect(() => {
     if (!enabled) {
-      console.log('[useGuests] Hook disabled, skipping fetch');
       return;
     }
     
     if (!clerkToken) {
-      console.log('[useGuests] No auth token available, skipping fetch');
       return;
     }
     
     if (hasFetchedRef.current) {
-      console.log('[useGuests] Already fetched, skipping');
       return;
     }
 
-    console.log('[useGuests] Fetching all guests...');
     hasFetchedRef.current = true;
     dispatch(getAllGuests());
   }, [dispatch, clerkToken, enabled]);
@@ -135,11 +128,9 @@ export const useGuests = (options = {}) => {
   // Manual refetch function
   const refetch = useCallback(() => {
     if (!clerkToken) {
-      console.warn('[useGuests] Cannot refetch: no auth token');
       return;
     }
-    
-    console.log('[useGuests] Manually refetching guests...');
+
     dispatch(clearGuestError());
     dispatch(getAllGuests());
   }, [dispatch, clerkToken]);
@@ -149,8 +140,7 @@ export const useGuests = (options = {}) => {
     const normalized = (guests || [])
       .map(normalizeGuest)
       .filter(g => g !== null);
-    
-    console.log('[useGuests] Final normalized data count:', normalized.length, 'guests');
+
     return normalized;
   }, [guests]);
 
@@ -191,21 +181,17 @@ export const useCheckedInGuests = (options = {}) => {
   // Fetch checked-in guests specifically
   useEffect(() => {
     if (!enabled) {
-      console.log('[useCheckedInGuests] Hook disabled, skipping fetch');
       return;
     }
     
     if (!clerkToken) {
-      console.log('[useCheckedInGuests] No auth token available, skipping fetch');
       return;
     }
     
     if (hasFetchedRef.current) {
-      console.log('[useCheckedInGuests] Already fetched, skipping');
       return;
     }
 
-    console.log('[useCheckedInGuests] Fetching checked-in guests...');
     hasFetchedRef.current = true;
     dispatch(getCheckedInGuests());
   }, [dispatch, clerkToken, enabled]);
@@ -216,21 +202,17 @@ export const useCheckedInGuests = (options = {}) => {
     
     // Strategy 1: Use dedicated checkedInGuests from Redux if available
     if (checkedInGuests.length > 0) {
-      console.log('[useCheckedInGuests] Using dedicated checkedInGuests array');
+
       result = checkedInGuests.map(normalizeGuest).filter(g => g !== null);
     } 
     // Strategy 2: Fallback to filtering all guests
     else if (guests.length > 0) {
-      console.log('[useCheckedInGuests] Filtering from all guests array');
+  
       result = guests
         .map(normalizeGuest)
         .filter(g => g !== null && g.isCheckedIn === true);
     }
     
-    console.log('[useCheckedInGuests] Final checked-in data:', {
-      count: result.length,
-      guests: result.map(g => ({ id: g.id, name: g.name, room: g.room, isCheckedIn: g.isCheckedIn }))
-    });
     
     return result;
   }, [guests, checkedInGuests]);
@@ -257,11 +239,8 @@ export const useCheckedInGuests = (options = {}) => {
   // Manual refetch function
   const refetch = useCallback(() => {
     if (!clerkToken) {
-      console.warn('[useCheckedInGuests] Cannot refetch: no auth token');
       return;
     }
-    
-    console.log('[useCheckedInGuests] Manually refetching checked-in guests...');
     dispatch(clearGuestError());
     dispatch(getCheckedInGuests());
   }, [dispatch, clerkToken]);
@@ -294,7 +273,6 @@ export const useGuestActions = () => {
 
   const register = useCallback(
     (guestData) => {
-      console.log('[useGuestActions] Registering guest:', guestData);
       return dispatch(registerGuest(guestData)).unwrap();
     },
     [dispatch]
@@ -302,7 +280,6 @@ export const useGuestActions = () => {
 
   const checkIn = useCallback(
     (guestId) => {
-      console.log('[useGuestActions] Checking in guest:', guestId);
       return dispatch(checkInGuest(guestId)).unwrap();
     },
     [dispatch]
@@ -310,7 +287,6 @@ export const useGuestActions = () => {
 
   const checkOut = useCallback(
     (guestId) => {
-      console.log('[useGuestActions] Checking out guest:', guestId);
       return dispatch(checkOutGuest(guestId)).unwrap();
     },
     [dispatch]
@@ -318,7 +294,6 @@ export const useGuestActions = () => {
 
   const clearError = useCallback(
     () => {
-      console.log('[useGuestActions] Clearing guest errors');
       dispatch(clearGuestError());
     },
     [dispatch]
