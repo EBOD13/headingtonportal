@@ -1,35 +1,63 @@
-import axios from "axios";
+// frontend/src/features/residents/residentService.js
+import axios from 'axios';
 
-const API_URL = '/api/residents/'
+const API_URL = '/api/residents/';
 
-const getAllResidents = async(token) =>{
-    const config = {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        }
-    }
-    const response = await axios.get(API_URL, config)
-    return response.data
-}
+// Small helper for auth header
+const buildConfig = (token) => ({
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
 
-const getResidentByRoom = async(roomNumber, token)=>{
-    const config = {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        }
-    }
-    const response = await axios.get(API_URL + roomNumber, config)
-    return response.data
-}
-const getGuestsByHost = async(hostId, token) =>{
-    const config = {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        }
-    }
-    const response = await axios.get(API_URL + 'guests/' + hostId, config)
-    return response.data
-}
-const residentService = {getResidentByRoom, getGuestsByHost, getAllResidents}
+// ==============================
+// Get ALL residents
+// GET /api/residents
+// ==============================
+const getAllResidents = async (token) => {
+  const config = buildConfig(token);
+  const response = await axios.get(API_URL, config);
+  // Expecting an array of residents
+  return response.data;
+};
 
-export default residentService
+// ==============================
+// Get resident(s) by room
+// GET /api/residents/:roomNumber
+// (roomNumber like "N101", "S222")
+// ==============================
+const getResidentByRoom = async (roomNumber, token) => {
+  const config = buildConfig(token);
+  const response = await axios.get(`${API_URL}${roomNumber}`, config);
+  // Backend might return array or single object; slice will handle both
+  return response.data;
+};
+
+// ==============================
+// Get guests by host ID
+// GET /api/residents/guests/:hostId
+// Expected backend response shape (recommended):
+//   {
+//     success: true,
+//     guestNames: [
+//       { id: "<guestId>", name: "john erickson", lastRoom: "N101" },
+//       ...
+//     ]
+//   }
+//
+// If your backend returns a different shape, the slice will
+// normalize it.
+// ==============================
+const getGuestsByHost = async (hostId, token) => {
+  const config = buildConfig(token);
+  const response = await axios.get(`${API_URL}guests/${hostId}`, config);
+  return response.data;
+};
+
+const residentService = {
+  getResidentByRoom,
+  getGuestsByHost,
+  getAllResidents,
+};
+
+export default residentService;

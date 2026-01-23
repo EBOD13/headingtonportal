@@ -9,3 +9,5 @@ node_modules/
 
 # Ignore the google config file
 backend/config/google-credentials.json
+
+backend/.env

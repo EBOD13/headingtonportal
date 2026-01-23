@@ -1,6 +1,10 @@
 {
-  "dependencies": {
-    "nodemailer": "^6.9.13",
-    "request": "^2.88.2"
+  "name": "headingtonportal-root",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm start --prefix frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
   }
 }

@@ -1,0 +1,411 @@
+src/components/Sidebar.css
+
+/* ============================================================================
+   Variables
+   ============================================================================ */
+
+:root {
+  --sidebar-width: 280px;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-text: #4b5563;
+  --sidebar-text-hover: #1f2937;
+  --sidebar-active-bg: linear-gradient(135deg, #841617 0%, #6b1213 100%);
+  --sidebar-active-text: #ffffff;
+  --sidebar-section-text: #6b7280;
+  --sidebar-badge-bg: #ef4444;
+  --sidebar-badge-text: #ffffff;
+  --sidebar-overlay-bg: rgba(0, 0, 0, 0.5);
+  --sidebar-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --sidebar-transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Lock page scroll when sidebar is open (mobile) */
+body.sidebar-scroll-lock {
+  overflow: hidden;
+}
+
+/* ============================================================================
+   Sidebar Component
+   ============================================================================ */
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  transition: var(--sidebar-transition);
+  transform: translateX(-100%);
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+/* Overlay (mobile) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--sidebar-overlay-bg);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Desktop: always visible, no overlay */
+@media (min-width: 1025px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+  .sidebar-overlay {
+    display: none !important;
+  }
+}
+
+/* ============================================================================
+   Sidebar Header
+   ============================================================================ */
+
+.sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--sidebar-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sidebar-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--sidebar-active-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-logo-inner {
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-brand-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--sidebar-text-hover);
+  line-height: 1.2;
+}
+
+.sidebar-brand-subtitle {
+  font-size: 0.875rem;
+  color: var(--sidebar-text);
+  line-height: 1.2;
+}
+
+.sidebar-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-close:hover {
+  background: var(--sidebar-border);
+}
+
+.sidebar-close svg {
+  width: 18px;
+  height: 18px;
+  color: var(--sidebar-text);
+}
+
+@media (max-width: 1024px) {
+  .sidebar-close {
+    display: flex;
+  }
+}
+
+/* ============================================================================
+   Navigation
+   ============================================================================ */
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar-section {
+  padding: 0 1.5rem;
+}
+
+.sidebar-section-title {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sidebar-section-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.sidebar-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sidebar-item {
+  position: relative;
+}
+
+.sidebar-link,
+.sidebar-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--sidebar-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.sidebar-link:hover,
+.sidebar-btn:hover {
+  background: var(--sidebar-border);
+  color: var(--sidebar-text-hover);
+}
+
+.sidebar-item.active .sidebar-link,
+.sidebar-item.active .sidebar-btn {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+}
+
+.sidebar-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-badge {
+  padding: 0.125rem 0.5rem;
+  background: var(--sidebar-badge-bg);
+  color: var(--sidebar-badge-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* ============================================================================
+   Footer
+   ============================================================================ */
+
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--sidebar-border);
+  flex-shrink: 0;
+}
+
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 8px;
+  color: var(--sidebar-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-logout-btn:hover {
+  background: var(--sidebar-border);
+  color: var(--sidebar-text-hover);
+}
+
+.sidebar-logout-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================================================
+   Mobile toggle (GLOBAL)
+   ============================================================================ */
+
+/* Hidden on desktop (since sidebar is always visible) */
+.sidebar-mobile-toggle {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-mobile-toggle {
+    display: flex;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 1100;
+
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+
+    background: #ffffff;
+    border: 1px solid var(--sidebar-border);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.2s ease;
+  }
+
+  .sidebar-mobile-toggle:hover {
+    background: #f3f4f6;
+  }
+
+  .sidebar-mobile-toggle:active {
+    transform: scale(0.98);
+  }
+
+  .sidebar-mobile-toggle svg {
+    width: 22px;
+    height: 22px;
+    color: var(--sidebar-text-hover);
+  }
+}
+
+/* ============================================================================
+   Layout helpers
+   ============================================================================ */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+/* your pages already use .app / .main-wrapper etc;
+   this just makes sure content shifts properly on desktop */
+.app-shell-content {
+  flex: 1;
+  min-width: 0;
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 1025px) {
+  .app-shell-content {
+    margin-left: var(--sidebar-width);
+  }
+}
+
+/* ============================================================================
+   Accessibility
+   ============================================================================ */
+
+.sidebar-link:focus-visible,
+.sidebar-btn:focus-visible,
+.sidebar-close:focus-visible,
+.sidebar-logout-btn:focus-visible,
+.sidebar-mobile-toggle:focus-visible {
+  outline: 2px solid #841617;
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Modes
+   ============================================================================ */
+
+.sidebar.light {
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-text: #4b5563;
+  --sidebar-text-hover: #1f2937;
+  --sidebar-section-text: #6b7280;
+}

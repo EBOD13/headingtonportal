@@ -7,7 +7,7 @@ const transporter = nodemailer.createTransport({
     secure: true,
     auth:{
         user: "ebodtechs@gmail.com",
-        pass: "uhpl igsb fdzs agsw" // Add your Gmail password here
+        pass: "uhpl igsb fdzs agsw"
     },
     tls: {
         rejectUnauthorized: false // Add this line to bypass certificate validation

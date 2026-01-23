@@ -1,0 +1,260 @@
+/* Root layout */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: #fdf6ec; /* soft cream background */
+  overflow: hidden;
+}
+
+/* Sidebar */
+.app-shell-sidebar {
+  width: 260px;
+  background: #fffaf3; /* cream sidebar */
+  border-right: 1px solid rgba(148, 27, 32, 0.08); /* soft crimson border */
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 20;
+}
+
+/* Branding */
+.app-shell-sidebar-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.app-shell-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: #841617; /* crimson */
+  color: #fff7ed;      /* light cream */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin-right: 10px;
+}
+
+.app-shell-brand span {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #3f0f14; /* deep crimson-ish text */
+}
+
+.app-shell-brand small {
+  display: block;
+  font-size: 0.75rem;
+  color: #9f1239; /* muted crimson accent */
+}
+
+/* Nav */
+.app-shell-nav {
+  flex: 1;
+  margin-top: 8px;
+}
+
+.app-shell-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #6b4b4b; /* muted warm gray/red */
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.app-shell-nav-item svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+/* Hover: soft crimson tint on cream */
+.app-shell-nav-item:hover {
+  background: rgba(132, 22, 23, 0.06); /* crimson tint */
+  color: #7f1d1d;
+  transform: translateY(-1px);
+}
+
+/* Active: stronger crimson/cream combo */
+.app-shell-nav-item.active {
+  background: rgba(132, 22, 23, 0.14);
+  color: #7f1d1d;
+}
+
+/* Sidebar footer */
+.app-shell-sidebar-footer {
+  margin-top: 16px;
+}
+
+.app-shell-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(185, 28, 28, 0.08); /* soft red */
+  color: #b91c1c;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.app-shell-logout-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.app-shell-logout-btn:hover {
+  background: rgba(185, 28, 28, 0.16);
+  transform: translateY(-1px);
+}
+
+/* Main body */
+.app-shell-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fffaf3; /* match sidebar cream for continuity */
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Hamburger (mobile) */
+.app-shell-hamburger {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 25;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #841617; /* crimson pill */
+  border: none;
+  display: none; /* desktop default */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(148, 27, 32, 0.35);
+}
+
+.app-shell-hamburger svg {
+  width: 22px;
+  height: 22px;
+  stroke: #fff7ed; /* cream icon on crimson */
+}
+
+/* Content */
+.app-shell-content {
+  flex: 1;
+  padding: 0;          /* page components control their own spacing */
+  margin: 0;
+  background: #ffffff; /* white canvas for tables/cards */
+}
+
+/* Transition */
+.app-shell-page {
+  width: 100%;
+  height: 100%;
+  animation: appShellFadeIn 0.2s ease-out;
+}
+
+@keyframes appShellFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile overlay */
+.app-shell-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(63, 12, 14, 0.45); /* darker crimson overlay */
+  backdrop-filter: blur(3px);
+  z-index: 15;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.app-shell-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Hide overlay on desktop to avoid weirdness */
+@media (min-width: 901px) {
+  .app-shell-overlay {
+    display: none;
+  }
+}
+
+/* Responsive behavior */
+@media (max-width: 900px) {
+  .app-shell {
+    position: relative;
+  }
+
+  .app-shell-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease-out;
+    box-shadow: 12px 0 30px rgba(63, 12, 14, 0.45);
+  }
+
+  .app-shell-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .app-shell-hamburger {
+    display: inline-flex;
+  }
+
+  /* give content some breathing room under the floating button */
+  .app-shell-content {
+    padding-top: 56px;
+  }
+}
+
+
+/* Action buttons section */
+.app-shell-sidebar-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Base button */
+.app-shell-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(132, 22, 23, 0.18);
+  background: rgba(255, 244, 235, 0.7);
+  color: #000000;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+

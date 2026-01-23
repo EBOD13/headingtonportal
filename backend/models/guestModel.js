@@ -1,48 +1,90 @@
+// backend/models/guestModel.js
 const mongoose = require('mongoose');
 
-const guestSchema = new mongoose.Schema({
+const guestSchema = new mongoose.Schema(
+  {
     name: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
+      trim: true,
     },
+
+    // This should be the HOST RESIDENT (not the clerk)
     host: {
-        type: mongoose.Schema.Types.ObjectId, 
-        required: true, 
-        ref: 'Clerk'
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'Resident',
     },
-    contact:{
-        type: String, 
-        require: true
+
+    // Handy denormalized info for reporting
+    hostName: {
+      type: String,
+      trim: true,
     },
-    studentAtOU:{
-        type: Boolean,
-        required: true
+    hostRoom: {
+      type: String,
+      trim: true,
     },
-    IDNumber:{
-        type: String
+
+    contact: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    flagged:{
-        type: Boolean,
-        default: false
+
+    studentAtOU: {
+      type: Boolean,
+      required: true,
     },
-    checkIn:{
-        type: Date,
-        default: Date.now
+
+    IDNumber: {
+      type: String,
+      trim: true,
     },
-    checkout:{
-        type: Date
+
+    flagged: {
+      type: Boolean,
+      default: false,
     },
-    room:{
-        type: String
+
+    checkIn: {
+      type: Date,
+      default: Date.now,
     },
-    isCheckedIn:{
-        type: Boolean, default: true
+
+    checkout: {
+      type: Date,
     },
-   }
+
+    room: {
+      type: String,
+      trim: true,
+    },
+
+    wing: {
+      type: String,
+      enum: ['North', 'South'],
+    },
+
+    isCheckedIn: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
+
+// Auto-derive wing from room if present
+guestSchema.pre('save', function (next) {
+  if (this.room) {
+    const firstChar = this.room.trim().charAt(0).toUpperCase();
+    this.wing = firstChar === 'S' ? 'South' : 'North';
+  }
+  next();
+});
 
 const Guest = mongoose.model('Guest', guestSchema);
 
 module.exports = Guest;
-
-
