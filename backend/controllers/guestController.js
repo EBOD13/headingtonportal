@@ -2,6 +2,7 @@
 const Guest = require("../models/guestModel");
 const Resident = require("../models/residentModel");
 const asyncHandler = require("express-async-handler");
+const { logActivity } = require('../utils/activityLogger');
 
 // @desc    Get all guests currently checked in
 // @route   GET /api/guests/allguests
@@ -144,6 +145,19 @@ const registerGuest = asyncHandler(async (req, res) => {
     hostResident.guests.push(guest._id);
     await hostResident.save();
 
+    await logActivity({
+    actorId: req.clerk?._id,
+    action: 'guest_registered',
+    targetType: 'guest',
+    targetId: guest._id,
+    description: `Guest registered: ${guest.name} for host ${hostResident.name} (${hostResident.roomNumber})`,
+    metadata: {
+      hostId: hostResident._id,
+      hostRoom: hostResident.roomNumber,
+      studentAtOU: guest.studentAtOU
+    }
+  });
+
     res.status(201).json({ 
       success: true,
       message: "Guest registered successfully",
@@ -157,7 +171,8 @@ const registerGuest = asyncHandler(async (req, res) => {
         wing: guest.wing,
         studentAtOU: guest.studentAtOU
       }
-    });
+    }
+  );
 
   } catch (error) {
     console.error("Error registering guest:", error);
@@ -279,8 +294,6 @@ const checkOutGuest = asyncHandler(async (req, res) => {
   try {
     const { guestId } = req.params;
 
-    console.log('[checkOutGuest] req.params:', req.params);
-
     if (!guestId) {
       return res.status(400).json({
         success: false,
@@ -308,6 +321,19 @@ const checkOutGuest = asyncHandler(async (req, res) => {
     guest.checkout = Date.now();
 
     const updatedGuest = await guest.save();
+
+    await logActivity({
+    actorId: req.clerk?._id,
+    action: 'guest_check_out',
+    targetType: 'guest',
+    targetId: updatedGuest._id,
+    description: `Guest checked out: ${updatedGuest.name} (${updatedGuest.room})`,
+    metadata: {
+      hostName: updatedGuest.hostName,
+      checkout: updatedGuest.checkout
+    }
+  });
+
 
     res.status(200).json({
       success: true,
@@ -535,6 +561,16 @@ const flagGuest = asyncHandler(async (req, res) => {
     if (reason) guest.flagReason = reason;
     
     const updatedGuest = await guest.save();
+
+    await logActivity({
+    actorId: req.clerk?._id,
+    action: 'incident_created',
+    targetType: 'guest',
+    targetId: updatedGuest._id,
+    description: `Guest ${updatedGuest.name} ${flagged ? 'flagged' : 'unflagged'}`,
+    metadata: { flagged: updatedGuest.flagged, reason }
+  });
+
     
     res.status(200).json({
       success: true,

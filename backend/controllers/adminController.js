@@ -1,177 +1,132 @@
-// backend/controllers/adminController.js
 const asyncHandler = require('express-async-handler');
 const Clerk = require('../models/clerkModel');
-const crypto = require('crypto');
-const { sendEmail } = require('../utils/emailService');
+const ActivityLog = require('../models/activityLogModel');
+const { logActivity } = require('../utils/activityLogger');
 
-class AdminTransitionManager {
-    // Initiate admin transfer
-    static initiateTransfer = asyncHandler(async (req, res) => {
-        const { targetClerkId, reason } = req.body;
-        const currentAdmin = req.clerk;
+// GET /api/admin/clerks
+// Query: search, role, isActive
+const getClerkRoster = asyncHandler(async (req, res) => {
+  const { search, role, isActive } = req.query;
+  const filter = {};
 
-        // Verify current admin has permission
-        if (!currentAdmin.isSuperAdmin && !currentAdmin.canCreateAdmins) {
-            return res.status(403).json({
-                success: false,
-                message: 'Insufficient permissions to transfer admin rights'
-            });
-        }
+  if (role) {
+    filter.role = role;
+  }
 
-        // Get target clerk
-        const targetClerk = await Clerk.findById(targetClerkId);
-        if (!targetClerk) {
-            return res.status(404).json({
-                success: false,
-                message: 'Target clerk not found'
-            });
-        }
+  if (isActive !== undefined) {
+    filter.isActive = isActive === 'true';
+  }
 
-        // Generate transfer token
-        const transferToken = crypto.randomBytes(32).toString('hex');
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  if (search) {
+    const q = search.trim();
+    filter.$or = [
+      { name: { $regex: q, $options: 'i' } },
+      { email: { $regex: q, $options: 'i' } },
+      { clerkID: { $regex: q, $options: 'i' } }
+    ];
+  }
 
-        // Create transfer record
-        const transfer = {
-            token: transferToken,
-            fromAdmin: currentAdmin._id,
-            toClerk: targetClerk._id,
-            expiresAt,
-            reason,
-            status: 'pending'
-        };
+  const clerks = await Clerk.find(filter)
+    .select('-password -clerkSecret -refreshTokens')
+    .sort({ role: 1, createdAt: -1 });
 
-        // Store in database (you'd create a Transfer model)
-        // await Transfer.create(transfer);
+  res.status(200).json({ count: clerks.length, clerks });
+});
 
-        // Send email to target clerk
-        await sendEmail({
-            to: targetClerk.email,
-            subject: 'Admin Rights Transfer Request - Headington Hall',
-            html: `
-                <h2>Admin Rights Transfer Request</h2>
-                <p>You have been nominated to receive admin rights by ${currentAdmin.email}.</p>
-                <p><strong>Reason:</strong> ${reason}</p>
-                <p>To accept this transfer, click the link below within 24 hours:</p>
-                <a href="${process.env.APP_URL}/admin/transfer/accept?token=${transferToken}">
-                    Accept Admin Rights
-                </a>
-                <p>If you did not expect this request, please contact the system administrator immediately.</p>
-            `
-        });
+// GET /api/admin/clerks/:id
+// Includes recent activity for modal
+const getClerkDetailWithActivity = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-        res.json({
-            success: true,
-            message: 'Transfer initiated. Target clerk has been notified.',
-            transferId: transfer._id
-        });
+  const clerk = await Clerk.findById(id).select(
+    '-password -clerkSecret -refreshTokens'
+  );
+  if (!clerk) {
+    return res.status(404).json({ message: 'Clerk not found' });
+  }
+
+  const recentActivity = await ActivityLog.find({ actor: clerk._id })
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .lean();
+
+  res.status(200).json({ clerk, recentActivity });
+});
+
+// PUT /api/admin/clerks/:id/status
+// Body: { isActive: boolean }
+const updateClerkStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { isActive, reason } = req.body;
+
+  const clerk = await Clerk.findById(id);
+  if (!clerk) {
+    return res.status(404).json({ message: 'Clerk not found' });
+  }
+
+  // You might want to prevent an admin from deactivating themselves:
+  if (String(clerk._id) === String(req.clerk._id)) {
+    return res.status(400).json({
+      message: "You cannot change your own status from this screen."
     });
+  }
 
-    // Accept admin transfer
-    static acceptTransfer = asyncHandler(async (req, res) => {
-        const { token } = req.body;
-        const acceptingClerk = req.clerk;
+  clerk.isActive = !!isActive;
+  await clerk.save();
 
-        // Find transfer record
-        // const transfer = await Transfer.findOne({
-        //     token,
-        //     toClerk: acceptingClerk._id,
-        //     status: 'pending',
-        //     expiresAt: { $gt: new Date() }
-        // });
+  await logActivity({
+    actorId: req.clerk._id,
+    action: 'clerk_status_changed',
+    targetType: 'clerk',
+    targetId: clerk._id,
+    description: `Clerk status changed to ${clerk.isActive ? 'active' : 'deactivated'}${reason ? `: ${reason}` : ''}`,
+    metadata: { isActive: clerk.isActive, reason }
+  });
 
-        // if (!transfer) {
-        //     return res.status(400).json({
-        //         success: false,
-        //         message: 'Invalid or expired transfer token'
-        //     });
-        // }
+  res.status(200).json({
+    message: 'Clerk status updated',
+    clerk: {
+      _id: clerk._id,
+      name: clerk.name,
+      email: clerk.email,
+      clerkID: clerk.clerkID,
+      isActive: clerk.isActive,
+      role: clerk.role
+    }
+  });
+});
 
-        // Get transferring admin
-        // const fromAdmin = await Clerk.findById(transfer.fromAdmin);
+// DELETE /api/admin/clerks/:id
+const deleteClerk = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-        // Create audit trail
-        // const audit = {
-        //     action: 'admin_transfer',
-        //     fromAdmin: fromAdmin._id,
-        //     toAdmin: acceptingClerk._id,
-        //     timestamp: new Date(),
-        //     transferId: transfer._id
-        // };
-        // await Audit.create(audit);
+  const clerk = await Clerk.findById(id);
+  if (!clerk) {
+    return res.status(404).json({ message: 'Clerk not found' });
+  }
 
-        // Update clerk permissions
-        acceptingClerk.role = 'admin';
-        acceptingClerk.permissions = [
-            'view_residents', 'edit_residents', 'delete_residents',
-            'view_guests', 'check_in_guests', 'check_out_guests',
-            'view_reports', 'generate_reports', 'manage_clerks',
-            'system_settings'
-        ];
-        acceptingClerk.canCreateAdmins = true;
-        await acceptingClerk.save();
-
-        // Update transfer status
-        // transfer.status = 'completed';
-        // transfer.completedAt = new Date();
-        // await transfer.save();
-
-        // Notify both parties
-        // await sendEmail({
-        //     to: fromAdmin.email,
-        //     subject: 'Admin Transfer Completed',
-        //     html: `${acceptingClerk.email} has accepted the admin rights transfer.`
-        // });
-
-        res.json({
-            success: true,
-            message: 'Admin rights transferred successfully',
-            newRole: acceptingClerk.role
-        });
+  if (clerk.isSuperAdmin) {
+    return res.status(403).json({
+      message: 'Cannot delete a super admin from this screen'
     });
+  }
 
-    // Get pending transfers
-    static getPendingTransfers = asyncHandler(async (req, res) => {
-        // const transfers = await Transfer.find({
-        //     status: 'pending',
-        //     expiresAt: { $gt: new Date() }
-        // }).populate('fromAdmin toClerk', 'email name');
+  await Clerk.findByIdAndDelete(id);
 
-        res.json({
-            success: true,
-            // data: transfers
-        });
-    });
+  await logActivity({
+    actorId: req.clerk._id,
+    action: 'clerk_deleted',
+    targetType: 'clerk',
+    targetId: id,
+    description: `Clerk ${clerk.email} deleted`
+  });
 
-    // Revoke transfer
-    static revokeTransfer = asyncHandler(async (req, res) => {
-        const { transferId } = req.params;
+  res.status(200).json({ message: 'Clerk deleted', id });
+});
 
-        // const transfer = await Transfer.findById(transferId);
-        // if (!transfer) {
-        //     return res.status(404).json({
-        //         success: false,
-        //         message: 'Transfer not found'
-        //     });
-        // }
-
-        // Only the initiating admin can revoke
-        // if (!transfer.fromAdmin.equals(req.clerk._id)) {
-        //     return res.status(403).json({
-        //         success: false,
-        //         message: 'Only the initiating admin can revoke this transfer'
-        //     });
-        // }
-
-        // transfer.status = 'revoked';
-        // transfer.revokedAt = new Date();
-        // await transfer.save();
-
-        res.json({
-            success: true,
-            message: 'Transfer revoked successfully'
-        });
-    });
-}
-
-module.exports = AdminTransitionManager;
+module.exports = {
+  getClerkRoster,
+  getClerkDetailWithActivity,
+  updateClerkStatus,
+  deleteClerk
+};

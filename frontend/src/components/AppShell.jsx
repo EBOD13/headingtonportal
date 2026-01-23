@@ -1,7 +1,7 @@
 // frontend/src/components/AppShell.jsx
 import React, { useState, useCallback, createContext, useContext, useMemo } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logout, reset } from '../features/auth/authSlice';
 import CheckInForm from './CheckInForm';
 import CheckOutForm from './CheckOutForm';
@@ -11,7 +11,6 @@ import './AppShell.css';
 // ============================================================================
 // Icons (using lucide-react)
 // ============================================================================
-
 import {
   Menu,
   Home,
@@ -21,37 +20,30 @@ import {
   Settings,
   LogOut,
   UserPlus,
+  Shield,
 } from 'lucide-react';
 
 const Icons = {
   Menu,
   Home,
   Users,
-  // Use a "checked user" icon to represent Guests/Check-in
   Guests: UserCheck,
   Analytics: BarChart3,
   Settings,
   LogOut,
   AddGuest: UserPlus,
+  Admin: Shield,
 };
 
 // ============================================================================
 // Modal Context - allows child components to open AddNewGuest modal
 // ============================================================================
-
 const ModalContext = createContext(null);
 
-/**
- * Hook to access the modal context from any child component.
- * Usage:
- *   const { openAddNewGuest } = useAppShellModals();
- *   openAddNewGuest({ room: 'N101', hostId: '123', hostName: 'John Doe' });
- */
 export const useAppShellModals = () => {
   const context = useContext(ModalContext);
   if (!context) {
     console.warn('useAppShellModals must be used within AppShell');
-    // Return a no-op function to prevent crashes
     return {
       openAddNewGuest: () => {
         console.warn('openAddNewGuest called outside of AppShell context');
@@ -64,7 +56,6 @@ export const useAppShellModals = () => {
 // ============================================================================
 // Main Component
 // ============================================================================
-
 const AppShell = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showCheckIn, setShowCheckIn] = useState(false);
@@ -78,6 +69,17 @@ const AppShell = ({ children }) => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const { clerk } = useSelector((state) => state.auth);
+  const isAdmin = useMemo(
+    () =>
+      Boolean(
+        clerk?.isAdmin === true ||
+        clerk?.role === 'admin' ||
+        clerk?.role === 'superadmin'
+      ),
+    [clerk]
+  );
 
   const toggleSidebar = useCallback(() => {
     setSidebarOpen((prev) => !prev);
@@ -118,10 +120,13 @@ const AppShell = ({ children }) => {
     setSidebarOpen(false);
   }, []);
 
-  const handleAddNewGuestFromCheckIn = useCallback((data) => {
-    setShowCheckIn(false);
-    handleOpenAddNewGuest(data);
-  }, [handleOpenAddNewGuest]);
+  const handleAddNewGuestFromCheckIn = useCallback(
+    (data) => {
+      setShowCheckIn(false);
+      handleOpenAddNewGuest(data);
+    },
+    [handleOpenAddNewGuest]
+  );
 
   const handleCloseAddNewGuest = useCallback(() => {
     setShowAddNewGuest(false);
@@ -132,17 +137,32 @@ const AppShell = ({ children }) => {
     });
   }, []);
 
-  const modalContextValue = useMemo(() => ({
-    openAddNewGuest: handleOpenAddNewGuest,
-  }), [handleOpenAddNewGuest]);
+  const modalContextValue = useMemo(
+    () => ({
+      openAddNewGuest: handleOpenAddNewGuest,
+    }),
+    [handleOpenAddNewGuest]
+  );
 
-  const navItems = [
-    { to: '/dashboard', label: 'Dashboard', icon: <Icons.Home /> },
-    { to: '/residents', label: 'Residents', icon: <Icons.Users /> },
-    { to: '/guests', label: 'Guests', icon: <Icons.Guests /> },
-    { to: '/analytics', label: 'Analytics', icon: <Icons.Analytics /> },
-    { to: '/settings', label: 'Settings', icon: <Icons.Settings /> },
-  ];
+  const navItems = useMemo(() => {
+    const base = [
+      { to: '/dashboard', label: 'Dashboard', icon: <Icons.Home /> },
+      { to: '/residents', label: 'Residents', icon: <Icons.Users /> },
+      { to: '/guests', label: 'Guests', icon: <Icons.Guests /> },
+      { to: '/analytics', label: 'Analytics', icon: <Icons.Analytics /> },
+      { to: '/settings', label: 'Settings', icon: <Icons.Settings /> },
+    ];
+
+    if (isAdmin) {
+      base.push({
+        to: '/admin',
+        label: 'Admin',
+        icon: <Icons.Admin />,
+      });
+    }
+
+    return base;
+  }, [isAdmin]);
 
   return (
     <ModalContext.Provider value={modalContextValue}>

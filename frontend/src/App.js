@@ -1,4 +1,3 @@
-// frontend/src/App.js
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useSelector } from 'react-redux';
@@ -11,12 +10,13 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import Guests from './components/Guests';
 import Settings from './components/Settings';
+import Analytics from './components/Analytics';        
+import AdminScreen from './components/AdminScreen';
 
 import { OverlayProvider } from './overlays/OverlayProvider';
-import AppShell from './components/AppShell';   // 🔹 <-- added
+import AppShell from './components/AppShell';
 
 import './App.css';
-import Analytics from './components/Analytics';
 
 // ============================================================================
 // Query Client
@@ -35,12 +35,9 @@ const queryClient = new QueryClient({
 // ============================================================================
 // Protected Route Wrapper
 // ============================================================================
-
 const ProtectedRoute = ({ children }) => {
   const { clerk, isLoading } = useSelector((state) => state.auth);
 
-  // ❗ Only show the big loading UI if we're still initializing
-  // and don't know who the user is yet.
   if (isLoading && !clerk) {
     return (
       <div className="loading-container">
@@ -50,16 +47,26 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // After init: if there is no clerk, bounce to login.
   if (!clerk) {
     return <Navigate to="/login" />;
   }
 
-  // If we *do* have a clerk, always render children,
-  // even if isLoading might be true in the background.
   return children;
 };
 
+// ============================================================================
+// Admin Route Wrapper
+// ============================================================================
+const AdminRoute = ({ children }) => {
+  const { clerk } = useSelector((state) => state.auth);
+  const isAdmin = Boolean(clerk?.isAdmin || clerk?.role === 'admin');
+
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return children;
+};
 
 // ============================================================================
 // App Component
@@ -67,7 +74,7 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <OverlayProvider>  
+      <OverlayProvider>
         <Router>
           <div className="container">
             <Routes>
@@ -146,11 +153,27 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AppShell>
-                      <Analytics /> {/* or <Analytics /> if you have that */}
+                      <Analytics />
                     </AppShell>
                   </ProtectedRoute>
                 }
               />
+
+              {/* ADMIN ONLY ROUTE */}
+
+               <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute>
+                      <AdminRoute>
+                        <AppShell>
+                          <AdminScreen />
+                        </AppShell>
+                      </AdminRoute>
+                    </ProtectedRoute>
+                  }
+/>
+
 
               {/* CATCH ALL */}
               <Route path="*" element={<Navigate to="/" />} />
@@ -158,10 +181,8 @@ function App() {
           </div>
         </Router>
 
-        {/* DEVTOOLS */}
         <ReactQueryDevtools initialIsOpen={false} />
 
-        {/* TOASTER */}
         <Toaster
           position="top-right"
           toastOptions={{

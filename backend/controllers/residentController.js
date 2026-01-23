@@ -2,6 +2,8 @@
 const asyncHandler = require('express-async-handler');
 const Resident = require('../models/residentModel');
 const bcrypt = require('bcryptjs');
+const { logActivity } = require('../utils/activityLogger');
+
 
 // ================================
 // GET: all residents
@@ -117,6 +119,15 @@ const registerResident = asyncHandler(async (req, res) => {
       email: resident.email,
       phoneNumber: resident.phoneNumber,
     });
+    await logActivity({
+    actorId: req.clerk?._id,
+    action: 'resident_created',
+    targetType: 'resident',
+    targetId: resident._id,
+    description: `Resident registered: ${resident.name} (${resident.roomNumber})`,
+    metadata: { email: resident.email }
+});
+
   } else {
     res.status(400);
     throw new Error('Failed to register resident');
@@ -138,6 +149,15 @@ const updateResident = asyncHandler(async (req, res) => {
     req.body,
     { new: true }
   );
+  await logActivity({
+  actorId: req.clerk?._id,
+  action: 'resident_updated',
+  targetType: 'resident',
+  targetId: updatedResident._id,
+  description: `Resident updated: ${updatedResident.name} (${updatedResident.roomNumber})`,
+  metadata: { changes: req.body }
+});
+
 
   res.status(200).json(updatedResident);
 });
@@ -160,6 +180,13 @@ const deleteResident = asyncHandler(async (req, res) => {
 
   await Resident.findByIdAndDelete(req.params.id);
   res.status(200).json({ id: req.params.id });
+  await logActivity({
+  actorId: req.clerk?._id,
+  action: 'resident_deleted',
+  targetType: 'resident',
+  targetId: req.params.id,
+  description: `Resident deleted: ${resident.name} (${resident.roomNumber})`
+});
 });
 
 // ================================
