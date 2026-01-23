@@ -1,5 +1,5 @@
 // frontend/src/features/residents/residentService.js
-import axios from 'axios';
+import { api } from "../../api/client";
 
 const API_URL = '/api/residents/';
 
@@ -16,7 +16,7 @@ const buildConfig = (token) => ({
 // ==============================
 const getAllResidents = async (token) => {
   const config = buildConfig(token);
-  const response = await axios.get(API_URL, config);
+  const response = await api.get(API_URL, config);
   // Expecting an array of residents
   return response.data;
 };
@@ -28,7 +28,7 @@ const getAllResidents = async (token) => {
 // ==============================
 const getResidentByRoom = async (roomNumber, token) => {
   const config = buildConfig(token);
-  const response = await axios.get(`${API_URL}${roomNumber}`, config);
+  const response = await api.get(`${API_URL}${roomNumber}`, config);
   // Backend might return array or single object; slice will handle both
   return response.data;
 };
@@ -50,7 +50,7 @@ const getResidentByRoom = async (roomNumber, token) => {
 // ==============================
 const getGuestsByHost = async (hostId, token) => {
   const config = buildConfig(token);
-  const response = await axios.get(`${API_URL}guests/${hostId}`, config);
+  const response = await api.get(`${API_URL}guests/${hostId}`, config);
   return response.data;
 };
 

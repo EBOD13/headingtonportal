@@ -1,9 +1,10 @@
 import axios from "axios";
+import { api } from "../../api/client";
 
 const API_URL = '/api/clerks/'
 
 const register = async(clerkData) =>{
-    const response = await axios.post(API_URL, clerkData)
+    const response = await api.post(API_URL, clerkData)
     if(response.data){
         localStorage.setItem("clerk", JSON.stringify(response.data))
     }
@@ -11,7 +12,7 @@ const register = async(clerkData) =>{
 }
 
 const login = async(clerkData) =>{
-    const response = await axios.post(API_URL + 'login', clerkData)
+    const response = await api.post(API_URL + 'login', clerkData)
 
     if(response.data){
         localStorage.setItem('clerk', JSON.stringify(response.data))
