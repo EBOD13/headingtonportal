@@ -11,13 +11,20 @@ connectDB();
 
 const app = express();
 
-// Enable CORS for React app on port 3000
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://headingtonportal.danielesambu.com',
+  'https://headingtonportal-frontend.onrender.com'
+];
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 
 // Handle preflight requests
 app.options('*', cors());
