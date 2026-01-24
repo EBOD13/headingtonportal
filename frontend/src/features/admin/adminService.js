@@ -39,6 +39,16 @@ const updateClerkStatus = async ({ id, updates }, token) => {
   return res.data;
 };
 
+// Resend clerk register link
+const resendClerkInvite = async (id, token) => {
+  const res = await api.post(
+    `${API_URL}/clerks/${id}/resend-invite`,
+    {},
+    buildConfig(token)
+  );
+  return res.data;
+};
+
 // DELETE /api/admin/clerks/:id
 const deleteClerk = async (id, token) => {
   const res = await api.delete(`${API_URL}/clerks/${id}`, buildConfig(token));
@@ -152,6 +162,7 @@ const adminService = {
   updateClerkStatus,
   deleteClerk,
   importClerksFromFile,
+  resendClerkInvite,
 
   // residents
   getResidentRoster,

@@ -14,6 +14,7 @@ const {
   getClerkDetailWithActivity,
   updateClerkStatus,
   deleteClerk,
+  resendClerkInvite,
 } = require('../controllers/adminClerkController');
 
 const {
@@ -94,6 +95,13 @@ router.post(
   requirePermission('manage_clerks'),
   uploadSingleFile,
   importClerksFromFile
+);
+
+// Resend clerk registration link
+router.post(
+  '/clerks/:id/resend-invite',
+  requirePermission('manage_clerks'),
+  resendClerkInvite
 );
 
 // ============================================================

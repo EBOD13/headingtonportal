@@ -119,8 +119,101 @@ const adminCreateClerk = asyncHandler(async (req, res) => {
 });
 
 // ----------------------------------------
-// Your existing handlers
+// Admin: Resend invitation link to clerk
+// POST /api/admin/clerks/:id/resend-invite
 // ----------------------------------------
+const resendClerkInvite = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const clerk = await Clerk.findById(id);
+  if (!clerk) {
+    return res.status(404).json({
+      success: false,
+      message: 'Clerk not found',
+    });
+  }
+
+  // Check if clerk already set their password (no need to resend)
+  if (!clerk.needsPasswordReset && !clerk.passwordResetToken) {
+    return res.status(400).json({
+      success: false,
+      message: 'This clerk has already set their password.',
+    });
+  }
+
+  // Generate a new temp password
+  const tempPassword = generateTempPassword();
+
+  // Update clerk with new password and reset token
+  clerk.password = tempPassword; // Will be hashed in pre-save hook
+
+  // Generate new reset token
+  const rawResetToken = crypto.randomBytes(32).toString('hex');
+  clerk.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(rawResetToken)
+    .digest('hex');
+
+  // Reset the expiry to 3 weeks from now
+  const expires = Date.now() + 3 * 24 * 60 * 60 * 1000; // 3 days
+  clerk.passwordResetExpires = new Date(expires);
+  clerk.mustChangePasswordBy = new Date(expires);
+  clerk.needsPasswordReset = true;
+
+  // Reactivate if they were deactivated due to expiry
+  clerk.isActive = true;
+
+  await clerk.save();
+
+  // Log activity
+  await logActivity({
+    actorId: req.clerk?._id,
+    action: 'clerk_invite_resent',
+    targetType: 'clerk',
+    targetId: clerk._id,
+    description: `Invitation resent to ${clerk.email}`,
+    metadata: {
+      clerkID: clerk.clerkID,
+      newExpiry: clerk.passwordResetExpires,
+    },
+  });
+
+  // Build set-password URL
+  const portalBaseUrl =
+    process.env.PORTAL_BASE_URL || 'https://headingtonportal-frontend.onrender.com';
+  const setPasswordUrl = `${portalBaseUrl}/set-password/${rawResetToken}`;
+
+  // Send email
+  try {
+    await sendRegisteredClerkEmail({
+      name: clerk.name,
+      email: clerk.email,
+      clerkID: clerk.clerkID,
+      tempPassword,
+      setPasswordUrl,
+    });
+  } catch (err) {
+    console.error('Failed to send resend invite email:', err.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Clerk updated but failed to send email. Please try again.',
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'Invitation link resent successfully',
+    clerk: {
+      _id: clerk._id,
+      name: clerk.name,
+      email: clerk.email,
+      clerkID: clerk.clerkID,
+      passwordResetExpires: clerk.passwordResetExpires,
+    },
+  });
+});
+
+
 
 // GET /api/admin/clerks
 // Query: search, role, isActive
@@ -251,4 +344,5 @@ module.exports = {
   getClerkDetailWithActivity,
   updateClerkStatus,
   deleteClerk,
+  resendClerkInvite
 };

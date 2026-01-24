@@ -498,3 +498,22 @@
   margin-bottom: 0.25rem;
   color: #0f172a;
 }
+
+.status-pill.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.expired {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.clerk-expiry-info {
+  margin-top: 4px;
+}
+
+.clerk-expiry-info small {
+  color: #6b7280;
+  font-size: 12px;
+}

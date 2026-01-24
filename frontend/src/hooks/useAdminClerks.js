@@ -79,6 +79,13 @@ export function useAdminClerks(options = {}) {
     [dispatch]
   );
 
+  const resendInvite = async (clerkId) => {
+  const token = getAuthToken();
+  const result = await adminService.resendClerkInvite(clerkId, token);
+  //  refetch to update the UI
+  refetch();
+  return result;
+};
   const deleteClerkAction = useCallback(
     (id) => {
       if (!id) return;
@@ -116,6 +123,7 @@ export function useAdminClerks(options = {}) {
     deleteClerk: deleteClerkAction,
     importFromFile,
     setSelectedClerk,
+    resendInvite
   };
 }
 export default useAdminClerks;
