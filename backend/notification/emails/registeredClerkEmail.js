@@ -10,8 +10,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 async function sendRegisteredClerkEmail({ name, email, clerkID, tempPassword, setPasswordUrl }) {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Headington Portal <onboarding@resend.dev>', 
-      to: 'olekabrida@gmail.com',
+      from: 'Headington Portal <noreply@danielesambu.com>',
+      to: email,
       subject: 'Your Headington Portal Clerk Credentials',
       html: `
 <!DOCTYPE html>
