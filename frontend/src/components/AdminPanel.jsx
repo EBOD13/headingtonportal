@@ -6,7 +6,6 @@ import React, {
   useCallback,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import {
   fetchResidentRoster,
@@ -20,6 +19,9 @@ import ResidentDetailModal from "./ResidentDetailModal";
 import CreateResidentModal from "./CreateResidentModal";
 import { useIsAdmin } from "../hooks/useIsAdmin";
 import "./AdminPanel.css";
+import { adminCreateClerk } from "../features/auth/authSlice";
+import CreateClerkModal from "./CreateClerkModal";
+
 
 import {
   Shield,
@@ -267,7 +269,6 @@ const ClerkDetailModal = ({
 const AdminPanel = () => {
   const isAdmin = useIsAdmin();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { openAddGuest } = useOverlays();
 
   const {
@@ -299,6 +300,8 @@ const AdminPanel = () => {
 
   const [showAddClerkMenu, setShowAddClerkMenu] = useState(false);
   const addClerkFileInputRef = useRef(null);
+    const [showCreateClerkModal, setShowCreateClerkModal] = useState(false);
+  const [creatingClerk, setCreatingClerk] = useState(false);
 
   // Resident create/import menu + modal
   const [showAddResidentMenu, setShowAddResidentMenu] = useState(false);
@@ -357,10 +360,45 @@ const AdminPanel = () => {
   // ==========================
   // Clerk: add/import
   // ==========================
-  const handleAddClerkSingle = () => {
-    setShowAddClerkMenu(false);
-    navigate("/admin/clerks/new", { state: { fromAdmin: true } });
-  };
+ const handleAddClerkSingle = () => {
+  setShowAddClerkMenu(false);
+  setShowCreateClerkModal(true);
+};
+
+
+const handleCreateClerk = async (values) => {
+  const name = values.name?.trim();
+  const email = values.email?.trim();
+
+  if (!name || !email) {
+    toast.error("Name and email are required.");
+    return;
+  }
+
+  setCreatingClerk(true);
+
+  const clerkData = { name, email };
+
+  try {
+    // uses the same thunk as Register.jsx admin flow
+    await dispatch(adminCreateClerk(clerkData));
+
+    toast.success("Clerk account created successfully");
+    setShowCreateClerkModal(false);
+    await refetchClerks();
+  } catch (err) {
+    console.error("Create clerk error:", err);
+    const message =
+      typeof err === "string"
+        ? err
+        : err?.response?.data?.message ||
+          err?.message ||
+          "Failed to create clerk";
+    toast.error(message);
+  } finally {
+    setCreatingClerk(false);
+  }
+};
 
   const handleAddClerkFileClick = () => {
     if (addClerkFileInputRef.current) {
@@ -917,6 +955,15 @@ const handleCreateResident = async (values) => {
         onAfterDelete={refreshResidents}
       />
     )}
+    {/* Add Clerk Modal */}
+    {showCreateClerkModal && (
+        <CreateClerkModal
+          isOpen={showCreateClerkModal}
+          onClose={() => setShowCreateClerkModal(false)}
+          onSubmit={handleCreateClerk}
+          isSubmitting={creatingClerk}
+        />
+      )}
 
 
       {/* Create resident modal */}

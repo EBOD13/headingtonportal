@@ -6,14 +6,12 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import Login from './components/Login';
 import ResidentsRooster from './components/ResidentsRooster';
-import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import Guests from './components/Guests';
 import Settings from './components/Settings';
 import Analytics from './components/Analytics';        
 import AdminScreen from './components/AdminScreen';
 import SetPasswordPage from './components/SetPasswordPage';
-
 
 import { OverlayProvider } from './overlays/OverlayProvider';
 import AppShell from './components/AppShell';
@@ -120,17 +118,6 @@ function App() {
               />
 
               <Route
-                path="/register-resident"
-                element={
-                  <ProtectedRoute>
-                    <AppShell>
-                      <Register />
-                    </AppShell>
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
                 path="/guests"
                 element={
                   <ProtectedRoute>
@@ -189,19 +176,6 @@ function App() {
                       </AdminRoute>
                     </ProtectedRoute>
                     
-                  }
-                />
-
-                <Route
-                  path="/admin/clerks/new"
-                  element={
-                    <ProtectedRoute>
-                      <AdminRoute>
-                        <AppShell>
-                          <Register />
-                        </AppShell>
-                      </AdminRoute>
-                    </ProtectedRoute>
                   }
                 />
 
