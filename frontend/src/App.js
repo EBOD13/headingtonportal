@@ -12,6 +12,8 @@ import Guests from './components/Guests';
 import Settings from './components/Settings';
 import Analytics from './components/Analytics';        
 import AdminScreen from './components/AdminScreen';
+import SetPasswordPage from './components/SetPasswordPage';
+
 
 import { OverlayProvider } from './overlays/OverlayProvider';
 import AppShell from './components/AppShell';
@@ -81,6 +83,7 @@ function App() {
             <Routes>
               {/* PUBLIC ROUTES */}
               <Route path="/login" element={<Login />} />
+              <Route path="/set-password/:token" element={<SetPasswordPage />} />
 
               {/* PROTECTED ROUTES (wrapped with AppShell) */}
               <Route

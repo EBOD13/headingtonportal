@@ -32,36 +32,34 @@ const Register = () => {
   // Was this navigation initiated from the admin screen?
   const fromAdmin = Boolean(location.state?.fromAdmin);
 
-useEffect(() => {
-  if (isError) {
-    toast.error(message || 'Registration failed', {
-      style: {
-        border: '2px solid #841617',
-        padding: '16px',
-        color: '#000000',
-      },
-    });
-    dispatch(reset());  // Only reset after showing error
-  }
+  useEffect(() => {
+    if (isError) {
+      toast.error(message || 'Registration failed', {
+        style: {
+          border: '2px solid #841617',
+          padding: '16px',
+          color: '#000000',
+        },
+      });
+      dispatch(reset()); // Only reset after showing error
+    }
 
-  if (isSuccess) {
-    if (fromAdmin) {
-      toast.success('Clerk account created successfully');
-      navigate('/admin/clerks');
-    } else {
+    if (isSuccess) {
+      if (fromAdmin) {
+        toast.success('Clerk account created successfully');
+        navigate('/admin/clerks');
+      } else {
+        navigate('/');
+      }
+      dispatch(reset()); // Only reset after success actions
+    }
+
+    // If user hits /register directly while already logged in,
+    // only redirect them in the normal (non-admin) case.
+    if (!fromAdmin && clerk) {
       navigate('/');
     }
-    dispatch(reset());  // Only reset after success actions
-  }
-
-  // If user hits /register directly while already logged in,
-  // only redirect them in the normal (non-admin) case.
-  if (!fromAdmin && clerk) {
-    navigate('/');
-  }
-  
-}, [clerk, isError, isSuccess, message, navigate, dispatch, fromAdmin]);
-
+  }, [clerk, isError, isSuccess, message, navigate, dispatch, fromAdmin]);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -108,8 +106,22 @@ useEffect(() => {
     }
   };
 
+  // ==========================
+  // Loading state with spinner
+  // ==========================
   if (isLoading) {
-    return <Spinner />;
+    return (
+      <div className="register-page register-loading-page" style={{ zIndex: 9999 }}>
+        <div className="register-loading-container">
+          <Spinner />
+          <p className="register-loading-text">
+            {fromAdmin
+              ? 'Creating clerk account...'
+              : 'Creating your account...'}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -130,6 +142,7 @@ useEffect(() => {
             required
             onChange={onChange}
             value={name}
+            disabled={isLoading}
           />
           <br />
 
@@ -142,10 +155,11 @@ useEffect(() => {
             required
             onChange={onChange}
             value={email}
+            disabled={isLoading}
           />
           <br />
 
-          {/* ✅ Only show password fields when NOT coming from admin */}
+          {/* Only show password fields when NOT coming from admin */}
           {!fromAdmin && (
             <>
               <label htmlFor="password">Password</label>
@@ -157,6 +171,7 @@ useEffect(() => {
                 onChange={onChange}
                 value={password}
                 required
+                disabled={isLoading}
               />
               <br />
 
@@ -169,14 +184,21 @@ useEffect(() => {
                 required
                 onChange={onChange}
                 value={password2}
+                disabled={isLoading}
               />
               <br />
             </>
           )}
 
           <div className="submit-btn">
-            <button type="submit">
-              {fromAdmin ? 'Create Clerk' : 'Register'}
+            <button type="submit" disabled={isLoading}>
+              {isLoading
+                ? fromAdmin
+                  ? 'Creating...'
+                  : 'Registering...'
+                : fromAdmin
+                ? 'Create Clerk'
+                : 'Register'}
             </button>
           </div>
         </form>
@@ -184,7 +206,9 @@ useEffect(() => {
         {/* Only show login link for normal flow, not when admin is adding a clerk */}
         {!fromAdmin && (
           <Link to="/login">
-            <button className="link-to-register">Log in to your account</button>
+            <button className="link-to-register" disabled={isLoading}>
+              Log in to your account
+            </button>
           </Link>
         )}
       </div>
