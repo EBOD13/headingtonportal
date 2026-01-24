@@ -1,18 +1,25 @@
-// frontend/src/components/ClerkRoster.jsx
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import {
   fetchResidentRoster,
   setSelectedResidentLocal,
+  importResidents,
+  createResidentAdmin,
 } from "../features/admin/adminSlice";
 import useAdminClerks from "../hooks/useAdminClerks";
 import ResidentDetailModal from "../components/ResidentDetailModal";
+import CreateResidentModal from "../components/CreateResidentModal";
 import { useIsAdmin } from "../hooks/useIsAdmin";
 import "./ClerkRoster.css";
 
-// lucide-react icons
 import {
   Shield,
   UserCog,
@@ -22,7 +29,6 @@ import {
   Users,
   FileSpreadsheet,
   Upload,
-  Search,
   Filter,
   Trash2,
   Mail,
@@ -30,12 +36,12 @@ import {
   Activity,
   ChevronDown,
   X,
+  Home,
 } from "lucide-react";
 
 // ============================================================================
 // Helper components
 // ============================================================================
-
 const StatusPill = ({ active }) => (
   <span className={`status-pill ${active ? "active" : "inactive"}`}>
     <span className="dot" />
@@ -85,7 +91,7 @@ const ClerkCard = ({ clerk, onClick, onToggleActive, onDelete }) => (
     <div
       className="clerk-card-footer"
       onClick={(e) => {
-        e.stopPropagation(); // prevent opening modal when pressing footer buttons
+        e.stopPropagation();
       }}
     >
       <button
@@ -117,7 +123,6 @@ const ClerkCard = ({ clerk, onClick, onToggleActive, onDelete }) => (
   </div>
 );
 
-// Very lightweight clerk detail modal (you can beautify like ResidentDetailModal)
 const ClerkDetailModal = ({
   clerk,
   onClose,
@@ -128,9 +133,10 @@ const ClerkDetailModal = ({
 }) => {
   if (!clerk) return null;
 
-  // Check if clerk needs to set password (invitation pending)
   const isPendingSetup = clerk.needsPasswordReset || clerk.passwordResetToken;
-  const isExpired = clerk.passwordResetExpires && new Date(clerk.passwordResetExpires) < new Date();
+  const isExpired =
+    clerk.passwordResetExpires &&
+    new Date(clerk.passwordResetExpires) < new Date();
 
   const initials = (clerk.name || "?")
     .split(" ")
@@ -139,7 +145,7 @@ const ClerkDetailModal = ({
     .toUpperCase()
     .slice(0, 2);
 
-  const formattedActivity = activity.slice(0, 5); // show top 5 for now
+  const formattedActivity = activity.slice(0, 5);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -147,7 +153,6 @@ const ClerkDetailModal = ({
         className="modal-container clerk-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="modal-header">
           <div className="modal-resident-info">
             <div className="modal-avatar">{initials}</div>
@@ -160,8 +165,12 @@ const ClerkDetailModal = ({
                   {clerk.role || "Clerk"}
                 </span>
                 {isPendingSetup && (
-                  <span className={`status-pill ${isExpired ? 'expired' : 'pending'}`}>
-                    {isExpired ? '⚠️ Invite Expired' : '⏳ Pending Setup'}
+                  <span
+                    className={`status-pill ${
+                      isExpired ? "expired" : "pending"
+                    }`}
+                  >
+                    {isExpired ? "⚠️ Invite Expired" : "⏳ Pending Setup"}
                   </span>
                 )}
               </div>
@@ -169,26 +178,15 @@ const ClerkDetailModal = ({
                 <span>{clerk.email}</span>
                 {clerk.phone && <span>• {clerk.phone}</span>}
               </div>
-              {isPendingSetup && clerk.passwordResetExpires && (
-                <div className="clerk-expiry-info">
-                  <small>
-                    {isExpired
-                      ? `Invitation expired on ${new Date(clerk.passwordResetExpires).toLocaleDateString()}`
-                      : `Invitation expires: ${new Date(clerk.passwordResetExpires).toLocaleDateString()}`
-                    }
-                  </small>
-                </div>
-              )}
             </div>
           </div>
+
           <button className="modal-close" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
 
-        {/* Content */}
         <div className="modal-content">
-          {/* Quick actions */}
           <section className="modal-section">
             <h3>Account Controls</h3>
             <div className="btn-row">
@@ -210,7 +208,6 @@ const ClerkDetailModal = ({
                 )}
               </button>
 
-              {/* Resend Invite Button - only show if pending setup */}
               {isPendingSetup && (
                 <button
                   type="button"
@@ -218,7 +215,7 @@ const ClerkDetailModal = ({
                   onClick={() => onResendInvite(clerk)}
                 >
                   <Mail size={16} />
-                  {isExpired ? 'Resend Expired Invite' : 'Resend Invitation'}
+                  {isExpired ? "Resend Expired Invite" : "Resend Invitation"}
                 </button>
               )}
 
@@ -233,13 +230,12 @@ const ClerkDetailModal = ({
             </div>
           </section>
 
-          {/* Activity */}
           <section className="modal-section">
             <h3>Recent Activity</h3>
             {formattedActivity.length === 0 ? (
               <p className="empty-text">
-                No activity loaded yet. (You can wire this to
-                <code> /api/admin/activity?clerkId=... </code> later.)
+                No activity loaded yet. (Wire to{" "}
+                <code>/api/admin/activity?clerkId=...</code> later.)
               </p>
             ) : (
               <ul className="activity-list">
@@ -259,33 +255,7 @@ const ClerkDetailModal = ({
               </ul>
             )}
           </section>
-
-          {/* Shift stats – stubbed for now */}
-          <section className="modal-section">
-            <h3>Shift Summary</h3>
-            <div className="stats-grid compact">
-              <div className="stat-box">
-                <span className="stat-number">
-                  {clerk.totalCheckIns ?? 0}
-                </span>
-                <span className="stat-label">Check-ins handled</span>
-              </div>
-              <div className="stat-box">
-                <span className="stat-number">
-                  {clerk.incidentCount ?? 0}
-                </span>
-                <span className="stat-label">Incidents reported</span>
-              </div>
-              <div className="stat-box">
-                <span className="stat-number">
-                  {clerk.notesCount ?? 0}
-                </span>
-                <span className="stat-label">Shift notes</span>
-              </div>
-            </div>
-          </section>
         </div>
-
       </div>
     </div>
   );
@@ -294,7 +264,6 @@ const ClerkDetailModal = ({
 // ============================================================================
 // Main Screen: ClerkRoster
 // ============================================================================
-
 const ClerkRoster = () => {
   const isAdmin = useIsAdmin();
   const dispatch = useDispatch();
@@ -310,133 +279,88 @@ const ClerkRoster = () => {
     importFromFile,
     setSelectedClerk,
     selectedClerk,
-    resendInvite
+    resendInvite,
   } = useAdminClerks({
     enabled: true,
-    onError: (err) => {
-      toast.error(err.message || "Failed to load clerks");
-    },
+    onError: (err) => toast.error(err.message || "Failed to load clerks"),
   });
 
   const adminState = useSelector((state) => state.admin);
   const { residents = [], isLoading: residentsLoading } = adminState;
 
- const [residentFilters, setResidentFilters] = useState({
-  search: "",
-  wing: "",
-  active: "",
-  semester: "",
-  year: "",
-});
+  const [residentFilters, setResidentFilters] = useState({
+    search: "",
+    wing: "",
+    active: "",
+    semester: "",
+    year: "",
+  });
 
   const [showAddClerkMenu, setShowAddClerkMenu] = useState(false);
   const addClerkFileInputRef = useRef(null);
 
+  // Resident create/import menu + modal
+  const [showAddResidentMenu, setShowAddResidentMenu] = useState(false);
+  const addResidentFileInputRef = useRef(null);
+  const [showCreateResidentModal, setShowCreateResidentModal] = useState(false);
+  const [creatingResident, setCreatingResident] = useState(false);
+
   const [selectedResident, setSelectedResident] = useState(null);
 
-  // Fetch residents on mount (for admin view)
-  useEffect(() => {
+  // Single source of truth for resident roster refresh
+  const refreshResidents = useCallback(() => {
     if (!isAdmin) return;
     dispatch(fetchResidentRoster({}));
   }, [dispatch, isAdmin]);
 
+  useEffect(() => {
+    refreshResidents();
+  }, [refreshResidents]);
+
   const availableYears = useMemo(() => {
-  const years = (residents || [])
-    .map((r) => r.year)
-    .filter((y) => typeof y === "number" && !Number.isNaN(y));
+    const years = (residents || [])
+      .map((r) => r.year)
+      .filter((y) => typeof y === "number" && !Number.isNaN(y));
+    return Array.from(new Set(years)).sort((a, b) => b - a);
+  }, [residents]);
 
-  return Array.from(new Set(years)).sort((a, b) => b - a); // newest first
-}, [residents]);
+  const filteredResidents = useMemo(() => {
+    let list = residents || [];
+    const { search, wing, active, semester, year } = residentFilters;
 
-const filteredResidents = useMemo(() => {
-  let list = residents || [];
-  const { search, wing, active, semester, year } = residentFilters;
+    if (search) {
+      const s = search.toLowerCase();
+      list = list.filter(
+        (r) =>
+          r.name?.toLowerCase().includes(s) ||
+          r.roomNumber?.toLowerCase().includes(s) ||
+          r.email?.toLowerCase().includes(s)
+      );
+    }
 
-  if (search) {
-    const s = search.toLowerCase();
-    list = list.filter(
-      (r) =>
-        r.name?.toLowerCase().includes(s) ||
-        r.roomNumber?.toLowerCase().includes(s)
-    );
-  }
+    if (wing) {
+      list = list.filter((r) =>
+        r.roomNumber?.toUpperCase().startsWith(wing.toUpperCase())
+      );
+    }
 
-  if (wing) {
-    // you could also use r.wing === 'North'/'South' if you prefer
-    list = list.filter((r) =>
-      r.roomNumber?.toUpperCase().startsWith(wing.toUpperCase())
-    );
-  }
+    if (active === "active") list = list.filter((r) => r.active === true);
+    if (active === "inactive") list = list.filter((r) => r.active === false);
 
-  if (active === "active") {
-    list = list.filter((r) => r.active === true);
-  } else if (active === "inactive") {
-    list = list.filter((r) => r.active === false);
-  }
+    if (semester) list = list.filter((r) => r.semester === semester);
+    if (year) list = list.filter((r) => String(r.year) === String(year));
 
-  if (semester) {
-    list = list.filter((r) => r.semester === semester);
-  }
-
-  if (year) {
-    // year is stored as Number in Mongo, select value comes as string
-    list = list.filter((r) => String(r.year) === String(year));
-  }
-
-  return list;
-}, [residents, residentFilters]);
+    return list;
+  }, [residents, residentFilters]);
 
   // ==========================
-  // Handler: Add Clerk
+  // Clerk: add/import
   // ==========================
-
   const handleAddClerkSingle = () => {
-  setShowAddClerkMenu(false);
-  navigate("/admin/clerks/new", { state: { fromAdmin: true } });
-};
+    setShowAddClerkMenu(false);
+    navigate("/admin/clerks/new", { state: { fromAdmin: true } });
+  };
 
-const handleCloseResidentModal = () => {
-  setSelectedResident(null);
-};
-
-// Handle "Add Visitor" from ResidentDetailModal
-// This receives the payload passed from ResidentDetailModal.handleAddVisitor:
-// { room, hostId, hostName }
-const handleAddNewGuestFromResident = (payload) => {
-
-  toast('Opening Add Visitor flow…', {
-  });
-
-  // TODO: Wire this to the overlay / AddNewGuest component, e.g.:
-  // openAddGuest(payload);
-};
-
-// Admin-only delete handler
-const handleDeleteResident = (residentToDelete) => {
-  if (!residentToDelete) return;
-
-  const { _id, name, roomNumber } = residentToDelete;
-
-  const confirmed = window.confirm(
-    `Are you sure you want to permanently delete resident "${name}" (Room ${roomNumber})? This action cannot be undone.`
-  );
-
-  if (!confirmed) return;
-
-  // TODO: dispatch your real delete thunk here, e.g.:
-  // await dispatch(deleteResident(residentToDelete._id)).unwrap();
-
-  console.log('[ResidentDetailModal] Delete resident requested:', {
-    id: _id,
-    name,
-    roomNumber,
-  });
-
-  toast.success(`Resident "${name}" scheduled for deletion`);
-
-  // Optionally close modal after delete
-  setSelectedResident(null);
-};
   const handleAddClerkFileClick = () => {
     if (addClerkFileInputRef.current) {
       addClerkFileInputRef.current.value = "";
@@ -452,31 +376,74 @@ const handleDeleteResident = (residentToDelete) => {
     try {
       const result = await importFromFile(file);
       toast.success(
-        result?.message ||
-          `Imported ${result?.successCount || 0} clerk(s) from file`
+        result?.message || `Imported ${result?.successCount || 0} clerk(s)`
       );
-      refetchClerks();
+      await refetchClerks();
     } catch (err) {
       console.error("Import clerks error:", err);
-      toast.error(
-        err?.message || "Failed to import clerks from selected file"
-      );
+      toast.error(err?.message || "Failed to import clerks");
     }
   };
 
   // ==========================
-  // Handlers: Clerk actions
+  // Residents: add/import/create
   // ==========================
+  const handleAddResidentSingle = () => {
+    setShowAddResidentMenu(false);
+    setShowCreateResidentModal(true);
+  };
 
+  const handleAddResidentFileClick = () => {
+    if (addResidentFileInputRef.current) {
+      addResidentFileInputRef.current.value = "";
+      addResidentFileInputRef.current.click();
+    }
+  };
+
+  const handleAddResidentFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setShowAddResidentMenu(false);
+
+    try {
+      const result = await dispatch(importResidents(file)).unwrap();
+      toast.success(
+        result?.message || `Imported ${result?.successCount || 0} resident(s)`
+      );
+      refreshResidents(); // immediately reload roster
+    } catch (err) {
+      console.error("Import residents error:", err);
+      toast.error(err?.message || err || "Failed to import residents");
+    }
+  };
+
+  const handleCreateResident = async (payload) => {
+    setCreatingResident(true);
+    try {
+      const res = await dispatch(createResidentAdmin(payload)).unwrap();
+      toast.success(res?.message || "Resident created");
+      setShowCreateResidentModal(false);
+      refreshResidents(); // show the new resident right away
+    } catch (err) {
+      console.error("Create resident error:", err);
+      toast.error(err?.message || err || "Failed to create resident");
+    } finally {
+      setCreatingResident(false);
+    }
+  };
+
+  // ==========================
+  // Clerk actions
+  // ==========================
   const handleToggleActiveClerk = async (clerk) => {
     try {
       await toggleActive(clerk);
-      toast.success(
-        clerk.isActive ? "Clerk paused" : "Clerk reactivated"
-      );
+      toast.success(clerk.isActive ? "Clerk paused" : "Clerk reactivated");
+      await refetchClerks();
     } catch (err) {
       console.error("Toggle clerk error:", err);
-      toast.error(err?.message || "Failed to update clerk status");
+      toast.error(err?.message || "Failed to update clerk");
     }
   };
 
@@ -485,38 +452,40 @@ const handleDeleteResident = (residentToDelete) => {
       `Delete clerk "${clerk.name}"? This cannot be undone.`
     );
     if (!confirmed) return;
+
+    const id = clerk._id || clerk.id;
+
     try {
-      await deleteClerk(clerk._id);
+      await deleteClerk(id);
       toast.success("Clerk deleted");
+      if (selectedClerk && (selectedClerk._id || selectedClerk.id) === id) {
+        setSelectedClerk(null);
+      }
+      await refetchClerks();
     } catch (err) {
       console.error("Delete clerk error:", err);
       toast.error(err?.message || "Failed to delete clerk");
     }
   };
 
-
-  // ==========================
-  // Handler: Clerk resend invite
-  // ==========================
   const handleResendInvite = async (clerk) => {
-  const confirmed = window.confirm(
-    `Resend invitation to "${clerk.name}" (${clerk.email})? This will generate a new temporary password and reset link.`
-  );
-  if (!confirmed) return;
+    const confirmed = window.confirm(
+      `Resend invitation to "${clerk.name}" (${clerk.email})?`
+    );
+    if (!confirmed) return;
 
-  try {
-    await resendInvite(clerk._id);
-    toast.success(`Invitation resent to ${clerk.email}`);
-  } catch (err) {
-    console.error("Resend invite error:", err);
-    toast.error(err?.response?.data?.message || err?.message || "Failed to resend invitation");
-  }
-};
+    try {
+      await resendInvite(clerk._id || clerk.id);
+      toast.success(`Invitation resent to ${clerk.email}`);
+    } catch (err) {
+      console.error("Resend invite error:", err);
+      toast.error(err?.message || "Failed to resend invitation");
+    }
+  };
 
   // ==========================
-  // Handler: Resident filters
+  // Residents: modal open/close + filters
   // ==========================
-
   const handleResidentFilterChange = (e) => {
     const { name, value } = e.target;
     setResidentFilters((prev) => ({ ...prev, [name]: value }));
@@ -525,6 +494,15 @@ const handleDeleteResident = (residentToDelete) => {
   const handleResidentCardClick = (resident) => {
     setSelectedResident(resident);
     dispatch(setSelectedResidentLocal(resident));
+  };
+
+  const handleCloseResidentModal = () => {
+    setSelectedResident(null);
+    refreshResidents();
+  };
+
+  const handleAddNewGuestFromResident = () => {
+    toast("Opening Add Visitor flow…");
   };
 
   if (!isAdmin) {
@@ -546,12 +524,13 @@ const handleDeleteResident = (residentToDelete) => {
         <div className="screen-title-block">
           <h1>Admin Control Center</h1>
           <p className="screen-subtitle">
-            Manage clerks, residents, reports, and communications from a
-            single, calm dashboard.
+            Manage clerks, residents, reports, and communications from a single,
+            calm dashboard.
           </p>
         </div>
 
         <div className="header-actions">
+          {/* Add Clerk dropdown */}
           <div className="add-clerk-wrapper">
             <button
               type="button"
@@ -562,6 +541,7 @@ const handleDeleteResident = (residentToDelete) => {
               Add Clerk
               <ChevronDown size={16} />
             </button>
+
             {showAddClerkMenu && (
               <div className="dropdown-menu">
                 <button
@@ -582,7 +562,7 @@ const handleDeleteResident = (residentToDelete) => {
                 </button>
               </div>
             )}
-            {/* Hidden file input for batch import */}
+
             <input
               type="file"
               ref={addClerkFileInputRef}
@@ -603,7 +583,7 @@ const handleDeleteResident = (residentToDelete) => {
         </div>
       </header>
 
-      {/* Two-column layout: Clerks & Residents */}
+      {/* Main two-column layout */}
       <main className="screen-main-grid">
         {/* Left: Clerk roster */}
         <section className="panel">
@@ -655,68 +635,122 @@ const handleDeleteResident = (residentToDelete) => {
           </div>
         </section>
 
-        {/* Right: Residents roster (admin view) */}
+        {/* Right: Residents roster */}
         <section className="panel">
           <div className="panel-header">
             <h2>
-              <Users size={18} /> Residents
+              <Home size={18} /> Residents
             </h2>
+            <div className="panel-header-actions">
+              <button
+                type="button"
+                className="btn-ghost small"
+                onClick={refreshResidents}
+              >
+                <Activity size={14} />
+                Refresh
+              </button>
+
+              <div className="add-resident-wrapper">
+                <button
+                  type="button"
+                  className="btn-primary small with-icon"
+                  onClick={() => setShowAddResidentMenu((s) => !s)}
+                >
+                  <Home size={16} />
+                  Add Resident
+                  <ChevronDown size={14} />
+                </button>
+
+                {showAddResidentMenu && (
+                  <div className="dropdown-menu">
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={handleAddResidentSingle}
+                    >
+                      <UserPlus size={16} />
+                      Add single resident
+                    </button>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={handleAddResidentFileClick}
+                    >
+                      <FileSpreadsheet size={16} />
+                      Import from CSV / Excel
+                    </button>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  ref={addResidentFileInputRef}
+                  style={{ display: "none" }}
+                  accept=".csv, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  onChange={handleAddResidentFileChange}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Filters */}
           <div className="resident-filters">
             <div className="filter-group">
-  <Filter size={16} />
+              <Filter size={16} />
 
-  {/* Wing */}
-  <select
-    name="wing"
-    value={residentFilters.wing}
-    onChange={handleResidentFilterChange}
-  >
-    <option value="">All wings</option>
-    <option value="N">North wing (N*** )</option>
-    <option value="S">South wing (S*** )</option>
-  </select>
+              <input
+                type="text"
+                name="search"
+                placeholder="Search by name, room, or email"
+                value={residentFilters.search}
+                onChange={handleResidentFilterChange}
+              />
 
-  {/* Active status */}
-  <select
-    name="active"
-    value={residentFilters.active}
-    onChange={handleResidentFilterChange}
-  >
-    <option value="">All statuses</option>
-    <option value="active">Active</option>
-    <option value="inactive">Paused / Deactivated</option>
-  </select>
+              <select
+                name="wing"
+                value={residentFilters.wing}
+                onChange={handleResidentFilterChange}
+              >
+                <option value="">All wings</option>
+                <option value="N">North wing (N*** )</option>
+                <option value="S">South wing (S*** )</option>
+              </select>
 
-  {/* Semester */}
-  <select
-    name="semester"
-    value={residentFilters.semester}
-    onChange={handleResidentFilterChange}
-  >
-    <option value="">All semesters</option>
-    <option value="Spring">Spring</option>
-    <option value="Summer">Summer</option>
-    <option value="Fall">Fall</option>
-  </select>
+              <select
+                name="active"
+                value={residentFilters.active}
+                onChange={handleResidentFilterChange}
+              >
+                <option value="">All statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Paused / Deactivated</option>
+              </select>
 
-  {/* Year */}
-  <select
-    name="year"
-    value={residentFilters.year}
-    onChange={handleResidentFilterChange}
-  >
-    <option value="">All years</option>
-    {availableYears.map((y) => (
-      <option key={y} value={y}>
-        {y}
-      </option>
-    ))}
-  </select>
-</div>
+              <select
+                name="semester"
+                value={residentFilters.semester}
+                onChange={handleResidentFilterChange}
+              >
+                <option value="">All semesters</option>
+                <option value="Spring">Spring</option>
+                <option value="Summer">Summer</option>
+                <option value="Fall">Fall</option>
+              </select>
 
+              <select
+                name="year"
+                value={residentFilters.year}
+                onChange={handleResidentFilterChange}
+              >
+                <option value="">All years</option>
+                {availableYears.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {residentsLoading && (
@@ -760,7 +794,7 @@ const handleDeleteResident = (residentToDelete) => {
         </section>
       </main>
 
-      {/* Lower area: placeholders for analytics / exports / mailbox */}
+      {/* Lower: activity & exports */}
       <section className="panel wide">
         <div className="panel-header">
           <h2>
@@ -772,9 +806,8 @@ const handleDeleteResident = (residentToDelete) => {
           <div className="subpanel">
             <h3>Visitation exports</h3>
             <p className="subpanel-text">
-              Export visitation logs for a day, week, month, or custom
-              range. (Hook this into
-              <code> exportVisitationCsv </code>.)
+              Export visitation logs for a day, week, month, or custom range.
+              (Hook into <code>exportVisitationCsv</code>.)
             </p>
             <button
               type="button"
@@ -792,7 +825,6 @@ const handleDeleteResident = (residentToDelete) => {
             <h3>Mailbox</h3>
             <p className="subpanel-text">
               A dedicated inbox for incident reports and clerk messages.
-              (You can later wire this to your email / messaging model.)
             </p>
             <button
               type="button"
@@ -814,19 +846,28 @@ const handleDeleteResident = (residentToDelete) => {
         onClose={() => setSelectedClerk(null)}
         onToggleActive={handleToggleActiveClerk}
         onDelete={handleDeleteClerk}
-        onResendInvite={handleResendInvite}  // Add this
+        onResendInvite={handleResendInvite}
         activity={[]}
       />
-      {/* Resident detail modal (your existing one, but as admin) */}
+
+      {/* Resident detail modal */}
       {selectedResident && (
-       <ResidentDetailModal
-      resident={selectedResident}
-      onClose={handleCloseResidentModal}
-      onAddNewGuest={handleAddNewGuestFromResident}
-      onDeleteResident={handleDeleteResident}
-    />
+        <ResidentDetailModal
+          resident={selectedResident}
+          onClose={handleCloseResidentModal}
+          onAddNewGuest={handleAddNewGuestFromResident}
+          onResidentDeleted={refreshResidents}
+        />
+      )}
 
-
+      {/* Create resident modal */}
+      {showCreateResidentModal && (
+        <CreateResidentModal
+          isOpen={showCreateResidentModal}
+          onClose={() => setShowCreateResidentModal(false)}
+          onSubmit={handleCreateResident}
+          isSubmitting={creatingResident}
+        />
       )}
     </div>
   );

@@ -86,8 +86,145 @@ const deleteResidentAdmin = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Resident deleted', id });
 });
 
+// POST: register new resident
+const registerResident = asyncHandler(async (req, res) => {
+  const {
+    name,
+    roomNumber,
+    email,
+    phoneNumber,
+    studentID,
+    semester,
+    year,
+    active,
+  } = req.body;
+
+  if (!name || !roomNumber || !email || !phoneNumber || !studentID) {
+    res.status(400);
+    throw new Error('All fields are required');
+  }
+
+  const residentExist = await Resident.findOne({ email });
+
+  if (residentExist) {
+    res.status(401);
+    throw new Error('Resident already in database');
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedID = await bcrypt.hash(studentID, salt);
+
+  const resident = await Resident.create({
+    name,
+    roomNumber,
+    email,
+    phoneNumber,
+    studentID: hashedID,
+    flagged: false,
+    guests: [],
+    // new fields
+    semester: semester || undefined,
+    year: year ? Number(year) : undefined,
+    active: typeof active === 'boolean' ? active : true,
+  });
+
+  if (resident) {
+    res.status(201).json({
+      _id: resident._id,
+      name: resident.name,
+      roomNumber: resident.roomNumber,
+      email: resident.email,
+      phoneNumber: resident.phoneNumber,
+      semester: resident.semester,
+      year: resident.year,
+      active: resident.active,
+    });
+
+    await logActivity({
+      actorId: req.clerk?._id,
+      action: 'resident_created',
+      targetType: 'resident',
+      targetId: resident._id,
+      description: `Resident registered: ${resident.name} (${resident.roomNumber})`,
+      metadata: { email: resident.email },
+    });
+  } else {
+    res.status(400);
+    throw new Error('Failed to register resident');
+  }
+});
+
+const createResidentAdmin = asyncHandler(async (req, res) => {
+  const {
+    name,
+    roomNumber,
+    email,
+    phoneNumber,
+    studentID,
+    semester,
+    year,
+    active,
+  } = req.body || {};
+
+  if (!name || !roomNumber || !email || !phoneNumber || !studentID) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  const existing = await Resident.findOne({ email: email.toLowerCase().trim() });
+  if (existing) {
+    return res.status(409).json({ message: 'A resident with this email already exists' });
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedID = await bcrypt.hash(String(studentID), salt);
+
+  const resident = await Resident.create({
+    name: String(name).trim(),
+    roomNumber: String(roomNumber).trim().toUpperCase(),
+    email: String(email).trim().toLowerCase(),
+    phoneNumber: String(phoneNumber).trim(),
+    studentID: hashedID,
+
+    // optional fields
+    semester: semester || undefined,
+    year: typeof year === 'number' ? year : year ? parseInt(year, 10) : undefined,
+    active: typeof active === 'boolean' ? active : true,
+    flagged: false,
+    guests: [],
+  });
+
+  await logActivity({
+    actorId: req.clerk?._id,
+    action: 'resident_created_admin',
+    targetType: 'resident',
+    targetId: resident._id,
+    description: `Resident created by admin: ${resident.name} (${resident.roomNumber})`,
+    metadata: { email: resident.email, semester: resident.semester, year: resident.year, active: resident.active },
+  });
+
+  // return the resident (lean-ish shape)
+  res.status(201).json({
+    message: 'Resident created',
+    resident: {
+      _id: resident._id,
+      name: resident.name,
+      roomNumber: resident.roomNumber,
+      email: resident.email,
+      phoneNumber: resident.phoneNumber,
+      active: resident.active,
+      semester: resident.semester,
+      year: resident.year,
+      wing: resident.wing,
+      createdAt: resident.createdAt,
+      updatedAt: resident.updatedAt,
+    },
+  });
+});
+
 module.exports = {
   getResidentRoster,
   updateResidentStatus,
-  deleteResidentAdmin
+  deleteResidentAdmin,
+  createResidentAdmin,
+  registerResident,
 };

@@ -34,6 +34,7 @@ const {
   getResidentRoster,
   updateResidentStatus,
   deleteResidentAdmin,
+  createResidentAdmin
 } = residentAdminController;
 
 const { getActivityFeed } = activityController;
@@ -194,6 +195,13 @@ safeRoute(
   importResidentsFromFile
 );
 
+// Create a resident (single)
+safeRoute(
+  'post',
+  '/residents',
+  requirePermission('edit_residents'),
+  createResidentAdmin
+);
 // ============================================================
 // ACTIVITY FEED
 // Base path: /api/admin/activity
@@ -245,5 +253,6 @@ safeRoute('put', '/profile', updateProfile);
 
 // Change admin password
 safeRoute('put', '/profile/password', changePassword);
+
 
 module.exports = router;

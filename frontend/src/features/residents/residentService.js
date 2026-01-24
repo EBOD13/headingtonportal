@@ -20,6 +20,15 @@ const getAllResidents = async (token) => {
 };
 
 // ==============================
+// Create resident (admin or clerk)
+// ==============================
+const createResident = async (data, token) => {
+  const config = buildConfig(token);
+  const res = await api.post(API_URL, data, config);
+  return res.data;
+};
+
+// ==============================
 // Update resident (status, details, etc.)
 // ==============================
 const updateResident = async (id, updates, token) => {
@@ -37,6 +46,14 @@ const getResidentByRoom = async (roomNumber, token) => {
 };
 
 // ==============================
+// Delete resident
+// ==============================
+const deleteResident = async (id, token) => {
+  const config = buildConfig(token);
+  const res = await api.delete(`${API_URL}${id}`, config);
+  return res.data;
+};
+// ==============================
 // Get guests by host ID
 // ==============================
 const getGuestsByHost = async (hostId, token) => {
@@ -49,7 +66,9 @@ const residentService = {
   getResidentByRoom,
   getGuestsByHost,
   getAllResidents,
-  updateResident
+  updateResident,
+  deleteResident,
+  createResident
 };
 
 export default residentService;

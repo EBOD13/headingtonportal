@@ -83,8 +83,18 @@ const getGuestsByHost = asyncHandler(async (req, res) => {
 // ================================
 // POST: register new resident
 // ================================
+// POST: register new resident
 const registerResident = asyncHandler(async (req, res) => {
-  const { name, roomNumber, email, phoneNumber, studentID } = req.body;
+  const {
+    name,
+    roomNumber,
+    email,
+    phoneNumber,
+    studentID,
+    semester,
+    year,
+    active,
+  } = req.body;
 
   if (!name || !roomNumber || !email || !phoneNumber || !studentID) {
     res.status(400);
@@ -109,6 +119,10 @@ const registerResident = asyncHandler(async (req, res) => {
     studentID: hashedID,
     flagged: false,
     guests: [],
+    // new fields
+    semester: semester || undefined,
+    year: year ? Number(year) : undefined,
+    active: typeof active === 'boolean' ? active : true,
   });
 
   if (resident) {
@@ -118,16 +132,19 @@ const registerResident = asyncHandler(async (req, res) => {
       roomNumber: resident.roomNumber,
       email: resident.email,
       phoneNumber: resident.phoneNumber,
+      semester: resident.semester,
+      year: resident.year,
+      active: resident.active,
     });
-    await logActivity({
-    actorId: req.clerk?._id,
-    action: 'resident_created',
-    targetType: 'resident',
-    targetId: resident._id,
-    description: `Resident registered: ${resident.name} (${resident.roomNumber})`,
-    metadata: { email: resident.email }
-});
 
+    await logActivity({
+      actorId: req.clerk?._id,
+      action: 'resident_created',
+      targetType: 'resident',
+      targetId: resident._id,
+      description: `Resident registered: ${resident.name} (${resident.roomNumber})`,
+      metadata: { email: resident.email },
+    });
   } else {
     res.status(400);
     throw new Error('Failed to register resident');

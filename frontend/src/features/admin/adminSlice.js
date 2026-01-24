@@ -145,6 +145,22 @@ export const fetchResidentRoster = createAsyncThunk(
   }
 );
 
+// POST /api/admin/residents
+export const createResidentAdmin = createAsyncThunk(
+  "admin/createResidentAdmin",
+  async (data, thunkAPI) => {
+    try {
+      const token = getAuthToken(thunkAPI);
+      return await adminService.createResidentAdmin(data, token);
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create resident";
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
 
 // PUT /api/admin/residents/:id/status
 export const setResidentStatusAdmin = createAsyncThunk(
@@ -271,6 +287,7 @@ export const adminSlice = createSlice({
         state.message = action.payload || "Failed to fetch clerk detail";
       })
 
+      
       // ========= Clerks: status =========
       .addCase(setClerkStatus.pending, (state) => {
         state.isLoading = true;
@@ -361,6 +378,32 @@ export const adminSlice = createSlice({
         state.message = action.payload || "Failed to import clerks";
       })
 
+       // ========= Residents: create =========
+      .addCase(createResidentAdmin.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.isSuccess = false;
+      })
+      .addCase(createResidentAdmin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+
+        const payload = action.payload || {};
+        // Allow either { resident } or the resident object directly
+        const newResident = payload.resident || payload;
+
+        if (newResident && newResident._id) {
+          // Prepend so newest appears at the top
+          state.residents = [newResident, ...(state.residents || [])];
+        }
+
+        state.message = payload.message || "Resident created";
+      })
+      .addCase(createResidentAdmin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload || "Failed to create resident";
+      })
       // ========= Residents: roster =========
       .addCase(fetchResidentRoster.pending, (state) => {
         state.isLoading = true;

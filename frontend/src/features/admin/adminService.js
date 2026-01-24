@@ -86,6 +86,16 @@ const getResidentRoster = async (params = {}, token) => {
   return res.data;
 };
 
+// POST /api/admin/residents
+const createResidentAdmin = async (data, token) => {
+  const res = await api.post(
+    `${API_URL}/residents`,
+    data,
+    buildConfig(token)
+  );
+  return res.data;
+};
+
 // PUT /api/admin/residents/:id/status
 // body: { active?: boolean }
 const updateResidentStatus = async ({ id, updates }, token) => {
@@ -169,6 +179,7 @@ const adminService = {
   updateResidentStatus,
   deleteResidentAdmin,
   importResidentsFromFile,
+  createResidentAdmin,
 
   // activity & exports
   getAdminActivity,

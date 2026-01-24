@@ -1,8 +1,9 @@
+// frontend/src/components/ResidentDetailModal.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 import './ResidentDetailModal.css';
-import { useGuestsByHost } from '../hooks/useResidentsQuery';
+import { useGuestsByHost, useResidents } from '../hooks/useResidentsQuery';
 import { useDispatch } from 'react-redux';
-import { updateResidentStatus } from '../features/residents/residentSlice';
+import { updateResidentStatus, deleteResident } from '../features/residents/residentSlice';
 import { toast } from 'react-hot-toast';
 
 // Using lucide-react instead of custom SVG icons
@@ -117,9 +118,22 @@ const VisitorCard = ({ visitor }) => (
 // ============================================================================
 // Main Component
 // ============================================================================
-const ResidentDetailModal = ({ resident, onClose, onAddNewGuest, onDeleteResident }) => {
+//
+// onAfterDelete is optional:
+//   - Called after a successful delete with the deleted resident id
+//   - Parent (e.g., ClerkRoster) can refetch its own lists
+//
+const ResidentDetailModal = ({
+  resident,
+  onClose,
+  onAddNewGuest,
+  onAfterDelete,
+}) => {
   const dispatch = useDispatch();
   const isAdmin = useIsAdmin();
+
+  // From resident hook, so the "normal" resident list can refresh too
+  const { refetch: refetchResidents } = useResidents();
 
   const hostId = resident?._id;
 
@@ -128,6 +142,7 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest, onDeleteResiden
     resident?.active ? 'active' : 'inactive'
   );
   const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     setStatusValue(resident?.active ? 'active' : 'inactive');
@@ -231,14 +246,12 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest, onDeleteResiden
     }
   };
 
-  // --- Handle delete resident (admin only) ---
-  const handleDeleteResident = () => {
-    if (!isAdmin) {
-      return;
-    }
+  // --- Handle delete resident (admin only + central delete logic) ---
+  const handleDeleteResident = async () => {
+    if (!isAdmin) return;
 
-    if (!onDeleteResident) {
-      console.warn('[ResidentDetailModal] onDeleteResident callback not provided');
+    if (!resident?._id && !resident?.id) {
+      toast.error('Cannot delete resident: missing ID');
       return;
     }
 
@@ -247,7 +260,31 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest, onDeleteResiden
     );
     if (!confirmed) return;
 
-    onDeleteResident(resident);
+    const id = resident._id || resident.id;
+
+    try {
+      setIsDeleting(true);
+      await dispatch(deleteResident(id)).unwrap();
+      toast.success('Resident deleted successfully');
+
+      // Refresh normal resident list
+      if (typeof refetchResidents === 'function') {
+        refetchResidents();
+      }
+
+      // Optional: notify parent (ClerkRoster, Residents screen, etc.)
+      if (typeof onAfterDelete === 'function') {
+        onAfterDelete(id);
+      }
+
+      // Close modal
+      onClose();
+    } catch (err) {
+      console.error('[ResidentDetailModal] deleteResident error:', err);
+      toast.error(err?.message || 'Failed to delete resident');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (!resident) return null;
@@ -284,7 +321,7 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest, onDeleteResiden
                     className="resident-status-select"
                     value={statusValue}
                     onChange={handleStatusChange}
-                    disabled={isSavingStatus}
+                    disabled={isSavingStatus || isDeleting}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -329,7 +366,7 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest, onDeleteResiden
                 label="Phone"
                 value={resident.phoneNumber}
               />
-              {/* New: Semester & Year */}
+              {/* Semester & Year */}
               <InfoItem
                 icon={Clock}
                 label="Semester"
@@ -406,6 +443,7 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest, onDeleteResiden
             className="btn btn-primary"
             type="button"
             onClick={handleAddVisitor}
+            disabled={isDeleting}
           >
             <UserPlus size={18} />
             Add Visitor
@@ -415,8 +453,9 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest, onDeleteResiden
               className="btn btn-danger"
               type="button"
               onClick={handleDeleteResident}
+              disabled={isDeleting}
             >
-              Delete Resident
+              {isDeleting ? 'Deleting…' : 'Delete Resident'}
             </button>
           )}
         </div>

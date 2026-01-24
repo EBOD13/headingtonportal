@@ -135,6 +135,27 @@ export const updateResidentStatus = createAsyncThunk(
   }
 );
 
+// ==============================
+// Delete Resident
+// ==============================
+export const deleteResident = createAsyncThunk(
+  'residents/delete',
+  async (id, thunkAPI) => {
+    try {
+      const token = getAuthToken(thunkAPI);
+      const res = await residentService.deleteResident(id, token);
+      // backend returns { id: req.params.id }
+      return res.id || id;
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to delete resident';
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 
 
 // ==============================
@@ -309,7 +330,47 @@ export const residentSlice = createSlice({
         state.isError = true;
         state.isSuccess = false;
         state.message = action.payload || 'Failed to fetch residents';
-      });
+      })
+
+      // =========================
+      // Delete Resident
+      // =========================
+      .addCase(deleteResident.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.isSuccess = false;
+        state.message = '';
+      })
+      .addCase(deleteResident.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isError = false;
+
+        const deletedId = action.payload;
+
+        // Remove from residents list
+        if (Array.isArray(state.residents)) {
+          state.residents = state.residents.filter(
+            (r) => (r._id || r.id) !== deletedId
+          );
+        }
+
+        // Remove from selectedResidents (modal source)
+        if (Array.isArray(state.selectedResidents)) {
+          state.selectedResidents = state.selectedResidents.filter(
+            (r) => (r._id || r.id) !== deletedId
+          );
+        }
+
+        state.message = 'Resident deleted successfully';
+      })
+      .addCase(deleteResident.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.isSuccess = false;
+        state.message = action.payload || 'Failed to delete resident';
+      })
+
   },
 });
 
