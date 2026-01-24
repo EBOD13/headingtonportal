@@ -6,6 +6,8 @@ const connectDB = require('./database/database');
 const cors = require('cors'); // Add CORS middleware
 const port = process.env.PORT || 8000;
 const adminRoutes = require('./routes/adminRoutes');
+const authRoutes = require('./routes/authRoutes');
+
 
 // Connect to database
 connectDB();
@@ -66,6 +68,7 @@ app.use('/api/sheets', require('./routes/sheetRoutes'));
 app.use('/api/clerks', require('./routes/clerkRoutes'));
 app.use('/api/residents', require('./routes/residentRoutes'));
 app.use('/api/guests', require("./routes/guestRoutes"));
+app.use('/api/auth', authRoutes);
 
 // Test email endpoint
 app.get('/api/test-email', async (req, res) => {

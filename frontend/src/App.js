@@ -189,6 +189,19 @@ function App() {
                   }
                 />
 
+                <Route
+                  path="/admin/clerks/new"
+                  element={
+                    <ProtectedRoute>
+                      <AdminRoute>
+                        <AppShell>
+                          <Register />
+                        </AppShell>
+                      </AdminRoute>
+                    </ProtectedRoute>
+                  }
+                />
+
 
               {/* CATCH ALL */}
               <Route path="*" element={<Navigate to="/" />} />

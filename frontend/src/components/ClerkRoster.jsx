@@ -343,10 +343,10 @@ const ClerkRoster = () => {
   // ==========================
 
   const handleAddClerkSingle = () => {
-    setShowAddClerkMenu(false);
-    // Send admin to your existing Register screen
-    navigate("/register");
-  };
+  setShowAddClerkMenu(false);
+  navigate("/admin/clerks/new", { state: { fromAdmin: true } });
+};
+
 
   const handleAddClerkFileClick = () => {
     if (addClerkFileInputRef.current) {

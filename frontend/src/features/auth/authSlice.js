@@ -1,93 +1,208 @@
-import {createSlice, createAsyncThunk} from "@reduxjs/toolkit"
-import authService from "./authService"
+// frontend/src/features/auth/authSlice.js
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import authService from "./authService";
 
-const localclerk = JSON.parse(localStorage.getItem('clerk'))
+const localclerk = JSON.parse(localStorage.getItem('clerk'));
 
 const initialState = {
-    clerk: localclerk ? localclerk: null,
-    isError: false, 
-    isSuccess: false,
-    isLoading: false,
-    message: ""
-}
+  clerk: localclerk ? localclerk : null,
+  isError: false,
+  isSuccess: false,
+  isLoading: false,
+  message: ""
+};
 
-// Slice function to register the clerk using an async Thunk 
+// ==============================
+// Self-registration
+// ==============================
 export const register = createAsyncThunk(
-    'auth/register',
-    async(clerk, thunkAPI) =>{
-        try{
-            return await authService.register(clerk)
-        }
-        catch (error){
-            const message = (error.response && error.response.data && error.response.data.message) ||
-            error.message ||
-            error.toString()
-        return thunkAPI.rejectWithValue(message)
-        }
+  'auth/register',
+  async (clerk, thunkAPI) => {
+    try {
+      return await authService.register(clerk);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
     }
-)
+  }
+);
 
+// ==============================
+// Login
+// ==============================
 export const login = createAsyncThunk(
-    'auth/login', async(clerk, thunkAPI) =>{
-        try{
-            return await authService.login(clerk)
-        }
-        catch (error){
-            const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString()
-            return thunkAPI.rejectWithValue(message)
-        }
+  'auth/login',
+  async (clerk, thunkAPI) => {
+    try {
+      return await authService.login(clerk);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
     }
-)
+  }
+);
 
-export const logout = createAsyncThunk('auth/logout', async() => await authService.logout())
+// ==============================
+// Logout
+// ==============================
+export const logout = createAsyncThunk(
+  'auth/logout',
+  async () => await authService.logout()
+);
 
+// ==============================
+// Admin: create clerk (does NOT log in as them)
+// ==============================
+export const adminCreateClerk = createAsyncThunk(
+  'auth/adminCreateClerk',
+  async (clerkData, thunkAPI) => {
+    try {
+      const state = thunkAPI.getState();
+      const token = state.auth.clerk?.token;
+
+      if (!token) {
+        return thunkAPI.rejectWithValue('Not authenticated as admin.');
+      }
+
+      const result = await authService.adminCreateClerk(clerkData, token);
+      return result; // e.g. { clerk, tempPassword, resetToken, ... }
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// ==============================
+// Password set via token (magic link)
+// ==============================
+export const setPasswordWithToken = createAsyncThunk(
+  'auth/setPasswordWithToken',
+  async ({ token, password, password2 }, thunkAPI) => {
+    try {
+      const data = await authService.setPasswordWithToken(token, {
+        password,
+        password2,
+      });
+      return data;
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// ==============================
+// Slice
+// ==============================
 export const authSlice = createSlice({
-    name: 'auth',
-    initialState, 
-    reducers:{
-        reset: state => {
-            state.isLoading = false
-            state.isSuccess = false
-            state.isError = false
-            state.message = ''
-        },
+  name: 'auth',
+  initialState,
+  reducers: {
+    reset: state => {
+      state.isLoading = false;
+      state.isSuccess = false;
+      state.isError = false;
+      state.message = '';
     },
-    extraReducers: builder =>{
-        builder
-        .addCase(register.pending, (state) =>{
-            state.isLoading= true
-        })
-        .addCase(register.fulfilled, (state, action)=>{
-            state.isLoading = false
-            state.isSuccess = true
-            state.clerk = action.payload
-        })
-        .addCase(register.rejected, (state, action)=>{
-            state.isLoading = false
-            state.isError = true 
-            state.message = action.payload
-            state.clerk = null
-        })
-        .addCase(login.pending, (state)=>{
-            state.isLoading = true
-        })
-        .addCase(login.fulfilled, (state, action) =>{
-            state.isLoading = false
-            state.isSuccess = true
-            state.clerk = action.payload
-        })
-        .addCase(login.rejected, (state, action)=>{
-            state.isLoading = false
-            state.isError = true
-            state.clerk = null
-            state.message = action.payload
-        })
-        .addCase(logout.fulfilled, (state)=>{
-            state.clerk = null
-        })
+  },
+  extraReducers: builder => {
+    builder
+      // --- register ---
+      .addCase(register.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.clerk = action.payload;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+        state.clerk = null;
+      })
 
-    }
-})
+      // --- login ---
+      .addCase(login.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.clerk = action.payload;
+      })
+      .addCase(login.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.clerk = null;
+        state.message = action.payload;
+      })
+
+      // --- logout ---
+      .addCase(logout.fulfilled, (state) => {
+        state.clerk = null;
+      })
+
+      // --- adminCreateClerk ---
+      .addCase(adminCreateClerk.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.message = '';
+      })
+      .addCase(adminCreateClerk.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        // IMPORTANT: do NOT overwrite state.clerk here.
+        // Admin stays logged in as themselves.
+        // If you want, you could stash last created clerk:
+        // state.lastCreatedClerk = action.payload.clerk;
+      })
+      .addCase(adminCreateClerk.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+
+      // --- setPasswordWithToken ---
+      .addCase(setPasswordWithToken.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.message = '';
+      })
+      .addCase(setPasswordWithToken.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.clerk = action.payload;
+      })
+      .addCase(setPasswordWithToken.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      });
+  }
+});
 
 export const { reset } = authSlice.actions;
-export default authSlice.reducer
+export default authSlice.reducer;

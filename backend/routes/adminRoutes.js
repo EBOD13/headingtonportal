@@ -13,6 +13,8 @@ const {
   getClerkDetailWithActivity,
   updateClerkStatus,
   deleteClerk,
+  createClerkAdmin,
+  resetClerkPasswordAdmin
 } = require('../controllers/adminClerkController');
 
 const {
@@ -187,5 +189,10 @@ router.put('/profile', updateProfile);
 
 // PUT /api/admin/profile/password
 router.put('/profile/password', changePassword);
+
+router.post('/clerks', requirePermission('manage_clerks'), createClerkAdmin);
+
+//  admin-triggered reset
+router.post('/clerks/:id/reset-password', requirePermission('manage_clerks'), resetClerkPasswordAdmin);
 
 module.exports = router;

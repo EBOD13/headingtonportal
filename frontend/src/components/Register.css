@@ -1,0 +1,404 @@
+/* Register.css */
+/* ============================================================================
+   Clerk / User Registration - Responsive, Centered, Calm
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   Page Shell
+   ---------------------------------------------------------------------------- */
+
+.Register.register-page,
+.register-page {
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport for mobile */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  font-family: 'EB Garamond', serif;
+  background:
+    radial-gradient(circle at top left, rgba(132, 22, 23, 0.10) 0, transparent 55%),
+    radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.10) 0, transparent 55%),
+    linear-gradient(135deg, #f8fafc 0%, #e5e7eb 100%);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Subtle background pattern */
+.register-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 25px 25px, rgba(148, 27, 30, 0.04) 2%, transparent 2.5%),
+    radial-gradient(circle at 75px 75px, rgba(15, 23, 42, 0.03) 2%, transparent 2.5%);
+  background-size: 100px 100px;
+  background-position: 0 0, 50px 50px;
+  opacity: 0.7;
+  z-index: -1;
+}
+
+/* ----------------------------------------------------------------------------
+   Card Container
+   ---------------------------------------------------------------------------- */
+
+.register-container {
+  width: 100%;
+  max-width: min(460px, 92vw);
+  min-width: 280px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow:
+    0 20px 60px rgba(15, 23, 42, 0.16),
+    0 0 0 1px rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+  max-height: 92dvh;
+  animation: register-slideUp 0.35s ease-out;
+}
+
+/* Slightly taller allowance on tiny screens */
+@media (max-height: 600px) {
+  .register-container {
+    max-height: 96vh;
+    max-height: 96dvh;
+  }
+}
+
+@keyframes register-slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Header
+   ---------------------------------------------------------------------------- */
+
+.register-container img.center-image {
+  display: block;
+  margin: 1.5rem auto 0.75rem;
+  width: clamp(52px, 14vw, 64px);
+  height: auto;
+}
+
+.register-container h4 {
+  text-align: center;
+  font-style: italic;
+  font-size: clamp(1rem, 3.2vw, 1.15rem);
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.75rem;
+}
+
+/* Thin accent rule under title */
+.register-container h4::after {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 2px;
+  margin: 0.35rem auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #841617, #b91c1c);
+}
+
+/* ----------------------------------------------------------------------------
+   Inner Layout
+   ---------------------------------------------------------------------------- */
+
+.register-container form {
+  padding: 0 1.75rem 1.5rem;
+  padding-top: 0.75rem;
+}
+
+/* Make form area scroll if keyboard pushes content */
+@media (max-height: 600px) {
+  .register-container form {
+    max-height: 65vh;
+    max-height: 65dvh;
+    overflow-y: auto;
+  }
+
+  .register-container form::-webkit-scrollbar {
+    width: 4px;
+  }
+  .register-container form::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.7);
+    border-radius: 999px;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Labels & Inputs
+   ---------------------------------------------------------------------------- */
+
+.register-container label {
+  display: block;
+  font-size: clamp(0.8rem, 1.9vw, 0.9rem);
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.35rem;
+  padding-left: 0.15rem;
+}
+
+.register-container input[type="text"],
+.register-container input[type="email"],
+.register-container input[type="password"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: clamp(0.55rem, 1.7vh, 0.75rem) clamp(0.6rem, 2vw, 0.85rem);
+  margin-bottom: clamp(0.75rem, 2.2vh, 1.1rem);
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: clamp(0.85rem, 2.2vw, 0.95rem);
+  color: #111827;
+  transition: all 0.18s ease-out;
+  font-family: 'EB Garamond', serif;
+}
+
+.register-container input::placeholder {
+  color: #9ca3af;
+}
+
+/* focus */
+.register-container input:focus {
+  outline: none;
+  border-color: #841617;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(132, 22, 23, 0.12);
+}
+
+/* disabled */
+.register-container input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ----------------------------------------------------------------------------
+   Submit Button
+   ---------------------------------------------------------------------------- */
+
+.submit-btn {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.submit-btn button {
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  padding: clamp(0.85rem, 2.3vh, 1rem);
+  background: radial-gradient(circle at 0% 0%, #b91c1c 0, #841617 48%, #5b0f11 100%);
+  color: #ffffff;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  font-family: 'EB Garamond', serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow:
+    0 12px 30px rgba(148, 27, 30, 0.3),
+    0 0 0 1px rgba(248, 250, 252, 0.8);
+  transition: transform 0.16s ease-out, box-shadow 0.16s ease-out,
+    filter 0.16s ease-out, background-position 0.18s ease-out;
+  background-size: 150% 150%;
+  background-position: 0% 50%;
+}
+
+.submit-btn button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background-position: 100% 50%;
+  filter: brightness(1.02);
+  box-shadow:
+    0 18px 40px rgba(148, 27, 30, 0.32),
+    0 0 0 1px rgba(248, 250, 252, 0.85);
+}
+
+.submit-btn button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow:
+    0 10px 24px rgba(148, 27, 30, 0.28),
+    0 0 0 1px rgba(248, 250, 252, 0.8);
+}
+
+.submit-btn button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ----------------------------------------------------------------------------
+   Secondary Login Link Button
+   ---------------------------------------------------------------------------- */
+
+.link-to-register {
+  margin: 0 1.75rem 1.5rem;
+  width: calc(100% - 3.5rem);
+  border-radius: 999px;
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  color: #4b5563;
+  font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+  font-weight: 500;
+  padding: clamp(0.75rem, 2.2vh, 0.9rem);
+  cursor: pointer;
+  font-family: 'EB Garamond', serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: all 0.18s ease-out;
+  box-shadow: 0 0 0 0 rgba(148, 163, 184, 0.3);
+}
+
+.link-to-register:hover {
+  border-color: #841617;
+  color: #841617;
+  background: #f9fafb;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.link-to-register:active {
+  transform: translateY(0.5px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+/* Ensure button inside Link behaves correctly */
+a .link-to-register {
+  width: 100%;
+}
+
+/* ----------------------------------------------------------------------------
+   Small Footer Text (Optional)
+   ---------------------------------------------------------------------------- */
+
+.register-footer {
+  padding: 0 1.75rem 1.25rem;
+  font-size: clamp(0.7rem, 1.8vw, 0.8rem);
+  color: #9ca3af;
+  text-align: center;
+}
+
+/* ----------------------------------------------------------------------------
+   Very Small / Edge Cases
+   ---------------------------------------------------------------------------- */
+
+/* Phones in landscape */
+@media (max-height: 500px) and (orientation: landscape) {
+  .Register.register-page,
+  .register-page {
+    padding: 0.5rem;
+  }
+
+  .register-container {
+    max-height: 98vh;
+    max-height: 98dvh;
+    max-width: 96vw;
+  }
+
+  .register-container img.center-image {
+    margin-top: 1rem;
+  }
+
+  .register-container h4 {
+    margin-bottom: 0.4rem;
+  }
+
+  .link-to-register {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Tiny phones */
+@media (max-width: 320px) {
+  .register-container {
+    border-radius: 18px;
+  }
+
+  .register-container form {
+    padding: 0 1.25rem 1.25rem;
+  }
+
+  .link-to-register {
+    margin-inline: 1.25rem;
+    width: calc(100% - 2.5rem);
+  }
+}
+
+/* Tall screens */
+@media (min-height: 900px) {
+  .register-container {
+    max-height: 80vh;
+    max-height: 80dvh;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Accessibility
+   ---------------------------------------------------------------------------- */
+
+.submit-btn button:focus-visible,
+.link-to-register:focus-visible,
+.register-container input:focus-visible {
+  outline: 2px solid #841617;
+  outline-offset: 3px;
+}
+
+/* Prevent text auto-zoom on iOS */
+@media screen and (max-device-width: 480px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Subtle fade-in for fields
+   ---------------------------------------------------------------------------- */
+
+.register-container form label,
+.register-container form input,
+.submit-btn,
+.link-to-register {
+  opacity: 0;
+  transform: translateY(6px);
+  animation: register-fadeInUp 0.28s ease-out forwards;
+}
+
+.register-container form label:nth-of-type(1),
+.register-container #name {
+  animation-delay: 0.05s;
+}
+.register-container #email {
+  animation-delay: 0.10s;
+}
+.register-container #password {
+  animation-delay: 0.15s;
+}
+.register-container #password2 {
+  animation-delay: 0.20s;
+}
+.submit-btn {
+  animation-delay: 0.25s;
+}
+.link-to-register {
+  animation-delay: 0.3s;
+}
+
+@keyframes register-fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
