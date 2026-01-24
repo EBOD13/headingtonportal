@@ -1,12 +1,12 @@
-/* frontend/src/components/CheckInForm.css */
+/* frontend/src/components/CheckOutForm.css */
 /* ============================================================================
-   CheckInForm Styles - Clean & Responsive
+   CheckOutForm Styles - Clean & Responsive
    ============================================================================ */
 
 /* ----------------------------------------------------------------------------
    Overlay & Container
    ---------------------------------------------------------------------------- */
-.checkin-overlay {
+.checkout-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
@@ -16,32 +16,29 @@
   justify-content: center;
   z-index: 2000;
   padding: 1rem;
-  animation: fadeIn 0.2s ease;
-}
-.checkout-content{
-  padding: 1rem;
+  animation: checkoutFadeIn 0.2s ease;
 }
 
-.checkin-modal {
+.checkout-modal {
   background: #ffffff;
   border-radius: 16px;
   width: 100%;
-  max-width: min(480px, 90vw);
+  max-width: min(500px, 90vw);
   min-width: 280px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  animation: slideUp 0.3s ease;
+  animation: checkoutSlideUp 0.3s ease;
   overflow: hidden;
   max-height: min(700px, 85vh);
 }
 
-@keyframes fadeIn {
+@keyframes checkoutFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes slideUp {
+@keyframes checkoutSlideUp {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -55,7 +52,7 @@
 /* ----------------------------------------------------------------------------
    Header
    ---------------------------------------------------------------------------- */
-.checkin-header {
+.checkout-header {
   padding: 1.25rem 1.5rem;
   background: linear-gradient(135deg, #841617 0%, #6b1213 100%);
   color: white;
@@ -66,12 +63,12 @@
   flex-shrink: 0;
 }
 
-.checkin-header .modal-title {
+.checkout-title {
   flex: 1;
   min-width: 0;
 }
 
-.checkin-header .modal-title h2 {
+.checkout-title h2 {
   font-size: clamp(1.1rem, 2vw, 1.3rem);
   font-weight: 600;
   margin: 0 0 0.25rem 0;
@@ -80,22 +77,19 @@
   gap: 0.5rem;
 }
 
-.checkin-header .modal-title h2 svg {
+.checkout-title h2 svg {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
 }
 
-.modal-subtitle {
+.checkout-subtitle {
   font-size: 0.8rem;
   opacity: 0.9;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.modal-close {
+.checkout-close {
   width: 36px;
   height: 36px;
   background: rgba(255, 255, 255, 0.1);
@@ -110,234 +104,223 @@
   transition: all 0.2s ease;
 }
 
-.modal-close:hover {
+.checkout-close:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.modal-close svg {
-  width: 18px;
-  height: 18px;
-}
-
 /* ----------------------------------------------------------------------------
-   Form Content - THIS IS THE KEY FIX
+   Content
    ---------------------------------------------------------------------------- */
-.checkin-form {
+.checkout-content {
   flex: 1;
   overflow-y: auto;
   padding: 1.5rem;
-  min-height: 0; /* Important for flex overflow */
-  
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: #d4d4d8;
-    border-radius: 2px;
-  }
-  
-  /* Hide scrollbar for IE, Edge and Firefox */
-  -ms-overflow-style: none;
-  scrollbar-width: thin;
+  min-height: 200px;
+}
+
+.checkout-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.checkout-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.checkout-content::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 2px;
 }
 
 /* ----------------------------------------------------------------------------
-   Form Fields
+   States: Loading, Error, Empty
    ---------------------------------------------------------------------------- */
-.form-field {
-  margin-bottom: 1.25rem;
-}
-
-.form-field:last-of-type {
-  margin-bottom: 0;
-}
-
-.form-label {
+.checkout-loading,
+.checkout-error,
+.checkout-empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #27272a;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1rem;
+  gap: 0.75rem;
+  color: #71717a;
+}
+
+.checkout-loading svg,
+.checkout-error svg,
+.checkout-empty svg {
+  color: #a1a1aa;
+}
+
+.checkout-error {
+  color: #ef4444;
+}
+
+.checkout-error svg {
+  color: #ef4444;
+}
+
+.checkout-empty h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #52525b;
+}
+
+.checkout-empty p {
+  margin: 0;
   font-size: 0.875rem;
 }
 
-.label-icon {
-  width: 28px;
-  height: 28px;
-  background: linear-gradient(135deg, #f4f4f5 0%, #e4e4e7 100%);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.label-icon svg {
-  width: 16px;
-  height: 16px;
-  color: #71717a;
-}
-
-.field-input {
-  position: relative;
-  width: 100%;
-}
-
-.input-with-icon,
-.select-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.input-with-icon input,
-.select-wrapper select {
-  width: 100%;
-  padding: 0.75rem 2.5rem 0.75rem 1rem; /* Right padding for status icon */
-  font-size: 0.9rem;
-  border: 2px solid #e4e4e7;
-  border-radius: 10px;
-  background: #fafafa;
-  color: #27272a;
-  transition: all 0.2s ease;
-  appearance: none;
-  box-sizing: border-box;
-}
-
-.input-with-icon input:focus,
-.select-wrapper select:focus {
-  outline: none;
-  border-color: #841617;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(132, 22, 23, 0.1);
-}
-
-.input-with-icon input:disabled,
-.select-wrapper select:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.room-input {
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Select dropdown arrow */
-.select-wrapper::after {
-  content: "";
-  position: absolute;
-  right: 2.5rem; /* Position before the status icon */
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid #71717a;
-  pointer-events: none;
-}
-
-/* When there's a status icon, adjust arrow position */
-.select-wrapper:has(.input-status)::after {
-  right: 2.5rem;
-}
-
-.input-status {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.input-status svg {
-  width: 18px;
-  height: 18px;
-}
-
-.input-status.valid,
-.input-status.selected {
-  color: #22c55e;
-}
-
 /* ----------------------------------------------------------------------------
-   Hints & Errors
+   Guest Count
    ---------------------------------------------------------------------------- */
-.field-hint {
-  font-size: 0.75rem;
-  color: #71717a;
-  margin-top: 0.375rem;
-  padding-left: 0;
-}
-
-.field-error {
+.checkout-guest-count {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  font-size: 0.75rem;
-  color: #ef4444;
-  margin-top: 0.375rem;
-  padding-left: 0;
-}
-
-.field-error svg {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
-
-.form-field.error .input-with-icon input,
-.form-field.error .select-wrapper select {
-  border-color: #ef4444;
-}
-
-.form-field.error .input-with-icon input:focus,
-.form-field.error .select-wrapper select:focus {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-}
-
-/* ----------------------------------------------------------------------------
-   Progress & Loading
-   ---------------------------------------------------------------------------- */
-.checkin-progress {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-  padding: 0.875rem;
-  background: #f8fafc;
-  border-radius: 10px;
-  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f4f4f5;
+  border-radius: 8px;
+  margin-bottom: 1rem;
   font-size: 0.875rem;
   color: #52525b;
 }
 
-.spinner {
+.checkout-guest-count svg {
+  color: #71717a;
+}
+
+/* ----------------------------------------------------------------------------
+   Guest List & Cards
+   ---------------------------------------------------------------------------- */
+.checkout-guest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.guest-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fafafa;
+  border: 2px solid #e4e4e7;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.guest-card:hover {
+  background: #f4f4f5;
+  border-color: #d4d4d8;
+}
+
+.guest-card.selected {
+  background: #fef2f2;
+  border-color: #841617;
+}
+
+.guest-card-avatar {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #841617 0%, #6b1213 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.guest-card.selected .guest-card-avatar {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.guest-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.guest-card-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #27272a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.guest-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8rem;
+  color: #71717a;
+}
+
+.guest-card-meta svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.guest-card-check {
+  width: 32px;
+  height: 32px;
+  background: #22c55e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+/* ----------------------------------------------------------------------------
+   Progress
+   ---------------------------------------------------------------------------- */
+.checkout-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f0fdf4;
+  border-radius: 10px;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+/* ----------------------------------------------------------------------------
+   Spinner
+   ---------------------------------------------------------------------------- */
+.checkout-spinner {
   width: 18px;
   height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  animation: spin 1s linear infinite;
+  animation: checkoutSpin 1s linear infinite;
 }
 
-.spinner svg {
+.checkout-spinner svg {
   width: 18px;
   height: 18px;
-  color: #841617;
+  color: currentColor;
 }
 
-@keyframes spin {
+@keyframes checkoutSpin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
@@ -345,7 +328,7 @@
 /* ----------------------------------------------------------------------------
    Footer
    ---------------------------------------------------------------------------- */
-.checkin-footer {
+.checkout-footer {
   padding: 1rem 1.5rem;
   background: #fafafa;
   border-top: 1px solid #e4e4e7;
@@ -354,12 +337,12 @@
   flex-shrink: 0;
 }
 
-.btn {
+.checkout-footer .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
   border-radius: 8px;
@@ -370,191 +353,110 @@
   min-height: 44px;
 }
 
-.btn svg {
+.checkout-footer .btn svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
 }
 
-.btn:disabled {
+.checkout-footer .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.btn-secondary {
+.checkout-footer .btn-secondary {
   background: white;
   color: #52525b;
   border: 1px solid #e4e4e7;
 }
 
-.btn-secondary:hover:not(:disabled) {
+.checkout-footer .btn-secondary:hover:not(:disabled) {
   background: #f4f4f5;
 }
 
-.btn-primary {
+.checkout-footer .btn-primary {
   background: linear-gradient(135deg, #841617 0%, #6b1213 100%);
   color: white;
 }
 
-.btn-primary:hover:not(:disabled) {
+.checkout-footer .btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #6b1213 0%, #5a1011 100%);
 }
 
 /* ----------------------------------------------------------------------------
-   Add New Guest Option
-   ---------------------------------------------------------------------------- */
-.add-guest-option {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #fffbeb;
-  border-radius: 10px;
-  border: 1px solid #fde68a;
-  text-align: center;
-  animation: fadeIn 0.3s ease;
-}
-
-.add-guest-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  color: #92400e;
-  font-size: 0.875rem;
-}
-
-.add-guest-message svg {
-  width: 18px;
-  height: 18px;
-  color: #f59e0b;
-  flex-shrink: 0;
-}
-
-.btn-outline {
-  background: transparent;
-  color: #841617;
-  border: 2px solid #841617;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-outline:hover:not(:disabled) {
-  background: #841617;
-  color: white;
-}
-
-.btn-outline svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* ----------------------------------------------------------------------------
-   Responsive Breakpoints
+   Responsive
    ---------------------------------------------------------------------------- */
 @media (max-width: 480px) {
-  .checkin-overlay {
+  .checkout-overlay {
     padding: 0.5rem;
   }
 
-  .checkin-modal {
-    max-width: 100%;
+  .checkout-modal {
     max-height: 90vh;
     border-radius: 12px;
   }
-  
-  .checkin-header {
+
+  .checkout-header {
     padding: 1rem 1.25rem;
-  }
-  
-  .checkin-form {
-    padding: 1.25rem;
-  }
-  
-  .checkin-footer {
-    padding: 1rem 1.25rem;
-  }
-  
-  .form-field {
-    margin-bottom: 1rem;
-  }
-  
-  .label-icon {
-    width: 24px;
-    height: 24px;
-  }
-  
-  .label-icon svg {
-    width: 14px;
-    height: 14px;
-  }
-  
-  .btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-    min-height: 40px;
   }
 
-  .add-guest-option {
-    padding: 0.75rem;
+  .checkout-content {
+    padding: 1.25rem;
   }
-  
-  .add-guest-message {
-    flex-direction: column;
-    text-align: center;
-    gap: 0.25rem;
+
+  .checkout-footer {
+    padding: 1rem 1.25rem;
+  }
+
+  .guest-card {
+    padding: 0.875rem;
+  }
+
+  .guest-card-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 0.8rem;
+  }
+
+  .guest-card-name {
+    font-size: 0.9rem;
+  }
+
+  .guest-card-meta {
+    font-size: 0.75rem;
   }
 }
 
-/* Small phones */
 @media (max-width: 360px) {
-  .checkin-modal {
-    border-radius: 10px;
-  }
-  
-  .checkin-header,
-  .checkin-form,
-  .checkin-footer {
+  .checkout-header,
+  .checkout-content,
+  .checkout-footer {
     padding: 0.875rem 1rem;
   }
 
-  .input-with-icon input,
-  .select-wrapper select {
-    padding: 0.625rem 2rem 0.625rem 0.75rem;
-    font-size: 0.85rem;
+  .guest-card {
+    gap: 0.75rem;
+    padding: 0.75rem;
   }
 }
 
 /* ----------------------------------------------------------------------------
    Accessibility
    ---------------------------------------------------------------------------- */
-.modal-close:focus-visible,
-.btn:focus-visible {
+.checkout-close:focus-visible,
+.checkout-footer .btn:focus-visible,
+.guest-card:focus-visible {
   outline: 2px solid #841617;
   outline-offset: 2px;
 }
 
-.input-with-icon input:focus-visible,
-.select-wrapper select:focus-visible {
-  outline: none;
-}
-
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .checkin-overlay,
-  .checkin-modal,
-  .add-guest-option {
+  .checkout-overlay,
+  .checkout-modal {
     animation: none;
   }
-  
-  .spinner {
+
+  .checkout-spinner {
     animation: none;
   }
 }
