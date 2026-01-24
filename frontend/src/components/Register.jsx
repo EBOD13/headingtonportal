@@ -74,6 +74,7 @@ const Register = () => {
 
   const onSubmit = (e) => {
     e.preventDefault();
+     console.log('onSubmit called, fromAdmin:', fromAdmin);  
 
     if (!name || !email) {
       toast.error('Name and email are required');
@@ -82,6 +83,7 @@ const Register = () => {
 
     if (fromAdmin) {
       // Admin creates clerk: no password fields here.
+      console.log('Dispatching adminCreateClerk');  
       const clerkData = {
         name: name.trim(),
         email: email.trim(),

@@ -68,20 +68,27 @@ export const adminCreateClerk = createAsyncThunk(
   async (clerkData, thunkAPI) => {
     try {
       const state = thunkAPI.getState();
+      console.log('=== DEBUG adminCreateClerk ===');
+      console.log('clerkData received:', clerkData);
+      console.log('Full auth state:', state.auth);
+      console.log('clerk object:', state.auth.clerk);
+      console.log('token:', state.auth.clerk?.token);
+      
       const token = state.auth.clerk?.token;
 
       if (!token) {
+        console.log('NO TOKEN FOUND - rejecting');
         return thunkAPI.rejectWithValue('Not authenticated as admin.');
       }
-      console.log('authService in thunk:', authService);
-console.log('adminCreateClerk typeof:', typeof authService.adminCreateClerk);
+      
+      console.log('Making API call with token:', token.substring(0, 20) + '...');
       const result = await authService.adminCreateClerk(clerkData, token);
-      return result; // e.g. { clerk, tempPassword, resetToken, ... }
+      console.log('API result:', result);
+      return result;
     } catch (error) {
+      console.error('adminCreateClerk error:', error);
       const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
+        (error.response?.data?.message) ||
         error.message ||
         error.toString();
       return thunkAPI.rejectWithValue(message);
@@ -193,8 +200,8 @@ export const authSlice = createSlice({
       .addCase(setPasswordWithToken.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.clerk = action.payload;
-      })
+        state.clerk = action.payload; 
+        })
       .addCase(setPasswordWithToken.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
