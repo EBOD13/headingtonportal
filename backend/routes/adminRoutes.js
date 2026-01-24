@@ -15,6 +15,7 @@ const {
   updateClerkStatus,
   deleteClerk,
   resendClerkInvite,
+  runExpiryCheck
 } = require('../controllers/adminClerkController');
 
 const {
@@ -102,6 +103,12 @@ router.post(
   '/clerks/:id/resend-invite',
   requirePermission('manage_clerks'),
   resendClerkInvite
+);
+
+router.post(
+  '/clerks/run-expiry-check',
+  requirePermission('manage_clerks'),
+  runExpiryCheck
 );
 
 // ============================================================
