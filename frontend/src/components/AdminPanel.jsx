@@ -14,11 +14,12 @@ import {
   importResidents,
   createResidentAdmin,
 } from "../features/admin/adminSlice";
+import { useOverlays } from "../overlays/OverlayProvider";
 import useAdminClerks from "../hooks/useAdminClerks";
-import ResidentDetailModal from "../components/ResidentDetailModal";
-import CreateResidentModal from "../components/CreateResidentModal";
+import ResidentDetailModal from "./ResidentDetailModal";
+import CreateResidentModal from "./CreateResidentModal";
 import { useIsAdmin } from "../hooks/useIsAdmin";
-import "./ClerkRoster.css";
+import "./AdminPanel.css";
 
 import {
   Shield,
@@ -29,7 +30,6 @@ import {
   Users,
   FileSpreadsheet,
   Upload,
-  Filter,
   Trash2,
   Mail,
   Settings,
@@ -262,12 +262,13 @@ const ClerkDetailModal = ({
 };
 
 // ============================================================================
-// Main Screen: ClerkRoster
+// Main Screen: AdminPanel
 // ============================================================================
-const ClerkRoster = () => {
+const AdminPanel = () => {
   const isAdmin = useIsAdmin();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { openAddGuest } = useOverlays();
 
   const {
     clerks,
@@ -542,9 +543,23 @@ const handleCreateResident = async (values) => {
     refreshResidents();
   };
 
-  const handleAddNewGuestFromResident = () => {
-    toast("Opening Add Visitor flow…");
+  const handleAddNewGuestFromResident = ({ room, hostId, hostName }) => {
+    if (!room || !hostId) {
+      toast.error("Missing room or host info for new visitor.");
+      return;
+    }
+
+    // Open AddNewGuest overlay with prefilled data (same shape as CheckInForm)
+    openAddGuest({
+      room,
+      hostId,
+      hostName,
+    });
+
+    // Close the resident detail modal so you don't stack overlays
+    setSelectedResident(null);
   };
+
 
   if (!isAdmin) {
     return (
@@ -571,7 +586,28 @@ const handleCreateResident = async (values) => {
         </div>
 
         <div className="header-actions">
-          {/* Add Clerk dropdown */}
+
+
+          <button
+            type="button"
+            className="btn-ghost with-icon"
+            onClick={() => toast("Profile / password screen coming soon")}
+          >
+            <Settings size={18} />
+            Admin Settings
+          </button>
+        </div>
+      </header>
+
+      {/* Main two-column layout */}
+      <main className="screen-main-grid">
+        {/* Left: Clerk roster */}
+        <section className="panel">
+          <div className="panel-header">
+            <h2>
+              <Users size={18} /> Clerk Roster
+            </h2>
+                      {/* Add Clerk dropdown */}
           <div className="add-clerk-wrapper">
             <button
               type="button"
@@ -612,34 +648,16 @@ const handleCreateResident = async (values) => {
               onChange={handleAddClerkFileChange}
             />
           </div>
-
-          <button
-            type="button"
-            className="btn-ghost with-icon"
-            onClick={() => toast("Profile / password screen coming soon")}
-          >
-            <Settings size={18} />
-            Admin Settings
-          </button>
-        </div>
-      </header>
-
-      {/* Main two-column layout */}
-      <main className="screen-main-grid">
-        {/* Left: Clerk roster */}
-        <section className="panel">
-          <div className="panel-header">
-            <h2>
-              <Users size={18} /> Clerk Roster
-            </h2>
             <button
               type="button"
               className="btn-ghost small"
               onClick={refetchClerks}
             >
+              
               <Activity size={14} />
               Refresh
             </button>
+
           </div>
 
           {clerksLoading && (
@@ -682,17 +700,7 @@ const handleCreateResident = async (values) => {
             <h2>
               <Home size={18} /> Residents
             </h2>
-            <div className="panel-header-actions">
-              <button
-                type="button"
-                className="btn-ghost small"
-                onClick={refreshResidents}
-              >
-                <Activity size={14} />
-                Refresh
-              </button>
-
-              <div className="add-resident-wrapper">
+              <div className="add-clerk-wrapper">
                 <button
                   type="button"
                   className="btn-primary small with-icon"
@@ -732,17 +740,26 @@ const handleCreateResident = async (values) => {
                   onChange={handleAddResidentFileChange}
                 />
               </div>
+              <button
+                type="button"
+                className="btn-ghost small"
+                onClick={refreshResidents}
+              >
+                <Activity size={14} />
+                Refresh
+              </button>
+
+
             </div>
-          </div>
 
           {/* Filters */}
           <div className="resident-filters">
             <div className="filter-group">
-              <Filter size={16} />
 
               <input
                 type="text"
                 name="search"
+                className="filter-search-box"
                 placeholder="Search by name, room, or email"
                 value={residentFilters.search}
                 onChange={handleResidentFilterChange}
@@ -893,13 +910,14 @@ const handleCreateResident = async (values) => {
 
       {/* Resident detail modal */}
       {selectedResident && (
-        <ResidentDetailModal
-          resident={selectedResident}
-          onClose={handleCloseResidentModal}
-          onAddNewGuest={handleAddNewGuestFromResident}
-          onResidentDeleted={refreshResidents}
-        />
-      )}
+      <ResidentDetailModal
+        resident={selectedResident}
+        onClose={handleCloseResidentModal}
+        onAddNewGuest={handleAddNewGuestFromResident}
+        onAfterDelete={refreshResidents}
+      />
+    )}
+
 
       {/* Create resident modal */}
       {showCreateResidentModal && (
@@ -914,4 +932,4 @@ const handleCreateResident = async (values) => {
   );
 };
 
-export default ClerkRoster;
+export default AdminPanel;

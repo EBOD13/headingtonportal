@@ -19,7 +19,7 @@ import { OverlayProvider } from './overlays/OverlayProvider';
 import AppShell from './components/AppShell';
 
 import './App.css';
-import ClerkRoster from './components/ClerkRoster';
+import AdminPanel from './components/AdminPanel';
 
 // ============================================================================
 // Query Client
@@ -184,7 +184,7 @@ function App() {
                     <ProtectedRoute>
                       <AdminRoute>
                         <AppShell>
-                          <ClerkRoster />
+                          <AdminPanel />
                         </AppShell>
                       </AdminRoute>
                     </ProtectedRoute>

@@ -1,9 +1,14 @@
 // frontend/src/components/CheckOutForm.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react';
 import { toast } from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { updateRow } from '../features/sheets/sheetSlice';
-import { useCheckedInGuests, useGuestActions } from '../hooks/useGuestsQuery';
+import { useGuests, useGuestActions } from '../hooks/useGuestsQuery';
 import './CheckOutForm.css';
 
 import {
@@ -13,10 +18,7 @@ import {
   AlertCircle,
   Check,
   Loader2,
-  User,
-  MapPin,
-  Clock,
-  Home,
+  Search,
 } from 'lucide-react';
 
 // ============================================================================
@@ -28,13 +30,13 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const GuestCard = ({ guest, isSelected, onSelect, capitalize }) => (
+const GuestCard = ({ guest, isSelected, onToggle, capitalize }) => (
   <button
     type="button"
-    className={`guest-card ${isSelected ? 'selected' : ''}`}
-    onClick={() => onSelect(guest)}
+    className={`guest-card guest-card--compact ${isSelected ? 'selected' : ''}`}
+    onClick={() => onToggle(guest)}
   >
-    <div className="guest-card-avatar">
+    <div className="guest-card-avatar guest-card-avatar--small">
       {(guest.name || '?')
         .split(' ')
         .map((p) => p[0])
@@ -42,26 +44,13 @@ const GuestCard = ({ guest, isSelected, onSelect, capitalize }) => (
         .toUpperCase()
         .slice(0, 2)}
     </div>
-    <div className="guest-card-info">
+    <div className="guest-card-info guest-card-info--tight">
       <span className="guest-card-name">{capitalize(guest.name)}</span>
-      <span className="guest-card-meta">
-        <Home size={12} />
-        Room {guest.roomNumber}
-      </span>
-      <span className="guest-card-meta">
-        <User size={12} />
-        Host: {capitalize(guest.hostName)}
-      </span>
-      {guest.checkInTime && (
-        <span className="guest-card-meta">
-          <Clock size={12} />
-          Checked in: {guest.checkInTime}
-        </span>
-      )}
+      <span className="guest-card-room">Room {guest.roomNumber}</span>
     </div>
     {isSelected && (
-      <div className="guest-card-check">
-        <Check size={18} />
+      <div className="guest-card-check guest-card-check--small">
+        <Check size={16} />
       </div>
     )}
   </button>
@@ -71,18 +60,20 @@ const GuestCard = ({ guest, isSelected, onSelect, capitalize }) => (
 // Main Component
 // ============================================================================
 function CheckOutForm({ onClose }) {
-  const [selectedGuest, setSelectedGuest] = useState(null);
+  const [selectedGuests, setSelectedGuests] = useState([]); // ⬅ multi-select
   const [isProcessing, setIsProcessing] = useState(false);
+  const [search, setSearch] = useState(''); // ⬅ search bar
 
   const dispatch = useDispatch();
 
+  // Use all-guests hook (GET /api/guests) instead of /allguests
   const {
-    data: checkedInGuests,
+    data: allGuests,
     isLoading: isLoadingGuests,
     isError: isErrorGuests,
     error: guestsError,
-    refetch: refetchGuests,
-  } = useCheckedInGuests();
+    refetch,
+  } = useGuests();
 
   const { checkOut, isLoading: isActionLoading } = useGuestActions();
 
@@ -90,71 +81,167 @@ function CheckOutForm({ onClose }) {
     if (!str) return '';
     return str
       .split(' ')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .map(
+        (word) =>
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      )
       .join(' ');
   }, []);
 
-  const guests =
-    checkedInGuests?.map((guest) => ({
-      id: guest._id,
-      name: guest.name,
-      hostName: guest.hostName,
-      roomNumber: guest.hostRoom,
-      checkInTime: guest.checkInTime,
-    })) || [];
+  // Base list: checked-in guests only
+  const checkedInGuests = useMemo(() => {
+    const base = Array.isArray(allGuests) ? allGuests : [];
+    return base
+      .filter((g) => g.isCheckedIn === true)
+      .map((g) => {
+        let checkInTime = null;
 
-  const handleSelectGuest = (guest) => {
-    setSelectedGuest(guest);
+        if (g.checkIn) {
+          try {
+            checkInTime = new Date(g.checkIn).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+          } catch {
+            checkInTime = null;
+          }
+        }
+
+        return {
+          id: g.id,
+          _id: g._id,
+          name: g.name,
+          hostName: g.hostName,
+          roomNumber: g.hostRoom || g.room || 'N/A',
+          checkInTime,
+        };
+      });
+  }, [allGuests]);
+
+  // Filtered by search (name, host, room)
+  const guests = useMemo(() => {
+    if (!search.trim()) return checkedInGuests;
+
+    const q = search.toLowerCase();
+    return checkedInGuests.filter((g) => {
+      return (
+        g.name?.toLowerCase().includes(q) ||
+        g.hostName?.toLowerCase().includes(q) ||
+        g.roomNumber?.toLowerCase().includes(q)
+      );
+    });
+  }, [checkedInGuests, search]);
+
+  const isGuestSelected = useCallback(
+    (guest) => {
+      const gid = guest.id || guest._id;
+      return selectedGuests.some(
+        (g) => (g.id || g._id) === gid
+      );
+    },
+    [selectedGuests]
+  );
+
+  // Toggle multi-select
+  const handleToggleGuest = (guest) => {
+    const gid = guest.id || guest._id;
+    setSelectedGuests((prev) => {
+      const exists = prev.some((g) => (g.id || g._id) === gid);
+      if (exists) {
+        return prev.filter((g) => (g.id || g._id) !== gid);
+      }
+      return [...prev, guest];
+    });
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedGuest) {
-      toast.error('Please select a guest to check out');
+    if (!selectedGuests.length) {
+      toast.error('Please select at least one guest to check out');
+      return;
+    }
+
+    // Resolve and validate IDs for all selected guests
+    const selectedWithIds = selectedGuests.map((guest) => {
+      const rawId = guest.id ?? guest._id;
+      const guestId =
+        typeof rawId === 'string' ? rawId : rawId?.toString?.();
+      return { guest, guestId };
+    });
+
+    const invalid = selectedWithIds.find(
+      ({ guestId }) =>
+        !guestId || !/^[0-9a-fA-F]{24}$/.test(guestId)
+    );
+
+    if (invalid) {
+      console.error(
+        '[CheckOutForm] Invalid guest ID in selection:',
+        invalid
+      );
+      toast.error(
+        'One of the selected guests has an invalid ID. Please refresh and try again.'
+      );
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      await checkOut(selectedGuest.id);
-
       const now = new Date();
       const checkoutTime = now.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
       });
 
-      const sheetResponse = await dispatch(
-        updateRow({
-          guestName: selectedGuest.name,
-          checkoutTime: checkoutTime,
-        })
-      ).unwrap();
+      // Process each selected guest sequentially
+      for (const { guest, guestId } of selectedWithIds) {
+        await checkOut(guestId);
 
-      if (sheetResponse.success) {
-        toast.success(
-          `${capitalize(selectedGuest.name)} checked out successfully`
-        );
-        await refetchGuests();
-
-        setTimeout(() => {
-          if (onClose) onClose();
-        }, 1000);
-      } else {
-        throw new Error('Failed to update sheet');
+        try {
+          await dispatch(
+            updateRow({
+              guestName: guest.name,
+              checkoutTime,
+            })
+          ).unwrap();
+        } catch (sheetErr) {
+          console.error(
+            '[CheckOutForm] Sheet update failed for guest:',
+            guest,
+            sheetErr
+          );
+          // Don't throw; continue checking out others
+        }
       }
+
+      toast.success(
+        `Checked out ${selectedGuests.length} guest${
+          selectedGuests.length > 1 ? 's' : ''
+        }`
+      );
+
+      setSelectedGuests([]);
+      await refetch();
+
+      setTimeout(() => {
+        onClose?.();
+      }, 800);
     } catch (error) {
-      console.error('Error during check-out:', error);
-      toast.error(error.message || 'Failed to check out guest');
+      console.error('[CheckOutForm] Error during bulk check-out:', error);
+      const message =
+        error?.response?.data?.message ||
+        error.message ||
+        'Failed to check out guest(s)';
+      toast.error(message);
     } finally {
       setIsProcessing(false);
     }
   };
 
   const closeOverlay = useCallback(() => {
-    if (onClose) onClose();
+    onClose?.();
   }, [onClose]);
 
   useEffect(() => {
@@ -172,9 +259,14 @@ function CheckOutForm({ onClose }) {
     };
   }, []);
 
+  const selectedCount = selectedGuests.length;
+
   return (
     <div className="checkout-overlay" onClick={closeOverlay}>
-      <div className="checkout-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="checkout-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="checkout-header">
           <div className="checkout-title">
@@ -182,7 +274,9 @@ function CheckOutForm({ onClose }) {
               <LogOut size={20} />
               Guest Check-Out
             </h2>
-            <p className="checkout-subtitle">Select a visitor to check out</p>
+            <p className="checkout-subtitle">
+              Select one or more visitors to check out
+            </p>
           </div>
           <button
             type="button"
@@ -211,7 +305,7 @@ function CheckOutForm({ onClose }) {
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => refetchGuests()}
+                onClick={() => refetch()}
               >
                 Try Again
               </button>
@@ -219,38 +313,62 @@ function CheckOutForm({ onClose }) {
           )}
 
           {/* Empty State */}
-          {!isLoadingGuests && !isErrorGuests && guests.length === 0 && (
-            <div className="checkout-empty">
-              <Users size={32} />
-              <h3>No Guests Checked In</h3>
-              <p>There are no guests currently checked in to the building.</p>
-            </div>
-          )}
+          {!isLoadingGuests &&
+            !isErrorGuests &&
+            checkedInGuests.length === 0 && (
+              <div className="checkout-empty">
+                <Users size={32} />
+                <h3>No Guests Checked In</h3>
+                <p>
+                  There are no guests currently checked in to the
+                  building.
+                </p>
+              </div>
+            )}
 
           {/* Guest List */}
-          {!isLoadingGuests && !isErrorGuests && guests.length > 0 && (
-            <>
-              <div className="checkout-guest-count">
-                <Users size={16} />
-                <span>
-                  {guests.length} guest{guests.length !== 1 ? 's' : ''} currently
-                  checked in
-                </span>
-              </div>
+          {!isLoadingGuests &&
+            !isErrorGuests &&
+            checkedInGuests.length > 0 && (
+              <>
+                {/* Fixed Toolbar with Search & Count */}
+                <div className="checkout-toolbar">
+                  <div className="checkout-search">
+                    <Search size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search by name, host, or room..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="checkout-guest-count">
+                    <Users size={16} />
+                    <span>
+                      {guests.length} guest
+                      {guests.length !== 1 ? 's' : ''}
+                      {search ? ' found' : ' checked in'}
+                    </span>
+                  </div>
+                </div>
 
-              <div className="checkout-guest-list">
-                {guests.map((guest) => (
-                  <GuestCard
-                    key={guest.id}
-                    guest={guest}
-                    isSelected={selectedGuest?.id === guest.id}
-                    onSelect={handleSelectGuest}
-                    capitalize={capitalize}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+                {/* Guest List Container */}
+                <div className="checkout-guest-list-container">
+                  <div className="checkout-guest-list">
+                    {guests.map((guest) => (
+                      <GuestCard
+                        key={guest.id || guest._id}
+                        guest={guest}
+                        isSelected={isGuestSelected(guest)}
+                        onToggle={handleToggleGuest}
+                        capitalize={capitalize}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
 
           {/* Processing Indicator */}
           {(isProcessing || isActionLoading) && (
@@ -276,10 +394,10 @@ function CheckOutForm({ onClose }) {
             className="btn btn-primary"
             onClick={onSubmit}
             disabled={
-              !selectedGuest ||
+              !selectedGuests.length ||
               isProcessing ||
               isActionLoading ||
-              guests.length === 0
+              checkedInGuests.length === 0
             }
           >
             {isProcessing || isActionLoading ? (
@@ -290,7 +408,11 @@ function CheckOutForm({ onClose }) {
             ) : (
               <>
                 <LogOut size={18} />
-                Check Out
+                {selectedCount > 0
+                  ? `Check Out ${selectedCount} Guest${
+                      selectedCount > 1 ? 's' : ''
+                    }`
+                  : 'Check Out'}
               </>
             )}
           </button>

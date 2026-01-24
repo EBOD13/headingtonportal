@@ -61,9 +61,7 @@ const PAGE_CONFIG = {
   '/guests': { title: 'Guests', icon: Icons.Guests },
   '/analytics': { title: 'Analytics', icon: Icons.Analytics },
   '/settings': { title: 'Settings', icon: Icons.Settings },
-  '/admin': { title: 'Admin', icon: Icons.Admin },
-  // ⭐ NEW: make header nice for the Clerk admin screen
-  '/admin/clerks': { title: 'Clerks', icon: Icons.ShieldUser },
+  '/admin/clerks': { title: 'Admin Panel', icon: Icons.ShieldUser },
 };
 
 // ============================================================================
@@ -318,13 +316,8 @@ const AppShell = ({ children }) => {
 
     if (isAdmin) {
       base.push({
-        to: '/admin',
-        label: 'Admin',
-        icon: <Icons.Admin size={18} />,
-      });
-      base.push({
         to: '/admin/clerks',
-        label: 'Clerks',
+        label: 'Admin Panel',
         icon: <Icons.ShieldUser size={18} />,
       });
     }
@@ -411,16 +404,13 @@ const AppShell = ({ children }) => {
               </div>
 
               {/* Logout Button - Placed below all navigation buttons */}
-              <div className="app-shell-logout-section">
+              <div className="app-shell-logout-section" style={{paddingTop: '1rem'}}>
                 <button
                   className="app-shell-logout-btn"
                   onClick={handleLogout}
                   type="button"
                 >
-                  <span className="app-shell-nav-icon">
-                    <Icons.LogOut size={18} />
-                  </span>
-                  <span className="app-shell-nav-label">Logout</span>
+                  <span className="app-shell-nav-label" >Logout</span>
                 </button>
               </div>
             </nav>

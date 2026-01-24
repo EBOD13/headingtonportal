@@ -47,14 +47,6 @@ const formatDate = (dateString) => {
   });
 };
 
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.trim().split(' ');
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  return name.substring(0, 2).toUpperCase();
-};
 
 // ============================================================================
 // Sub-components
@@ -73,9 +65,6 @@ const InfoItem = ({ icon: Icon, label, value }) => (
 
 const VisitorCard = ({ visitor }) => (
   <div className={`visitor-card ${visitor.flagged ? 'flagged' : ''}`}>
-    <div className="visitor-avatar">
-      {getInitials(visitor.name)}
-    </div>
     <div className="visitor-info">
       <div className="visitor-header">
         <span className="visitor-name">{capitalize(visitor.name)}</span>
@@ -132,10 +121,9 @@ const ResidentDetailModal = ({
   const dispatch = useDispatch();
   const isAdmin = useIsAdmin();
 
-  // From resident hook, so the "normal" resident list can refresh too
   const { refetch: refetchResidents } = useResidents();
 
-  const hostId = resident?._id;
+  const hostId = resident?._id || resident?.id || null;
 
   // --- Status state for select (derive initial from resident) ---
   const [statusValue, setStatusValue] = useState(
@@ -203,19 +191,24 @@ const ResidentDetailModal = ({
     };
   }, []);
 
-  // Handle Add Visitor click - opens AddNewGuest modal with prefilled data
+  // ---------------------------------------------------------------------------
+  // Handle Add Visitor click - same prefill pattern as CheckInForm.handleAddNewGuest
+  // ---------------------------------------------------------------------------
   const handleAddVisitor = () => {
     if (!onAddNewGuest) {
-      console.warn('[ResidentDetailModal] onAddNewGuest callback not provided');
+      console.warn(
+        '[ResidentDetailModal] onAddNewGuest callback not provided'
+      );
       return;
     }
 
     onAddNewGuest({
       room: resident.roomNumber,
-      hostId: resident._id,
+      hostId: hostId,
       hostName: resident.name,
     });
 
+    // Let parent close this modal (same behavior as CheckInForm)
     onClose();
   };
 
@@ -272,12 +265,11 @@ const ResidentDetailModal = ({
         refetchResidents();
       }
 
-      // Optional: notify parent (ClerkRoster, Residents screen, etc.)
+      // Optional: notify parent
       if (typeof onAfterDelete === 'function') {
         onAfterDelete(id);
       }
 
-      // Close modal
       onClose();
     } catch (err) {
       console.error('[ResidentDetailModal] deleteResident error:', err);
@@ -303,9 +295,7 @@ const ResidentDetailModal = ({
         {/* Header */}
         <div className="modal-header">
           <div className="modal-resident-info">
-            <div className="modal-avatar">
-              {getInitials(resident.name)}
-            </div>
+ 
             <div className="modal-title-row">
               <h2>{capitalize(resident.name)}</h2>
 
@@ -333,6 +323,7 @@ const ResidentDetailModal = ({
                   )}
                 </div>
               )}
+
             </div>
           </div>
           <button className="modal-close" onClick={onClose}>
