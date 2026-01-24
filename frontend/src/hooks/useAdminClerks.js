@@ -10,11 +10,13 @@ import {
   clearAdminError,
   setSelectedClerkLocal,
 } from "../features/admin/adminSlice";
+import adminService from "../features/admin/adminService"; 
 
 const selectAdminState = (state) => state.admin || {};
 
-export function useAdminClerks(options = {}) { 
+export function useAdminClerks(options = {}) {
   const { enabled = true, onError } = options || {};
+
   const dispatch = useDispatch();
   const adminState = useSelector(selectAdminState);
   const token = useSelector((state) => state.auth?.clerk?.token ?? null);
@@ -36,7 +38,6 @@ export function useAdminClerks(options = {}) {
     if (!enabled) return;
     if (!token) return;
     if (hasFetchedRef.current) return;
-
     hasFetchedRef.current = true;
     dispatch(fetchClerkRoster());
   }, [dispatch, token, enabled]);
@@ -79,13 +80,20 @@ export function useAdminClerks(options = {}) {
     [dispatch]
   );
 
-  const resendInvite = async (clerkId) => {
-  const token = getAuthToken();
-  const result = await adminService.resendClerkInvite(clerkId, token);
-  //  refetch to update the UI
-  refetch();
-  return result;
-};
+  // ✅ Fixed resendInvite - use token from selector, not undefined function
+  const resendInvite = useCallback(
+    async (clerkId) => {
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+      const result = await adminService.resendClerkInvite(clerkId, token);
+      // Refetch to update the UI
+      refetch();
+      return result;
+    },
+    [token, refetch]
+  );
+
   const deleteClerkAction = useCallback(
     (id) => {
       if (!id) return;
@@ -123,7 +131,8 @@ export function useAdminClerks(options = {}) {
     deleteClerk: deleteClerkAction,
     importFromFile,
     setSelectedClerk,
-    resendInvite
+    resendInvite,
   };
 }
+
 export default useAdminClerks;
