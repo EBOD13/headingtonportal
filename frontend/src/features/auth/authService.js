@@ -1,5 +1,5 @@
 // frontend/src/features/auth/authService.js
-import axios from "axios";
+import { api } from "../../api/client";
 
 const API_URL = '/api/clerks/';
 const ADMIN_API_URL = '/api/admin/clerks';
@@ -9,19 +9,16 @@ const AUTH_API_URL = '/api/auth/';
 // Self-registration & login
 // ==============================
 const register = async (clerkData) => {
-  const response = await axios.post(API_URL, clerkData);
-
+  const response = await api.post(API_URL, clerkData);
   if (response.data) {
     // Self-registration: log them in
     localStorage.setItem("clerk", JSON.stringify(response.data));
   }
-
   return response.data;
 };
 
 const login = async (clerkData) => {
-  const response = await axios.post(API_URL + 'login', clerkData);
-
+  const response = await api.post(API_URL + 'login', clerkData);
   if (response.data) {
     localStorage.setItem('clerk', JSON.stringify(response.data));
   }
@@ -38,7 +35,7 @@ const logout = () => {
 //  - DOES NOT log in as that clerk
 // ==============================
 const adminCreateClerk = async (clerkData, token) => {
-  const response = await axios.post(
+  const response = await api.post(
     ADMIN_API_URL,    // POST /api/admin/clerks
     clerkData,
     {
@@ -47,7 +44,6 @@ const adminCreateClerk = async (clerkData, token) => {
       },
     }
   );
-
   // Do NOT touch localStorage here.
   // Admin stays logged in as themselves.
   return response.data;
@@ -56,13 +52,11 @@ const adminCreateClerk = async (clerkData, token) => {
 // ==============================
 // Password set via token (magic link)
 // ==============================
-// frontend/src/features/auth/authService.js
 const setPasswordWithToken = async (token, data) => {
-  const response = await axios.post(
+  const response = await api.post(
     `${AUTH_API_URL}set-password/${token}`,
     data
   );
-
   // Backend returns: { message, token, clerk }
   const { clerk, token: jwt, message } = response.data;
 
@@ -80,7 +74,6 @@ const setPasswordWithToken = async (token, data) => {
   localStorage.setItem('clerk', JSON.stringify(loginPayload));
   return loginPayload;
 };
-
 
 // Bundle into a single default export
 const authService = {
