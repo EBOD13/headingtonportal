@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const API_URL = '/api/clerks/';
-const ADMIN_API_URL = '/api/admin/clerks/';
+const ADMIN_API_URL = '/api/admin/clerks';
 const AUTH_API_URL = '/api/auth/';
 
 // ==============================
@@ -56,19 +56,31 @@ const adminCreateClerk = async (clerkData, token) => {
 // ==============================
 // Password set via token (magic link)
 // ==============================
+// frontend/src/features/auth/authService.js
 const setPasswordWithToken = async (token, data) => {
   const response = await axios.post(
     `${AUTH_API_URL}set-password/${token}`,
     data
   );
 
-  // In this flow, backend can return { token, clerk, message }
-  if (response.data) {
-    localStorage.setItem('clerk', JSON.stringify(response.data));
+  // Backend returns: { message, token, clerk }
+  const { clerk, token: jwt, message } = response.data;
+
+  if (!clerk || !jwt) {
+    // fallback: just return raw data
+    return response.data;
   }
 
-  return response.data;
+  // Normalize: store a "login-style" clerk object in localStorage
+  const loginPayload = {
+    ...clerk,   // _id, name, email, role, clerkID, isActive, createdAt
+    token: jwt, // attach JWT at top level
+  };
+
+  localStorage.setItem('clerk', JSON.stringify(loginPayload));
+  return loginPayload;
 };
+
 
 // Bundle into a single default export
 const authService = {

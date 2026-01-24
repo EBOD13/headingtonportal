@@ -1,9 +1,95 @@
+// // backend/routes/adminRoutes.js
+// const express = require('express');
+// const router = express.Router();
+
+// const { protect, requireRole, requirePermission } = require('../middleware/authMiddleware');
+
+// const {
+//   adminCreateClerk,
+//   getClerkRoster,
+//   getClerkDetailWithActivity,
+//   updateClerkStatus,
+//   deleteClerk,
+// } = require('../controllers/adminClerkController');
+
+// const {
+//   getResidentRoster,
+//   updateResidentStatus,
+//   deleteResidentAdmin,
+// } = require('../controllers/adminResidentController');
+
+// const { getActivityFeed } = require('../controllers/adminActivityController');
+// const { exportVisitationCsv } = require('../controllers/exportController');
+// const { getInbox, sendMessage, markMessageRead } = require('../controllers/mailboxController');
+// const {
+//   getProfile,
+//   updateProfile,
+//   changePassword,
+// } = require('../controllers/adminProfileController');
+
+// const {
+//   importResidentsFromFile,
+//   importClerksFromFile,
+// } = require('../controllers/adminImportController');
+
+// const { uploadSingleFile } = require('../middleware/uploadMiddleware');
+
+// // ✅ All admin routes require auth & at least 'admin' or 'supervisor'
+// router.use(protect, requireRole('admin', 'supervisor'));
+
+// // ----- Clerks -----
+// // Create clerk (this is what adminCreateClerk thunk hits)
+// router.post('/clerks', requirePermission('manage_clerks'), adminCreateClerk);
+
+// router.get('/clerks', requirePermission('manage_clerks'), getClerkRoster);
+// router.get('/clerks/:id', requirePermission('manage_clerks'), getClerkDetailWithActivity);
+// router.put('/clerks/:id/status', requirePermission('manage_clerks'), updateClerkStatus);
+// router.delete('/clerks/:id', requirePermission('manage_clerks'), deleteClerk);
+
+// // Batch import clerks (CSV/Excel)
+// router.post(
+//   '/clerks/import',
+//   requirePermission('manage_clerks'),
+//   uploadSingleFile,
+//   importClerksFromFile
+// );
+
+// // ----- Residents -----
+// router.get('/residents', requirePermission('view_residents'), getResidentRoster);
+// router.put('/residents/:id/status', requirePermission('edit_residents'), updateResidentStatus);
+// router.delete('/residents/:id', requirePermission('delete_residents'), deleteResidentAdmin);
+
+// router.post(
+//   '/residents/import',
+//   requirePermission('edit_residents'),
+//   uploadSingleFile,
+//   importResidentsFromFile
+// );
+
+// // ----- Activity feed -----
+// router.get('/activity', requirePermission('view_reports'), getActivityFeed);
+
+// // ----- Exports -----
+// router.get('/exports/visitation', requirePermission('generate_reports'), exportVisitationCsv);
+
+// // ----- Mailbox -----
+// router.get('/mail', getInbox);
+// router.post('/mail', sendMessage);
+// router.patch('/mail/:id/read', markMessageRead);
+
+// // ----- Profile -----
+// router.get('/profile', getProfile);
+// router.put('/profile', updateProfile);
+// router.put('/profile/password', changePassword);
+
+// module.exports = router;
+
+
 // backend/routes/adminRoutes.js
 const express = require('express');
 const router = express.Router();
 
 const { protect, requireRole, requirePermission } = require('../middleware/authMiddleware');
-
 const {
   adminCreateClerk,
   getClerkRoster,
@@ -12,74 +98,49 @@ const {
   deleteClerk,
 } = require('../controllers/adminClerkController');
 
-const {
-  getResidentRoster,
-  updateResidentStatus,
-  deleteResidentAdmin,
-} = require('../controllers/adminResidentController');
-
-const { getActivityFeed } = require('../controllers/adminActivityController');
-const { exportVisitationCsv } = require('../controllers/exportController');
-const { getInbox, sendMessage, markMessageRead } = require('../controllers/mailboxController');
-const {
-  getProfile,
-  updateProfile,
-  changePassword,
-} = require('../controllers/adminProfileController');
-
-const {
-  importResidentsFromFile,
-  importClerksFromFile,
-} = require('../controllers/adminImportController');
-
-const { uploadSingleFile } = require('../middleware/uploadMiddleware');
-
-// ✅ All admin routes require auth & at least 'admin' or 'supervisor'
+// All admin routes require an authenticated clerk with admin/supervisor role
 router.use(protect, requireRole('admin', 'supervisor'));
 
-// ----- Clerks -----
-// Create clerk (this is what adminCreateClerk thunk hits)
-router.post('/clerks', requirePermission('manage_clerks'), adminCreateClerk);
+// ----- CLERKS -----
 
-router.get('/clerks', requirePermission('manage_clerks'), getClerkRoster);
-router.get('/clerks/:id', requirePermission('manage_clerks'), getClerkDetailWithActivity);
-router.put('/clerks/:id/status', requirePermission('manage_clerks'), updateClerkStatus);
-router.delete('/clerks/:id', requirePermission('manage_clerks'), deleteClerk);
-
-// Batch import clerks (CSV/Excel)
+// Create a new clerk
+// POST /api/admin/clerks
 router.post(
-  '/clerks/import',
+  '/clerks',
   requirePermission('manage_clerks'),
-  uploadSingleFile,
-  importClerksFromFile
+  adminCreateClerk
 );
 
-// ----- Residents -----
-router.get('/residents', requirePermission('view_residents'), getResidentRoster);
-router.put('/residents/:id/status', requirePermission('edit_residents'), updateResidentStatus);
-router.delete('/residents/:id', requirePermission('delete_residents'), deleteResidentAdmin);
-
-router.post(
-  '/residents/import',
-  requirePermission('edit_residents'),
-  uploadSingleFile,
-  importResidentsFromFile
+// Get all clerks
+// GET /api/admin/clerks
+router.get(
+  '/clerks',
+  requirePermission('manage_clerks'),
+  getClerkRoster
 );
 
-// ----- Activity feed -----
-router.get('/activity', requirePermission('view_reports'), getActivityFeed);
+// Get one clerk + activity
+// GET /api/admin/clerks/:id
+router.get(
+  '/clerks/:id',
+  requirePermission('manage_clerks'),
+  getClerkDetailWithActivity
+);
 
-// ----- Exports -----
-router.get('/exports/visitation', requirePermission('generate_reports'), exportVisitationCsv);
+// Update status (active / paused)
+// PUT /api/admin/clerks/:id/status
+router.put(
+  '/clerks/:id/status',
+  requirePermission('manage_clerks'),
+  updateClerkStatus
+);
 
-// ----- Mailbox -----
-router.get('/mail', getInbox);
-router.post('/mail', sendMessage);
-router.patch('/mail/:id/read', markMessageRead);
-
-// ----- Profile -----
-router.get('/profile', getProfile);
-router.put('/profile', updateProfile);
-router.put('/profile/password', changePassword);
+// Delete a clerk
+// DELETE /api/admin/clerks/:id
+router.delete(
+  '/clerks/:id',
+  requirePermission('manage_clerks'),
+  deleteClerk
+);
 
 module.exports = router;
