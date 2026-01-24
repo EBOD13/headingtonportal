@@ -1,30 +1,19 @@
 // backend/notification/emails/registeredClerkEmail.js
-const nodemailer = require("nodemailer");
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-    service: "Gmail",
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * Send "new clerk" email with ClerkID + temp password.
  * Optionally include a "set password" link.
  */
-function sendRegisteredClerkEmail({ name, email, clerkID, tempPassword, setPasswordUrl }) {
-    const mailOptions = {
-        from: `"Headington Portal" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Your Headington Portal Clerk Credentials",
-        html: `
+async function sendRegisteredClerkEmail({ name, email, clerkID, tempPassword, setPasswordUrl }) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'Headington Portal <onboarding@resend.dev>', 
+      to: 'olekabrida@gmail.com',
+      subject: 'Your Headington Portal Clerk Credentials',
+      html: `
 <!DOCTYPE html>
 <html>
 <head>
@@ -146,21 +135,20 @@ function sendRegisteredClerkEmail({ name, email, clerkID, tempPassword, setPassw
   </div>
 </body>
 </html>
-        `,
-    };
-
-    // ✅ Return a Promise so we can await it
-    return new Promise((resolve, reject) => {
-        transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                console.error("Error sending registered clerk email:", error.message);
-                reject(error);
-            } else {
-                console.log("Registered clerk email sent:", info.response);
-                resolve(info);
-            }
-        });
+      `,
     });
+
+    if (error) {
+      console.error('Resend error:', error);
+      throw new Error(error.message);
+    }
+
+    console.log('Registered clerk email sent successfully:', data?.id);
+    return data;
+  } catch (err) {
+    console.error('Failed to send registered clerk email:', err.message);
+    throw err;
+  }
 }
 
 module.exports = sendRegisteredClerkEmail;

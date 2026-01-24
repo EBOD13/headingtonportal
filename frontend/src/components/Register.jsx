@@ -32,37 +32,36 @@ const Register = () => {
   // Was this navigation initiated from the admin screen?
   const fromAdmin = Boolean(location.state?.fromAdmin);
 
-  useEffect(() => {
-    if (isError) {
-      toast.error(message || 'Registration failed', {
-        style: {
-          border: '2px solid #841617',
-          padding: '16px',
-          color: '#000000',
-        },
-      });
-    }
+useEffect(() => {
+  if (isError) {
+    toast.error(message || 'Registration failed', {
+      style: {
+        border: '2px solid #841617',
+        padding: '16px',
+        color: '#000000',
+      },
+    });
+    dispatch(reset());  // Only reset after showing error
+  }
 
-    // Only respond to *this* register/adminCreate attempt completing
-    if (isSuccess) {
-      if (fromAdmin) {
-        toast.success('Clerk account created successfully');
-        // Send back to clerks roster
-        navigate('/admin/clerks');
-      } else {
-        // Normal self-registration flow
-        navigate('/');
-      }
-    }
-
-    // If user hits /register directly while already logged in,
-    // only redirect them in the normal (non-admin) case.
-    if (!fromAdmin && clerk) {
+  if (isSuccess) {
+    if (fromAdmin) {
+      toast.success('Clerk account created successfully');
+      navigate('/admin/clerks');
+    } else {
       navigate('/');
     }
+    dispatch(reset());  // Only reset after success actions
+  }
 
-    dispatch(reset());
-  }, [clerk, isError, isSuccess, message, navigate, dispatch, fromAdmin]);
+  // If user hits /register directly while already logged in,
+  // only redirect them in the normal (non-admin) case.
+  if (!fromAdmin && clerk) {
+    navigate('/');
+  }
+  
+}, [clerk, isError, isSuccess, message, navigate, dispatch, fromAdmin]);
+
 
   const onChange = (e) => {
     const { name, value } = e.target;
