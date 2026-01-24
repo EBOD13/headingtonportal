@@ -74,21 +74,18 @@ const Register = () => {
 
   const onSubmit = (e) => {
     e.preventDefault();
-     console.log('onSubmit called, fromAdmin:', fromAdmin);  
 
     if (!name || !email) {
       toast.error('Name and email are required');
       return;
     }
 
+    // Admin flow: create clerk without password
     if (fromAdmin) {
-      // Admin creates clerk: no password fields here.
-      console.log('Dispatching adminCreateClerk');  
       const clerkData = {
         name: name.trim(),
         email: email.trim(),
       };
-
       dispatch(adminCreateClerk(clerkData));
       return;
     }
@@ -106,8 +103,7 @@ const Register = () => {
     };
 
     try {
-      const registerUser = dispatch(register(clerkData));
-      console.log(registerUser);
+      dispatch(register(clerkData));
     } catch (error) {
       console.log(error);
     }
@@ -150,7 +146,7 @@ const Register = () => {
           />
           <br />
 
-          {/* Only show password fields when NOT coming from admin */}
+          {/* ✅ Only show password fields when NOT coming from admin */}
           {!fromAdmin && (
             <>
               <label htmlFor="password">Password</label>
@@ -161,7 +157,7 @@ const Register = () => {
                 id="password"
                 onChange={onChange}
                 value={password}
-                required={!fromAdmin}
+                required
               />
               <br />
 
@@ -171,7 +167,7 @@ const Register = () => {
                 type="password"
                 name="password2"
                 id="password2"
-                required={!fromAdmin}
+                required
                 onChange={onChange}
                 value={password2}
               />
