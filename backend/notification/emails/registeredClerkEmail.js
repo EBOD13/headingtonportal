@@ -1,15 +1,14 @@
 // backend/notification/emails/registeredClerkEmail.js
 const nodemailer = require("nodemailer");
 
-// Ideally move these to env vars
 const transporter = nodemailer.createTransport({
     service: "Gmail",
     host: "smtp.gmail.com",
     port: 465,
     secure: true,
     auth: {
-        user: process.env.EMAIL_USER || "ebodtechs@gmail.com",
-        pass: process.env.EMAIL_PASS || "uhpl igsb fdzs agsw",
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
     tls: {
         rejectUnauthorized: false
@@ -22,7 +21,7 @@ const transporter = nodemailer.createTransport({
  */
 function sendRegisteredClerkEmail({ name, email, clerkID, tempPassword, setPasswordUrl }) {
     const mailOptions = {
-        from: '"Headington Portal" <ebodtechs@gmail.com>',
+        from: `"Headington Portal" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: "Your Headington Portal Clerk Credentials",
         html: `
@@ -109,7 +108,7 @@ function sendRegisteredClerkEmail({ name, email, clerkID, tempPassword, setPassw
 
       <p>Welcome to Headington Hall, and congratulations on joining the OU Athletics Department team as a front desk clerk.</p>
 
-      <p>We’ve created your account for the Headington Portal. Here are your temporary credentials:</p>
+      <p>We've created your account for the Headington Portal. Here are your temporary credentials:</p>
 
       <div class="credentials">
         <div><strong>Clerk ID:</strong> ${clerkID}</div>
@@ -150,12 +149,17 @@ function sendRegisteredClerkEmail({ name, email, clerkID, tempPassword, setPassw
         `,
     };
 
-    transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-            console.error("Error sending registered clerk email:", error.message);
-        } else {
-            console.log("Registered clerk email sent:", info.response);
-        }
+    // ✅ Return a Promise so we can await it
+    return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.error("Error sending registered clerk email:", error.message);
+                reject(error);
+            } else {
+                console.log("Registered clerk email sent:", info.response);
+                resolve(info);
+            }
+        });
     });
 }
 
