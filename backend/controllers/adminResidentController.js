@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Resident = require('../models/residentModel');
 const { logActivity } = require('../utils/activityLogger');
+const bcrypt = require('bcryptjs'); 
 
 // GET /api/admin/residents
 // Query: search, wing, active, semester, year

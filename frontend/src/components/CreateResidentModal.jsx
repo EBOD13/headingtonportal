@@ -66,26 +66,31 @@ const CreateResidentModal = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+const handleSubmit = (e) => {
+  e.preventDefault();
 
-    // Build payload; backend registerResident currently requires:
-    // { name, roomNumber, email, phoneNumber, studentID }
-    // plus optional: semester, year, active
-    const payload = {
-      name: form.name.trim(),
-      roomNumber: form.roomNumber.trim().toUpperCase(),
-      email: form.email.trim().toLowerCase(),
-      phoneNumber: form.phoneNumber.trim(),
-      studentID: form.studentID.trim(),
-      semester: form.semester || undefined,
-      year: form.year ? Number(form.year) : undefined,
-      active: !!form.active,
-    };
+  // Optional but recommended if you track submitting state
+  if (typeof isSubmitting !== "undefined" && isSubmitting) return;
 
-    onSubmit?.(payload);
+  if (!validate()) return;
+
+  const payload = {
+    name: form.name?.trim(),
+    roomNumber: form.roomNumber?.trim().toUpperCase(),
+    email: form.email?.trim().toLowerCase(),
+    phoneNumber: form.phoneNumber?.trim(),
+    studentID: form.studentID?.trim(),
+    semester: form.semester || undefined,
+    year: form.year ? Number(form.year) : undefined,
+
+    active:
+      typeof form.active === "boolean"
+        ? form.active
+        : true,
   };
+
+  onSubmit?.(payload);
+};
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -273,23 +278,37 @@ const CreateResidentModal = ({
               </div>
 
               {/* Active toggle */}
-              <div className="form-field checkbox-field">
-                <label htmlFor="active" className="checkbox-label">
-                  <input
-                    id="active"
-                    name="active"
-                    type="checkbox"
-                    checked={form.active}
-                    onChange={handleChange}
-                    disabled={isSubmitting}
-                  />
-                  <span>Resident is active</span>
-                </label>
-                <p className="field-hint">
-                  Uncheck if this record should start in a paused state.
-                </p>
-              </div>
+            <div className="form-field active-toggle-field">
+            <div className="active-toggle-header">
+                <span className="active-toggle-label">Resident status</span>
+                <span
+                className={`status-pill ${form.active ? "active" : "inactive"}`}
+                >
+                {form.active ? "Active" : "Paused"}
+                </span>
             </div>
+
+            <label htmlFor="active" className="switch">
+                <input
+                id="active"
+                name="active"
+                type="checkbox"
+                checked={form.active}
+                onChange={handleChange}
+                disabled={isSubmitting}
+                />
+                <span className="switch-track">
+                <span className="switch-thumb" />
+                </span>
+                <span className="switch-text">
+                {form.active
+                    ? "Resident can receive visitors and will appear as active."
+                    : "Resident is paused and will appear inactive in the roster."}
+                </span>
+            </label>
+            </div>
+
+                        </div>
 
             {/* Footer buttons */}
             <div className="modal-footer">

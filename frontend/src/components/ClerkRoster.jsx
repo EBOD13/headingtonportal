@@ -418,20 +418,61 @@ const ClerkRoster = () => {
     }
   };
 
-  const handleCreateResident = async (payload) => {
-    setCreatingResident(true);
-    try {
-      const res = await dispatch(createResidentAdmin(payload)).unwrap();
-      toast.success(res?.message || "Resident created");
-      setShowCreateResidentModal(false);
-      refreshResidents(); // show the new resident right away
-    } catch (err) {
-      console.error("Create resident error:", err);
-      toast.error(err?.message || err || "Failed to create resident");
-    } finally {
-      setCreatingResident(false);
-    }
+const handleCreateResident = async (values) => {
+  setCreatingResident(true);
+
+  // Normalise + shape exactly what /api/admin/residents expects
+  const payload = {
+    name: values.name?.trim(),
+    roomNumber: values.roomNumber?.trim().toUpperCase(),
+    email: values.email?.trim().toLowerCase(),
+    phoneNumber: values.phoneNumber?.trim(),
+    studentID: values.studentID?.trim(),
+
+    // optional fields
+    semester: values.semester || undefined, // 'Spring' | 'Summer' | 'Fall'
+    year: values.year ? Number(values.year) : undefined, // backend will parseInt as well
+    active:
+      typeof values.active === "boolean"
+        ? values.active
+        : true, // default true if the form doesn't expose a toggle
   };
+
+  // Client-side guard for the backend's required fields
+  if (
+    !payload.name ||
+    !payload.roomNumber ||
+    !payload.email ||
+    !payload.phoneNumber ||
+    !payload.studentID
+  ) {
+    setCreatingResident(false);
+    toast.error("Name, room, email, phone, and student ID are required.");
+    return;
+  }
+
+  try {
+    const res = await dispatch(createResidentAdmin(payload)).unwrap();
+
+    // Backend returns: { message: 'Resident created', resident: {...} }
+    toast.success(res?.message || "Resident created");
+    setShowCreateResidentModal(false);
+    refreshResidents();
+  } catch (err) {
+    console.error("Create resident error:", err);
+
+    const message =
+      typeof err === "string"
+        ? err
+        : err?.response?.data?.message ||
+          err?.message ||
+          "Failed to create resident";
+
+    toast.error(message);
+  } finally {
+    setCreatingResident(false);
+  }
+};
 
   // ==========================
   // Clerk actions
