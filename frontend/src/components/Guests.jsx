@@ -176,35 +176,22 @@ const ToolbarSection = ({
   </div>
 );
 
-const StatsCards = ({ stats }) => (
-  <div className="guests-stats">
-    <div className="stat-card stat-card--total">
-      <div className="stat-icon">
-        <Icons.Users size={20} />
+const StatsCard = ({ stats }) => (
+  <div className="stats-card">
+    <div className="stats-container">
+      <div className="stat-item">
+        <div className="stat-label">Total Guests</div>
+        <div className="stat-value crimson">{stats.total}</div>
       </div>
-      <div className="stat-content">
-        <span className="stat-value">{stats.total}</span>
-        <span className="stat-label">Total Guests</span>
+      <div className="stat-divider"></div>
+      <div className="stat-item">
+        <div className="stat-label">Checked In</div>
+        <div className="stat-value green">{stats.checkedIn}</div>
       </div>
-    </div>
-
-    <div className="stat-card stat-card--checked-in">
-      <div className="stat-icon">
-        <Icons.LogIn size={20} />
-      </div>
-      <div className="stat-content">
-        <span className="stat-value">{stats.checkedIn}</span>
-        <span className="stat-label">Checked In</span>
-      </div>
-    </div>
-
-    <div className="stat-card stat-card--flagged">
-      <div className="stat-icon">
-        <Icons.Flag size={20} />
-      </div>
-      <div className="stat-content">
-        <span className="stat-value">{stats.flagged}</span>
-        <span className="stat-label">Flagged</span>
+      <div className="stat-divider"></div>
+      <div className="stat-item">
+        <div className="stat-label">Flagged</div>
+        <div className="stat-value orange">{stats.flagged}</div>
       </div>
     </div>
   </div>
@@ -449,8 +436,8 @@ const Guests = () => {
 
       {/* Main Content */}
       <div className="guests-content">
-        {/* Stats Cards */}
-        <StatsCards stats={stats} />
+        {/* Stats Card */}
+        <StatsCard stats={stats} />
 
         {/* Guests Grid */}
         <div className="guests-grid-container">

@@ -187,7 +187,7 @@
   color: #27272a;
   transition: all 0.2s ease;
   appearance: none;
-  box-sizing: border-box;
+  /* box-sizing: border-box; */
 }
 
 .addguest-form .input-with-icon input:focus,

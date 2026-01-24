@@ -45,12 +45,28 @@ const BLUR_TIMEOUT_MS = 60000;
 // Sub-components
 // ============================================================================
 
-const StatCard = ({ icon, label, value, color }) => (
-  <div className={`stat-card ${color}`}>
-    <div className="stat-icon">{icon}</div>
-    <div className="stat-info">
-      <span className="stat-value">{value}</span>
-      <span className="stat-label">{label}</span>
+const StatsCard = ({ checkedInCount, totalGuestsCount, activitiesCount, noticesCount }) => (
+  <div className="stats-card">
+    <div className="stats-container">
+      <div className="stat-item">
+        <div className="stat-label">Checked In</div>
+        <div className="stat-value crimson">{checkedInCount}</div>
+      </div>
+      <div className="stat-divider"></div>
+      <div className="stat-item">
+        <div className="stat-label">Total Guests</div>
+        <div className="stat-value blue">{totalGuestsCount}</div>
+      </div>
+      <div className="stat-divider"></div>
+      <div className="stat-item">
+        <div className="stat-label">Activities</div>
+        <div className="stat-value green">{activitiesCount}</div>
+      </div>
+      <div className="stat-divider"></div>
+      <div className="stat-item">
+        <div className="stat-label">Notices</div>
+        <div className="stat-value orange">{noticesCount}</div>
+      </div>
     </div>
   </div>
 );
@@ -153,6 +169,20 @@ const Dashboard = () => {
     isLoading: isLoadingAllGuests,
     refetch: refetchAllGuests,
   } = useGuests();
+  
+  // Determine "today"
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Filter guests that have any visit TODAY
+  const visitorsToday = allGuests.filter(g => {
+    const checkInTime = g.checkIn || g.timeIn || g.createdAt;
+    if (!checkInTime) return false;
+
+    const d = new Date(checkInTime);
+    return d >= today; 
+  });
+
 
   const {
     data: checkedInGuests = [],
@@ -201,33 +231,13 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-page">
-      {/* Stats Section */}
-      <section className="stats-section">
-        <StatCard
-          icon={<Icons.Users size={24} />}
-          label="Checked In"
-          value={checkedInGuests.length}
-          color="crimson"
-        />
-        <StatCard
-          icon={<Icons.Users size={24} />}
-          label="Total Guests"
-          value={allGuests.length}
-          color="blue"
-        />
-        <StatCard
-          icon={<Icons.Activity size={24} />}
-          label="Activities"
-          value={activities.length}
-          color="green"
-        />
-        <StatCard
-          icon={<Icons.Bell size={24} />}
-          label="Notices"
-          value={notice.length}
-          color="orange"
-        />
-      </section>
+      {/* Stats Card */}
+      <StatsCard
+        checkedInCount={checkedInGuests.length}
+        totalGuestsCount={visitorsToday.length}
+        activitiesCount={activities.length}
+        noticesCount={notice.length}
+      />
 
       {/* Main Grid */}
       <section className="dashboard-grid">

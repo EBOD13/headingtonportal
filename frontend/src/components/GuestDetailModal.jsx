@@ -265,14 +265,6 @@ const GuestDetailModal = ({ guest, onClose, onCheckoutSuccess }) => {
     )} */}
         <div className="modal-header guest-modal-header">
           <div className="modal-guest-info">
-            <div className={`modal-avatar guest-avatar ${isFlagged ? 'flagged' : ''}`}>
-              {getInitials(guest.name)}
-              {isFlagged && (
-                <span className="avatar-flag-indicator">
-                  <Icons.AlertTriangle />
-                </span>
-              )}
-            </div>
             <div className="modal-title">
               <h2>{capitalize(guest.name)}</h2>
               <span className="modal-status">

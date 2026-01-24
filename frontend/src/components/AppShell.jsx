@@ -1,5 +1,12 @@
 // frontend/src/components/AppShell.jsx
-import React, { useState, useCallback, createContext, useContext, useMemo } from 'react';
+import React, {
+  useState,
+  useCallback,
+  createContext,
+  useContext,
+  useMemo,
+  useEffect,
+} from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, reset } from '../features/auth/authSlice';
@@ -24,7 +31,9 @@ import {
   Shield,
   Bell,
   Search,
+  ShieldUser,
 } from 'lucide-react';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 
 const Icons = {
   Menu,
@@ -39,6 +48,7 @@ const Icons = {
   Admin: Shield,
   Bell,
   Search,
+  ShieldUser,
 };
 
 // ============================================================================
@@ -52,6 +62,8 @@ const PAGE_CONFIG = {
   '/analytics': { title: 'Analytics', icon: Icons.Analytics },
   '/settings': { title: 'Settings', icon: Icons.Settings },
   '/admin': { title: 'Admin', icon: Icons.Admin },
+  // ⭐ NEW: make header nice for the Clerk admin screen
+  '/admin/clerks': { title: 'Clerks', icon: Icons.ShieldUser },
 };
 
 // ============================================================================
@@ -92,10 +104,10 @@ export const useAppShellHeader = () => {
 // ============================================================================
 // Header Component
 // ============================================================================
-const AppShellHeader = ({ 
-  title, 
-  subtitle, 
-  onMenuClick, 
+const AppShellHeader = ({
+  title,
+  subtitle,
+  onMenuClick,
   headerActions,
   showSearch,
   searchValue,
@@ -105,9 +117,9 @@ const AppShellHeader = ({
   return (
     <header className="app-shell-header">
       <div className="app-shell-header-left">
-        <button 
-          className="app-shell-menu-btn" 
-          type="button" 
+        <button
+          className="app-shell-menu-btn"
+          type="button"
           onClick={onMenuClick}
           aria-label="Open menu"
         >
@@ -115,7 +127,9 @@ const AppShellHeader = ({
         </button>
         <div className="app-shell-header-title">
           <h1>{title}</h1>
-          {subtitle && <span className="app-shell-header-subtitle">{subtitle}</span>}
+          {subtitle && (
+            <span className="app-shell-header-subtitle">{subtitle}</span>
+          )}
         </div>
       </div>
 
@@ -131,7 +145,7 @@ const AppShellHeader = ({
               onChange={(e) => onSearchChange?.(e.target.value)}
             />
             {searchValue && (
-              <button 
+              <button
                 className="app-shell-search-clear"
                 onClick={() => onSearchChange?.('')}
                 type="button"
@@ -177,15 +191,7 @@ const AppShell = ({ children }) => {
   const location = useLocation();
 
   const { clerk } = useSelector((state) => state.auth);
-  const isAdmin = useMemo(
-    () =>
-      Boolean(
-        clerk?.isAdmin === true ||
-        clerk?.role === 'admin' ||
-        clerk?.role === 'superadmin'
-      ),
-    [clerk]
-  );
+  const isAdmin = useIsAdmin();
 
   // Get current page config based on route
   const currentPageConfig = useMemo(() => {
@@ -193,15 +199,27 @@ const AppShell = ({ children }) => {
     return PAGE_CONFIG[path] || PAGE_CONFIG['/dashboard'];
   }, [location.pathname]);
 
+  // ⭐ Reset header config when route changes so one screen
+  //    doesn't "leak" its custom header into the next one.
+  useEffect(() => {
+    setHeaderConfig({});
+    setHeaderActions(null);
+  }, [location.pathname]);
+
   // Merge default page config with custom header config
-  const finalHeaderConfig = useMemo(() => ({
-    title: headerConfig.title || currentPageConfig.title,
-    subtitle: headerConfig.subtitle || (clerk?.name ? `Welcome, ${clerk.name}` : ''),
-    showSearch: headerConfig.showSearch || false,
-    searchValue: headerConfig.searchValue || '',
-    onSearchChange: headerConfig.onSearchChange || null,
-    searchPlaceholder: headerConfig.searchPlaceholder || 'Search...',
-  }), [headerConfig, currentPageConfig, clerk]);
+  const finalHeaderConfig = useMemo(
+    () => ({
+      title: headerConfig.title || currentPageConfig.title,
+      subtitle:
+        headerConfig.subtitle ||
+        (clerk?.name ? `Welcome, ${clerk.name}` : ''),
+      showSearch: !!headerConfig.showSearch,
+      searchValue: headerConfig.searchValue || '',
+      onSearchChange: headerConfig.onSearchChange || null,
+      searchPlaceholder: headerConfig.searchPlaceholder || 'Search...',
+    }),
+    [headerConfig, currentPageConfig, clerk]
+  );
 
   const toggleSidebar = useCallback(() => {
     setSidebarOpen((prev) => !prev);
@@ -279,11 +297,23 @@ const AppShell = ({ children }) => {
 
   const navItems = useMemo(() => {
     const base = [
-      { to: '/dashboard', label: 'Dashboard', icon: <Icons.Home size={18} /> },
+      {
+        to: '/dashboard',
+        label: 'Dashboard',
+        icon: <Icons.Home size={18} />,
+      },
       { to: '/residents', label: 'Residents', icon: <Icons.Users size={18} /> },
       { to: '/guests', label: 'Guests', icon: <Icons.Guests size={18} /> },
-      { to: '/analytics', label: 'Analytics', icon: <Icons.Analytics size={18} /> },
-      { to: '/settings', label: 'Settings', icon: <Icons.Settings size={18} /> },
+      {
+        to: '/analytics',
+        label: 'Analytics',
+        icon: <Icons.Analytics size={18} />,
+      },
+      {
+        to: '/settings',
+        label: 'Settings',
+        icon: <Icons.Settings size={18} />,
+      },
     ];
 
     if (isAdmin) {
@@ -291,6 +321,11 @@ const AppShell = ({ children }) => {
         to: '/admin',
         label: 'Admin',
         icon: <Icons.Admin size={18} />,
+      });
+      base.push({
+        to: '/admin/clerks',
+        label: 'Clerks',
+        icon: <Icons.ShieldUser size={18} />,
       });
     }
 
@@ -313,7 +348,7 @@ const AppShell = ({ children }) => {
                 <small>Residence Portal</small>
               </div>
               {/* Close button for mobile */}
-              <button 
+              <button
                 className="app-shell-sidebar-close"
                 onClick={closeSidebar}
                 type="button"
@@ -328,6 +363,7 @@ const AppShell = ({ children }) => {
                 <NavLink
                   key={item.to}
                   to={item.to}
+                  // 'end' true only for dashboard so nested routes work
                   end={item.to === '/dashboard' || item.to === '/'}
                   className={({ isActive }) =>
                     `app-shell-nav-item ${isActive ? 'active' : ''}`
@@ -376,7 +412,11 @@ const AppShell = ({ children }) => {
             </nav>
 
             <div className="app-shell-sidebar-footer">
-              <button className="app-shell-logout-btn" onClick={handleLogout}>
+              <button
+                className="app-shell-logout-btn"
+                onClick={handleLogout}
+                type="button"
+              >
                 <span className="app-shell-nav-icon">
                   <Icons.LogOut size={18} />
                 </span>
@@ -406,9 +446,7 @@ const AppShell = ({ children }) => {
             />
 
             {/* Page content */}
-            <main className="app-shell-content">
-              {children}
-            </main>
+            <main className="app-shell-content">{children}</main>
           </div>
 
           {/* Overlays */}

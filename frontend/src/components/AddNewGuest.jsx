@@ -89,8 +89,10 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
     enabled: room.length === 4,
   });
 
+  // pulling checkIn from useGuestActions to check guests in when they are added 
   const {
     register,
+    checkIn,
     isLoading,
     isError: registerError,
     message: registerMessage,
@@ -236,26 +238,65 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
         room,
       };
 
+      // 1) Register guest
       const result = await register(guestData);
 
-      if (result?.success) {
-        toast.success(result.message || 'Guest registered successfully!');
-        setFormData({
-          lastName: '',
-          firstName: '',
-          host: '',
-          room: '',
-          contact: '',
-          studentAtOU: '',
-          IDNumber: '',
-        });
-
-        setTimeout(() => {
-          if (onClose) onClose();
-        }, 800);
-      } else {
+      if (!result?.success) {
         toast.error(result?.message || 'Registration failed');
+        return;
       }
+
+      // 2) Try to grab the new guest ID from common response shapes
+      const newGuestId =
+        result?.guest?.id ||
+        result?.guest?._id ||
+        result?.data?.id ||
+        result?.data?._id ||
+        result?.id ||
+        result?._id ||
+        null;
+
+      // 3) If we got an ID, auto check-in
+      if (newGuestId) {
+        try {
+          const checkInResult = await checkIn(newGuestId);
+
+          if (checkInResult?.success === false) {
+            toast.success(result.message || 'Guest registered successfully');
+            toast.error(
+              checkInResult?.message || 'Guest registered but check-in failed'
+            );
+          } else {
+            toast.success(
+              checkInResult?.message ||
+                result.message ||
+                'Guest registered and checked in successfully!'
+            );
+          }
+        } catch (err) {
+          console.error('Auto check-in error:', err);
+          toast.success(result.message || 'Guest registered successfully');
+          toast.error('Guest registered but automatic check-in failed');
+        }
+      } else {
+        // Fallback: registration success but we could not auto check-in
+        toast.success(result.message || 'Guest registered successfully');
+      }
+
+      // 4) Reset form + close
+      setFormData({
+        lastName: '',
+        firstName: '',
+        host: '',
+        room: '',
+        contact: '',
+        studentAtOU: '',
+        IDNumber: '',
+      });
+
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 800);
     } catch (error) {
       console.error('Registration error (frontend):', error);
       toast.error(error.message || 'Error registering guest');
@@ -484,7 +525,7 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
             ) : (
               <>
                 <Icons.UserPlus size={18} />
-                Register Guest
+                Register & Check-In
               </>
             )}
           </button>

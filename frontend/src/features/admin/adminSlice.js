@@ -134,7 +134,7 @@ export const fetchResidentRoster = createAsyncThunk(
   async (filters = {}, thunkAPI) => {
     try {
       const token = getAuthToken(thunkAPI);
-      return await adminService.getResidentRoster(filters, token);
+      return await adminService.getResidentRoster(filters, token); // 👈 now valid
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -144,6 +144,7 @@ export const fetchResidentRoster = createAsyncThunk(
     }
   }
 );
+
 
 // PUT /api/admin/residents/:id/status
 export const setResidentStatusAdmin = createAsyncThunk(

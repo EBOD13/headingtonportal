@@ -216,6 +216,7 @@ export const useGuestsByHost = (hostId, options = {}) => {
   const dispatch = useDispatch();
   const {
     guestsByHost,
+    guestsStatsByHost, 
     isLoading,
     isError,
     isSuccess,
@@ -243,6 +244,7 @@ export const useGuestsByHost = (hostId, options = {}) => {
   }, [dispatch, effectiveToken, normalizedHostId, enabled]);
 
   const data = guestsByHost || [];
+  const stats = guestsStatsByHost || null;  
 
   // Build Error object
   const errorObj = useMemo(() => {
@@ -280,7 +282,8 @@ export const useGuestsByHost = (hostId, options = {}) => {
   }, [dispatch, effectiveToken, normalizedHostId]);
 
   return {
-    data,              // array of guests (shape based on controller)
+    data,      // guestsByHost
+    stats,     
     isLoading,
     isError,
     isSuccess,

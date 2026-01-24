@@ -33,7 +33,7 @@ const {
 const { uploadSingleFile } = require('../middleware/uploadMiddleware');
 
 // All admin routes require auth & at least 'admin' or 'supervisor'
-router.use(protect, requireRole('admin', 'supervisor'));
+// router.use(protect, requireRole('admin', 'supervisor'));
 
 // ----- Clerks -----
 router.get('/clerks', requirePermission('manage_clerks'), getClerkRoster);

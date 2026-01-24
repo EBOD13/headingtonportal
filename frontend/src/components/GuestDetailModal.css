@@ -8,12 +8,12 @@
 
 
 .guest-modal-header {
-  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  background: linear-gradient(135deg, #841617 0%, #6b1213 100%);
 }
 
 .guest-avatar {
   position: relative;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #841617 0%, #6b1213 100%);
 }
 
 .guest-avatar.flagged {
@@ -50,7 +50,7 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.3rem 0.75rem;
-  border-radius: 20px;
+  border-radius: 10px;
   font-size: 0.8rem;
   font-weight: 500;
 }
@@ -61,12 +61,12 @@
 }
 
 .status-badge.checked-in {
-  background: rgba(34, 197, 94, 0.15);
+  background: #22c55e;
   color: #ffffff;
 }
 
 .status-badge.checked-out {
-  background: rgba(113, 113, 122, 0.15);
+  background: #f59e0b;
   color: #ffffff;
 }
 

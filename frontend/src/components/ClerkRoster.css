@@ -1,0 +1,500 @@
+/* ClerkRoster.css */
+
+.clerk-roster-screen.screen-container {
+  min-height: 100vh;
+  padding: 2rem;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.screen-title-block h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.screen-subtitle {
+  margin-top: 0.25rem;
+  color: #64748b;
+  font-size: 0.95rem;
+  max-width: 640px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.add-clerk-wrapper {
+  position: relative;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.btn-danger {
+  border-radius: 9999px;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-primary {
+  background: #841617;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: #6e1011;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: #111827;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #111827;
+}
+
+.btn-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.btn-danger.ghost {
+  background: transparent;
+  color: #b91c1c;
+}
+
+.btn-ghost.small,
+.btn-danger.small {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.with-icon svg {
+  flex-shrink: 0;
+}
+
+/* Dropdown */
+.dropdown-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.35rem 0;
+  min-width: 220px;
+  z-index: 10;
+}
+
+.dropdown-item {
+  width: 100%;
+  padding: 0.45rem 0.9rem;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #f1f5f9;
+}
+
+/* Main grid */
+.screen-main-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 960px) {
+  .screen-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Panels */
+.panel {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 1rem 1.25rem 1.25rem;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.panel.wide {
+  margin-top: 0.5rem;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+/* Loading & empty */
+.panel-loading,
+.panel-empty,
+.panel-error {
+  padding: 1rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.panel-loading .spinner,
+.visitors-loading .spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #841617;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 0.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Clerks grid */
+.clerk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.9rem;
+}
+
+.clerk-card {
+  background: #f8fafc;
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: transform 0.08s ease, box-shadow 0.08s ease,
+    border-color 0.08s ease, background 0.08s ease;
+}
+
+.clerk-card:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5f5;
+  background: #f1f5f9;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+}
+
+.clerk-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.clerk-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: #841617;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.clerk-main {
+  flex: 1;
+}
+
+.clerk-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.clerk-email {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-pill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+}
+
+.status-pill.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill.active .dot {
+  background: #16a34a;
+}
+
+.status-pill.inactive {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-pill.inactive .dot {
+  background: #ef4444;
+}
+
+.clerk-card-body {
+  font-size: 0.8rem;
+}
+
+.clerk-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #64748b;
+}
+
+/* Clerk card footer */
+.clerk-card-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.35rem;
+}
+
+/* Residents grid */
+.resident-filters {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #f8fafc;
+  border-radius: 9999px;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #e2e8f0;
+}
+
+.input-with-icon input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.85rem;
+}
+
+.filter-group select {
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.82rem;
+}
+
+.resident-grid {
+  margin-top: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.resident-card {
+  border-radius: 0.9rem;
+  border: 1px solid #e2e8f0;
+  padding: 0.6rem 0.8rem;
+  background: #f9fafb;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: border-color 0.08s ease, background 0.08s ease,
+    transform 0.08s ease;
+}
+
+.resident-card:hover {
+  border-color: #cbd5f5;
+  background: #f1f5f9;
+  transform: translateY(-1px);
+}
+
+.resident-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.resident-room {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.resident-card-bottom {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.resident-status {
+  font-size: 0.75rem;
+  border-radius: 9999px;
+  padding: 0.1rem 0.45rem;
+}
+
+.resident-status.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.resident-status.inactive {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Lower panel */
+.panel-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.subpanel {
+  border-radius: 0.9rem;
+  border: 1px dashed #e2e8f0;
+  padding: 0.75rem 0.9rem;
+  background: #f9fafb;
+}
+
+.subpanel h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #0f172a;
+}
+
+.subpanel-text {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 0.4rem;
+}
+
+/* Clerk modal tweaks */
+.clerk-modal .modal-resident-info {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.clerk-modal .modal-avatar {
+  width: 44px;
+  height: 44px;
+}
+
+.clerk-modal-sub {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.15rem;
+}
+
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.75rem;
+}
+
+.clerk-contact-row {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.1rem;
+}
+
+.stats-grid.compact .stat-box {
+  padding: 0.4rem 0.6rem;
+}
+
+/* Guard */
+.screen-guard {
+  margin: 4rem auto;
+  text-align: center;
+  color: #64748b;
+}
+
+.screen-guard h2 {
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+  color: #0f172a;
+}

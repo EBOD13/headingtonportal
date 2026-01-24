@@ -17,6 +17,7 @@ import { OverlayProvider } from './overlays/OverlayProvider';
 import AppShell from './components/AppShell';
 
 import './App.css';
+import ClerkRoster from './components/ClerkRoster';
 
 // ============================================================================
 // Query Client
@@ -171,8 +172,22 @@ function App() {
                         </AppShell>
                       </AdminRoute>
                     </ProtectedRoute>
+                    
                   }
-/>
+                />
+                <Route
+                  path="/admin/clerks"
+                  element={
+                    <ProtectedRoute>
+                      <AdminRoute>
+                        <AppShell>
+                          <ClerkRoster />
+                        </AppShell>
+                      </AdminRoute>
+                    </ProtectedRoute>
+                    
+                  }
+                />
 
 
               {/* CATCH ALL */}
