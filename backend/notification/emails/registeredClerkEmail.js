@@ -1,240 +1,162 @@
 // backend/notification/emails/registeredClerkEmail.js
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
+// Ideally move these to env vars
 const transporter = nodemailer.createTransport({
-  service: 'Gmail',
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER, // e.g. ebodtechs@gmail.com
-    pass: process.env.EMAIL_PASSWORD, 
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
+    service: "Gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+        user: process.env.EMAIL_USER || "ebodtechs@gmail.com",
+        pass: process.env.EMAIL_PASS || "uhpl igsb fdzs agsw",
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
 });
 
 /**
- * Send "Welcome / Reset" email to clerk
- *
- * @param {Object} opts
- * @param {string} opts.name
- * @param {string} opts.email
- * @param {string} opts.clerkID
- * @param {string} opts.tempPassword - plain temp password
- * @param {string} opts.resetLink - one-time link to set password
- * @param {number} opts.expiresInDays - e.g. 3
- * @param {boolean} opts.isReset - if true, wording is "reset" instead of "welcome"
+ * Send "new clerk" email with ClerkID + temp password.
+ * Optionally include a "set password" link.
  */
-async function sendRegisteredClerkEmail({
-  name,
-  email,
-  clerkID,
-  tempPassword,
-  resetLink,
-  expiresInDays = 3,
-  isReset = false,
-}) {
-  const safeName = name || 'Clerk';
+function sendRegisteredClerkEmail({ name, email, clerkID, tempPassword, setPasswordUrl }) {
+    const mailOptions = {
+        from: '"Headington Portal" <ebodtechs@gmail.com>',
+        to: email,
+        subject: "Your Headington Portal Clerk Credentials",
+        html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 0;
+    }
+    .wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    .banner {
+      background-color: #841620;
+      color: #ffffff;
+      padding: 16px 20px;
+      text-align: center;
+      border-radius: 12px 12px 0 0;
+    }
+    .banner h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0.03em;
+    }
+    .content {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 0 0 12px 12px;
+      border: 1px solid #e5e7eb;
+      border-top: none;
+      line-height: 1.6;
+      color: #111827;
+    }
+    .credentials {
+      background-color: #f9fafb;
+      border-radius: 8px;
+      padding: 12px 14px;
+      border: 1px dashed #d1d5db;
+      margin: 16px 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 14px;
+    }
+    .credentials div {
+      margin-bottom: 4px;
+    }
+    .cta-button {
+      display: inline-block;
+      margin: 12px 0 16px;
+      padding: 10px 18px;
+      background-color: #841620;
+      color: #ffffff !important;
+      text-decoration: none;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .note {
+      font-size: 13px;
+      color: #4b5563;
+      margin-top: 8px;
+    }
+    .footer {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="banner">
+      <h1>Headington Hall Front Desk</h1>
+    </div>
+    <div class="content">
+      <p>Hi ${name || 'there'},</p>
 
-  const subject = isReset
-    ? 'Password reset for your Headington Portal account'
-    : 'Your Headington Portal clerk account';
+      <p>Welcome to Headington Hall, and congratulations on joining the OU Athletics Department team as a front desk clerk.</p>
 
-  const introLine = isReset
-    ? `A password reset was requested for your Headington Hall clerk account.`
-    : `Welcome to Headington Hall and congratulations on joining the front desk team!`;
+      <p>We’ve created your account for the Headington Portal. Here are your temporary credentials:</p>
 
-  const actionLine = isReset
-    ? `Use the temporary password and link below to set a new password.`
-    : `Use the temporary password and link below to set up your account.`;
-
-  const html = `
-  <html>
-    <head>
-      <style>
-        body {
-          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          background-color: #f3f4f6;
-          margin: 0;
-          padding: 0;
-        }
-        .wrapper {
-          padding: 24px;
-        }
-        .card {
-          max-width: 640px;
-          margin: 0 auto;
-          background: #ffffff;
-          border-radius: 16px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-          overflow: hidden;
-        }
-        .banner {
-          background: linear-gradient(135deg, #841620, #6b1213);
-          color: #ffffff;
-          padding: 16px 24px;
-          text-align: center;
-        }
-        .banner h1 {
-          margin: 0;
-          font-size: 20px;
-          letter-spacing: 0.03em;
-          text-transform: uppercase;
-        }
-        .content {
-          padding: 24px;
-          background: #fdf7f2;
-        }
-        .content p {
-          line-height: 1.6;
-          margin: 0 0 10px;
-          color: #111827;
-        }
-        .label {
-          font-weight: 600;
-        }
-        .credential-box {
-          background: #111827;
-          color: #f9fafb;
-          border-radius: 12px;
-          padding: 16px;
-          margin: 16px 0;
-          font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-          font-size: 14px;
-        }
-        .credential-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-        .credential-row span.key {
-          opacity: 0.8;
-        }
-        .credential-row span.value {
-          font-weight: 600;
-        }
-        .credential-note {
-          font-size: 12px;
-          opacity: 0.9;
-          margin-top: 8px;
-        }
-        .cta-btn {
-          display: inline-block;
-          margin-top: 12px;
-          padding: 10px 18px;
-          border-radius: 999px;
-          background: #841620;
-          color: #ffffff !important;
-          text-decoration: none;
-          font-weight: 600;
-          font-size: 14px;
-        }
-        .cta-btn:hover {
-          background: #6b1213;
-        }
-        .footer {
-          padding: 16px 24px 20px;
-          background: #f9fafb;
-          border-top: 1px solid #e5e7eb;
-          font-size: 12px;
-          color: #6b7280;
-          text-align: center;
-        }
-        .link {
-          color: #841620;
-          word-break: break-all;
-          font-size: 12px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="wrapper">
-        <div class="card">
-          <div class="banner">
-            <h1>Headington Hall Portal</h1>
-          </div>
-          <div class="content">
-            <p>Hello ${safeName},</p>
-            <p>${introLine}</p>
-            <p>${actionLine}</p>
-
-            <div class="credential-box">
-              <div class="credential-row">
-                <span class="key">Clerk ID</span>
-                <span class="value">${clerkID}</span>
-              </div>
-              <div class="credential-row">
-                <span class="key">Temporary password</span>
-                <span class="value">${tempPassword}</span>
-              </div>
-              <p class="credential-note">
-                This temporary password is valid until your account is updated.
-                For security, you must choose a new password within ${expiresInDays} days.
-                After that, your account will automatically be paused until a new reset is issued.
-              </p>
-            </div>
-
-            <p>
-              To set your password, click the button below or paste this link into your browser:
-            </p>
-            <p>
-              <a href="${resetLink}" class="cta-btn" target="_blank" rel="noopener noreferrer">
-                Set my password
-              </a>
-            </p>
-            <p class="link">${resetLink}</p>
-
-            <p>If you did not expect this email, please contact your supervisor or the Assistant Director.</p>
-
-            <p>Warm regards,<br/>
-               Headington Hall Staff<br/>
-               The University of Oklahoma Athletics Department
-            </p>
-          </div>
-          <div class="footer">
-            This link is personal to your account and will expire in ${expiresInDays} days.
-          </div>
-        </div>
+      <div class="credentials">
+        <div><strong>Clerk ID:</strong> ${clerkID}</div>
+        <div><strong>Temporary password:</strong> ${tempPassword}</div>
       </div>
-    </body>
-  </html>
-  `;
 
-  const text = `
-Hello ${safeName},
+      <p>
+        For security, this temporary password is intended for first-time login only. 
+        You must change your password within <strong>3 days</strong> of receiving this email. 
+        After that, your account may be automatically paused until a new password is set.
+      </p>
 
-${introLine}
+      ${
+        setPasswordUrl
+          ? `<p>You can change your password now using this secure link:</p>
+             <p><a class="cta-button" href="${setPasswordUrl}" target="_blank" rel="noopener noreferrer">
+               Set your password
+             </a></p>`
+          : ''
+      }
 
-Your clerk account details:
+      <p class="note">
+        Please keep these credentials confidential and do not share them with anyone. 
+        If you believe this email reached you in error, contact the Assistant Director immediately.
+      </p>
 
-- Clerk ID: ${clerkID}
-- Temporary password: ${tempPassword}
+      <p>Warm regards,<br/>
+      Headington Hall Staff<br/>
+      The University of Oklahoma Athletics Department</p>
+    </div>
 
-To set your password, open this link (it is unique to you and expires in ${expiresInDays} days):
+    <div class="footer">
+      This email was sent automatically by the Headington Portal system. Please do not reply directly.
+    </div>
+  </div>
+</body>
+</html>
+        `,
+    };
 
-${resetLink}
-
-For security, you must choose a new password within ${expiresInDays} days. After that, your account will be paused until a new reset is issued.
-
-If you did not expect this email, please contact your supervisor or the Assistant Director.
-
-Headington Hall
-The University of Oklahoma Athletics Department
-  `.trim();
-
-  const mailOptions = {
-    from: '"Headington Portal" <' + process.env.EMAIL_USER + '>',
-    to: email,
-    subject,
-    text,
-    html,
-  };
-
-  const info = await transporter.sendMail(mailOptions);
-  console.log('Registered clerk email sent:', info.messageId);
+    transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+            console.error("Error sending registered clerk email:", error.message);
+        } else {
+            console.log("Registered clerk email sent:", info.response);
+        }
+    });
 }
 
 module.exports = sendRegisteredClerkEmail;

@@ -9,7 +9,7 @@ const initialState = {
   isError: false,
   isSuccess: false,
   isLoading: false,
-  message: ""
+  message: "",
 };
 
 // ==============================
@@ -57,11 +57,11 @@ export const login = createAsyncThunk(
 // ==============================
 export const logout = createAsyncThunk(
   'auth/logout',
-  async () => await authService.logout()
+  async () => authService.logout()
 );
 
 // ==============================
-// Admin: create clerk (does NOT log in as them)
+// Admin: create clerk
 // ==============================
 export const adminCreateClerk = createAsyncThunk(
   'auth/adminCreateClerk',
@@ -73,7 +73,8 @@ export const adminCreateClerk = createAsyncThunk(
       if (!token) {
         return thunkAPI.rejectWithValue('Not authenticated as admin.');
       }
-
+      console.log('authService in thunk:', authService);
+console.log('adminCreateClerk typeof:', typeof authService.adminCreateClerk);
       const result = await authService.adminCreateClerk(clerkData, token);
       return result; // e.g. { clerk, tempPassword, resetToken, ... }
     } catch (error) {
@@ -89,7 +90,7 @@ export const adminCreateClerk = createAsyncThunk(
 );
 
 // ==============================
-// Password set via token (magic link)
+// Password set via token
 // ==============================
 export const setPasswordWithToken = createAsyncThunk(
   'auth/setPasswordWithToken',
@@ -119,14 +120,14 @@ export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    reset: state => {
+    reset: (state) => {
       state.isLoading = false;
       state.isSuccess = false;
       state.isError = false;
       state.message = '';
     },
   },
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
       // --- register ---
       .addCase(register.pending, (state) => {
@@ -174,10 +175,8 @@ export const authSlice = createSlice({
       .addCase(adminCreateClerk.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        // IMPORTANT: do NOT overwrite state.clerk here.
-        // Admin stays logged in as themselves.
-        // If you want, you could stash last created clerk:
-        // state.lastCreatedClerk = action.payload.clerk;
+        // DO NOT overwrite state.clerk here.
+        // Admin remains logged in as themselves.
       })
       .addCase(adminCreateClerk.rejected, (state, action) => {
         state.isLoading = false;
@@ -201,7 +200,7 @@ export const authSlice = createSlice({
         state.isError = true;
         state.message = action.payload;
       });
-  }
+  },
 });
 
 export const { reset } = authSlice.actions;

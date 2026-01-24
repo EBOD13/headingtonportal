@@ -1,68 +1,110 @@
+// backend/controllers/adminClerkController.js
 const asyncHandler = require('express-async-handler');
+const crypto = require('crypto');
 const Clerk = require('../models/clerkModel');
 const ActivityLog = require('../models/activityLogModel');
 const { logActivity } = require('../utils/activityLogger');
 const sendRegisteredClerkEmail = require('../notification/emails/registeredClerkEmail');
-const crypto = require('crypto');
 
-// Utility: generate a temp password (tweak pattern if you like)
-function generateTempPassword() {
-  // 10 chars: letters + numbers
-  return crypto.randomBytes(6).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
+// Small helper to generate a strong temp password
+function generateTempPassword(length = 12) {
+  const chars =
+    'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@$%&*?';
+  let pwd = '';
+  for (let i = 0; i < length; i++) {
+    const idx = crypto.randomInt(0, chars.length);
+    pwd += chars[idx];
+  }
+  return pwd;
 }
 
+// ----------------------------------------
+// Admin: Create a new clerk
 // POST /api/admin/clerks
-// Body: { name, email, role?, permissions? }
-// Admin creates a clerk; backend generates temp password + reset link
-const createClerkAdmin = asyncHandler(async (req, res) => {
-  const { name, email, role, permissions } = req.body;
+// Body: { name, email, role }
+// ----------------------------------------
+const adminCreateClerk = asyncHandler(async (req, res) => {
+  const { name, email, role } = req.body;
 
   if (!name || !email) {
-    return res.status(400).json({ message: 'Name and email are required' });
+    return res.status(400).json({
+      success: false,
+      message: 'Name and email are required',
+    });
   }
 
-  const existing = await Clerk.findOne({ email: email.toLowerCase().trim() });
+  const existing = await Clerk.findOne({ email });
   if (existing) {
-    return res.status(400).json({ message: 'A clerk with this email already exists' });
+    return res.status(400).json({
+      success: false,
+      message: 'A clerk with this email already exists',
+    });
   }
 
+  // 1) Generate temp password
   const tempPassword = generateTempPassword();
 
+  // 2) Create clerk
   const clerk = new Clerk({
     name: name.trim(),
-    email: email.trim().toLowerCase(),
-    password: tempPassword, // will be hashed in pre-save
+    email: email.toLowerCase().trim(),
+    password: tempPassword, // will be hashed in pre-save hook
     role: role || 'clerk',
-    permissions: Array.isArray(permissions) ? permissions : undefined,
+    isActive: true,
+    mustChangePassword: true,
     createdBy: req.clerk?._id || null,
   });
 
-  // configure 3-day window
-  const resetToken = clerk.createPasswordResetToken(3 * 24 * 60 * 60 * 1000); // 3 days
-  // clerk.needsPasswordReset = true; // set in createPasswordResetToken
+  // 3) Set a "must change by" deadline (3 days)
+  const expires = Date.now() + 3 * 24 * 60 * 60 * 1000;
+  clerk.passwordResetExpires = new Date(expires);
+
+  // Optional: token for magic-link password set later
+  const rawResetToken = crypto.randomBytes(32).toString('hex');
+  clerk.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(rawResetToken)
+    .digest('hex');
+
   await clerk.save();
 
-  // Build URL for setting password
-  const baseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
-  const resetLink = `${baseUrl}/set-password/${resetToken}`;
+  // 4) Log activity
+  await logActivity({
+    actorId: req.clerk?._id,
+    action: 'clerk_created',
+    targetType: 'clerk',
+    targetId: clerk._id,
+    description: `Clerk ${clerk.email} created with role ${clerk.role}`,
+    metadata: {
+      name: clerk.name,
+      role: clerk.role,
+      clerkID: clerk.clerkID,
+    },
+  });
 
+  // 5) Build optional set-password URL (for later when you add that page)
+  const portalBaseUrl =
+    process.env.PORTAL_BASE_URL || 'https://headingtonportal.danielesambu.com';
+  const setPasswordUrl = `${portalBaseUrl}/set-password/${rawResetToken}`;
+
+  // 6) Send welcome email with ClerkID + temp password
   try {
     await sendRegisteredClerkEmail({
       name: clerk.name,
       email: clerk.email,
       clerkID: clerk.clerkID,
       tempPassword,
-      resetLink,
-      expiresInDays: 3,
-      isReset: false,
+      setPasswordUrl,
     });
   } catch (err) {
-    console.error('Failed to send registered clerk email:', err);
-    // You might decide to still keep the clerk, but tell admin email failed
+    console.error('Failed to send registered clerk email:', err.message);
+    // We don't fail the whole request if email fails; but you could choose to.
   }
 
+  // 7) Respond with safe data (no password)
   return res.status(201).json({
-    message: 'Clerk created and email sent',
+    success: true,
+    message: 'Clerk created and welcome email sent',
     clerk: {
       _id: clerk._id,
       name: clerk.name,
@@ -70,57 +112,15 @@ const createClerkAdmin = asyncHandler(async (req, res) => {
       clerkID: clerk.clerkID,
       role: clerk.role,
       isActive: clerk.isActive,
+      mustChangePassword: clerk.mustChangePassword,
+      passwordResetExpires: clerk.passwordResetExpires,
     },
   });
 });
 
-// POST /api/admin/clerks/:id/reset-password
-// Admin resets password: new temp password + new reset link
-const resetClerkPasswordAdmin = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const clerk = await Clerk.findById(id);
-  if (!clerk) {
-    return res.status(404).json({ message: 'Clerk not found' });
-  }
-
-  if (!clerk.isActive) {
-    // you can allow this anyway if you want
-    console.warn(`Resetting password for inactive clerk ${clerk.email}`);
-  }
-
-  const tempPassword = generateTempPassword();
-  clerk.password = tempPassword; // will hash
-  const resetToken = clerk.createPasswordResetToken(3 * 24 * 60 * 60 * 1000);
-
-  // When admin resets password, you probably want to reactivate so they can use link
-  clerk.isActive = true;
-
-  await clerk.save();
-
-  const baseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
-  const resetLink = `${baseUrl}/set-password/${resetToken}`;
-
-  try {
-    await sendRegisteredClerkEmail({
-      name: clerk.name,
-      email: clerk.email,
-      clerkID: clerk.clerkID,
-      tempPassword,
-      resetLink,
-      expiresInDays: 3,
-      isReset: true,
-    });
-  } catch (err) {
-    console.error('Failed to send reset clerk email:', err);
-  }
-
-  return res.status(200).json({
-    message: 'Temporary password generated and email sent',
-  });
-});
-
-
+// ----------------------------------------
+// Your existing handlers
+// ----------------------------------------
 
 // GET /api/admin/clerks
 // Query: search, role, isActive
@@ -141,12 +141,12 @@ const getClerkRoster = asyncHandler(async (req, res) => {
     filter.$or = [
       { name: { $regex: q, $options: 'i' } },
       { email: { $regex: q, $options: 'i' } },
-      { clerkID: { $regex: q, $options: 'i' } }
+      { clerkID: { $regex: q, $options: 'i' } },
     ];
   }
 
   const clerks = await Clerk.find(filter)
-    .select('-password -clerkSecret -refreshTokens')
+    .select('-password -clerkSecret -refreshTokens -passwordResetToken')
     .sort({ role: 1, createdAt: -1 });
 
   res.status(200).json({ count: clerks.length, clerks });
@@ -158,7 +158,7 @@ const getClerkDetailWithActivity = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const clerk = await Clerk.findById(id).select(
-    '-password -clerkSecret -refreshTokens'
+    '-password -clerkSecret -refreshTokens -passwordResetToken'
   );
   if (!clerk) {
     return res.status(404).json({ message: 'Clerk not found' });
@@ -173,7 +173,7 @@ const getClerkDetailWithActivity = asyncHandler(async (req, res) => {
 });
 
 // PUT /api/admin/clerks/:id/status
-// Body: { isActive: boolean }
+// Body: { isActive: boolean, reason?: string }
 const updateClerkStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { isActive, reason } = req.body;
@@ -183,10 +183,10 @@ const updateClerkStatus = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Clerk not found' });
   }
 
-  // You might want to prevent an admin from deactivating themselves:
+  // Prevent admin from changing their own status
   if (String(clerk._id) === String(req.clerk._id)) {
     return res.status(400).json({
-      message: "You cannot change your own status from this screen."
+      message: 'You cannot change your own status from this screen.',
     });
   }
 
@@ -198,8 +198,10 @@ const updateClerkStatus = asyncHandler(async (req, res) => {
     action: 'clerk_status_changed',
     targetType: 'clerk',
     targetId: clerk._id,
-    description: `Clerk status changed to ${clerk.isActive ? 'active' : 'deactivated'}${reason ? `: ${reason}` : ''}`,
-    metadata: { isActive: clerk.isActive, reason }
+    description: `Clerk status changed to ${
+      clerk.isActive ? 'active' : 'deactivated'
+    }${reason ? `: ${reason}` : ''}`,
+    metadata: { isActive: clerk.isActive, reason },
   });
 
   res.status(200).json({
@@ -210,8 +212,8 @@ const updateClerkStatus = asyncHandler(async (req, res) => {
       email: clerk.email,
       clerkID: clerk.clerkID,
       isActive: clerk.isActive,
-      role: clerk.role
-    }
+      role: clerk.role,
+    },
   });
 });
 
@@ -226,7 +228,7 @@ const deleteClerk = asyncHandler(async (req, res) => {
 
   if (clerk.isSuperAdmin) {
     return res.status(403).json({
-      message: 'Cannot delete a super admin from this screen'
+      message: 'Cannot delete a super admin from this screen',
     });
   }
 
@@ -237,17 +239,16 @@ const deleteClerk = asyncHandler(async (req, res) => {
     action: 'clerk_deleted',
     targetType: 'clerk',
     targetId: id,
-    description: `Clerk ${clerk.email} deleted`
+    description: `Clerk ${clerk.email} deleted`,
   });
 
   res.status(200).json({ message: 'Clerk deleted', id });
 });
 
 module.exports = {
+  adminCreateClerk,
   getClerkRoster,
   getClerkDetailWithActivity,
   updateClerkStatus,
   deleteClerk,
-  createClerkAdmin,
-  resetClerkPasswordAdmin
 };
