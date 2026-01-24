@@ -1,8 +1,7 @@
-// frontend/src/components/ResidentDetailModal.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 import './ResidentDetailModal.css';
 import { useGuestsByHost } from '../hooks/useResidentsQuery';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { updateResidentStatus } from '../features/residents/residentSlice';
 import { toast } from 'react-hot-toast';
 
@@ -118,19 +117,21 @@ const VisitorCard = ({ visitor }) => (
 // ============================================================================
 // Main Component
 // ============================================================================
-const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
+const ResidentDetailModal = ({ resident, onClose, onAddNewGuest, onDeleteResident }) => {
   const dispatch = useDispatch();
   const isAdmin = useIsAdmin();
 
   const hostId = resident?._id;
 
   // --- Status state for select (derive initial from resident) ---
-  const [statusValue, setStatusValue] = useState(resident?.active ? 'active' : 'inactive');
-
+  const [statusValue, setStatusValue] = useState(
+    resident?.active ? 'active' : 'inactive'
+  );
   const [isSavingStatus, setIsSavingStatus] = useState(false);
+
   useEffect(() => {
-  setStatusValue(resident?.active ? 'active' : 'inactive');
-}, [resident?.active]);
+    setStatusValue(resident?.active ? 'active' : 'inactive');
+  }, [resident?.active]);
 
   // Use hook to fetch guests + stats for this host
   const {
@@ -162,13 +163,10 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
   }, [guestsForHost]);
 
   // Prefer backend stats, fall back to client-side
-  const totalVisitors =
-    stats?.totalVisitors ?? visitors.length;
-
+  const totalVisitors = stats?.totalVisitors ?? visitors.length;
   const totalVisits =
     stats?.totalVisits ??
     visitors.reduce((sum, v) => sum + (v.visitCount || 1), 0);
-
   const flaggedVisitors =
     stats?.flaggedVisitors ??
     visitors.filter((v) => v.flagged).length;
@@ -208,24 +206,49 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
 
   // --- Handle status change ---
   const handleStatusChange = async (e) => {
-  const newValue = e.target.value; // 'active' | 'inactive'
-  const active = newValue === 'active';
-  const id = resident._id || resident.id;
+    const newValue = e.target.value; // 'active' | 'inactive'
+    const active = newValue === 'active';
+    const id = resident._id || resident.id;
 
-  setStatusValue(newValue);
-  setIsSavingStatus(true);
+    setStatusValue(newValue);
+    setIsSavingStatus(true);
 
-  try {
-    await dispatch(
-      updateResidentStatus({
-        id,
-        updates: { active },
-      })
-    ).unwrap();
-  } finally {
-    setIsSavingStatus(false);
-  }
-};
+    try {
+      await dispatch(
+        updateResidentStatus({
+          id,
+          updates: { active },
+        })
+      ).unwrap();
+      toast.success('Resident status updated');
+    } catch (err) {
+      console.error('[ResidentDetailModal] updateResidentStatus error:', err);
+      toast.error(err?.message || 'Failed to update resident status');
+      // revert UI if failed
+      setStatusValue(resident?.active ? 'active' : 'inactive');
+    } finally {
+      setIsSavingStatus(false);
+    }
+  };
+
+  // --- Handle delete resident (admin only) ---
+  const handleDeleteResident = () => {
+    if (!isAdmin) {
+      return;
+    }
+
+    if (!onDeleteResident) {
+      console.warn('[ResidentDetailModal] onDeleteResident callback not provided');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Delete resident "${resident.name}" and their data? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    onDeleteResident(resident);
+  };
 
   if (!resident) return null;
 
@@ -236,7 +259,10 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-container"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="modal-header">
           <div className="modal-resident-info">
@@ -244,37 +270,32 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
               {getInitials(resident.name)}
             </div>
             <div className="modal-title-row">
-
               <h2>{capitalize(resident.name)}</h2>
 
-                <span className="modal-room">
+              <span className="modal-room">
                 <MapPin size={16} />
                 Room {resident.roomNumber}
-                
               </span>
-                {isAdmin && (
-              <div className="resident-status-wrapper">
-                <select
-                  id="resident-status-select"
-                  className="resident-status-select"
-                  value={statusValue}
-                  onChange={handleStatusChange}
-                  disabled={isSavingStatus}
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-                {isSavingStatus && (
-                  <span className="resident-status-saving">
-                    Saving...
-                  </span>
-                )}
-              </div>
-            )}
 
-              
-            
-
+              {isAdmin && (
+                <div className="resident-status-wrapper">
+                  <select
+                    id="resident-status-select"
+                    className="resident-status-select"
+                    value={statusValue}
+                    onChange={handleStatusChange}
+                    disabled={isSavingStatus}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                  {isSavingStatus && (
+                    <span className="resident-status-saving">
+                      Saving...
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <button className="modal-close" onClick={onClose}>
@@ -286,7 +307,7 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
         <div className="modal-content">
           {/* Resident Details */}
           <section className="modal-section">
-            <h3>Contact Information</h3>
+            <h3>Contact & Academic Information</h3>
             <div className="info-grid">
               <InfoItem
                 icon={User}
@@ -308,9 +329,18 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
                 label="Phone"
                 value={resident.phoneNumber}
               />
+              {/* New: Semester & Year */}
+              <InfoItem
+                icon={Clock}
+                label="Semester"
+                value={resident.semester ? capitalize(resident.semester) : 'N/A'}
+              />
+              <InfoItem
+                icon={Clock}
+                label="Year"
+                value={resident.year || 'N/A'}
+              />
             </div>
-
-            
           </section>
 
           {/* Visitor Stats */}
@@ -325,7 +355,11 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
                 <span className="stat-number">{totalVisits}</span>
                 <span className="stat-label">Total Visits</span>
               </div>
-              <div className={`stat-box ${flaggedVisitors > 0 ? 'warning' : ''}`}>
+              <div
+                className={`stat-box ${
+                  flaggedVisitors > 0 ? 'warning' : ''
+                }`}
+              >
                 <span className="stat-number">{flaggedVisitors}</span>
                 <span className="stat-label">Flagged</span>
               </div>
@@ -376,6 +410,15 @@ const ResidentDetailModal = ({ resident, onClose, onAddNewGuest }) => {
             <UserPlus size={18} />
             Add Visitor
           </button>
+          {isAdmin && (
+            <button
+              className="btn btn-danger"
+              type="button"
+              onClick={handleDeleteResident}
+            >
+              Delete Resident
+            </button>
+          )}
         </div>
       </div>
     </div>

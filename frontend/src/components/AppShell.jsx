@@ -409,20 +409,21 @@ const AppShell = ({ children }) => {
                   <span className="app-shell-nav-label">Add New Guest</span>
                 </button>
               </div>
-            </nav>
 
-            <div className="app-shell-sidebar-footer">
-              <button
-                className="app-shell-logout-btn"
-                onClick={handleLogout}
-                type="button"
-              >
-                <span className="app-shell-nav-icon">
-                  <Icons.LogOut size={18} />
-                </span>
-                <span className="app-shell-nav-label">Logout</span>
-              </button>
-            </div>
+              {/* Logout Button - Placed below all navigation buttons */}
+              <div className="app-shell-logout-section">
+                <button
+                  className="app-shell-logout-btn"
+                  onClick={handleLogout}
+                  type="button"
+                >
+                  <span className="app-shell-nav-icon">
+                    <Icons.LogOut size={18} />
+                  </span>
+                  <span className="app-shell-nav-label">Logout</span>
+                </button>
+              </div>
+            </nav>
           </aside>
 
           {/* MOBILE OVERLAY */}

@@ -122,10 +122,15 @@ const ClerkDetailModal = ({
   clerk,
   onClose,
   onToggleActive,
+  onResendInvite,
   onDelete,
   activity = [],
 }) => {
   if (!clerk) return null;
+
+  // Check if clerk needs to set password (invitation pending)
+  const isPendingSetup = clerk.needsPasswordReset || clerk.passwordResetToken;
+  const isExpired = clerk.passwordResetExpires && new Date(clerk.passwordResetExpires) < new Date();
 
   const initials = (clerk.name || "?")
     .split(" ")
@@ -154,11 +159,26 @@ const ClerkDetailModal = ({
                   <Shield size={14} />
                   {clerk.role || "Clerk"}
                 </span>
+                {isPendingSetup && (
+                  <span className={`status-pill ${isExpired ? 'expired' : 'pending'}`}>
+                    {isExpired ? '⚠️ Invite Expired' : '⏳ Pending Setup'}
+                  </span>
+                )}
               </div>
               <div className="clerk-contact-row">
                 <span>{clerk.email}</span>
                 {clerk.phone && <span>• {clerk.phone}</span>}
               </div>
+              {isPendingSetup && clerk.passwordResetExpires && (
+                <div className="clerk-expiry-info">
+                  <small>
+                    {isExpired
+                      ? `Invitation expired on ${new Date(clerk.passwordResetExpires).toLocaleDateString()}`
+                      : `Invitation expires: ${new Date(clerk.passwordResetExpires).toLocaleDateString()}`
+                    }
+                  </small>
+                </div>
+              )}
             </div>
           </div>
           <button className="modal-close" onClick={onClose}>
@@ -189,6 +209,19 @@ const ClerkDetailModal = ({
                   </>
                 )}
               </button>
+
+              {/* Resend Invite Button - only show if pending setup */}
+              {isPendingSetup && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => onResendInvite(clerk)}
+                >
+                  <Mail size={16} />
+                  {isExpired ? 'Resend Expired Invite' : 'Resend Invitation'}
+                </button>
+              )}
+
               <button
                 type="button"
                 className="btn-danger"
@@ -253,12 +286,6 @@ const ClerkDetailModal = ({
           </section>
         </div>
 
-        {/* Footer */}
-        <div className="modal-footer">
-          <button className="btn-secondary" onClick={onClose}>
-            Close
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -283,6 +310,7 @@ const ClerkRoster = () => {
     importFromFile,
     setSelectedClerk,
     selectedClerk,
+    resendInvite
   } = useAdminClerks({
     enabled: true,
     onError: (err) => {
@@ -293,11 +321,13 @@ const ClerkRoster = () => {
   const adminState = useSelector((state) => state.admin);
   const { residents = [], isLoading: residentsLoading } = adminState;
 
-  const [residentFilters, setResidentFilters] = useState({
-    search: "",
-    wing: "",
-    active: "",
-  });
+ const [residentFilters, setResidentFilters] = useState({
+  search: "",
+  wing: "",
+  active: "",
+  semester: "",
+  year: "",
+});
 
   const [showAddClerkMenu, setShowAddClerkMenu] = useState(false);
   const addClerkFileInputRef = useRef(null);
@@ -310,33 +340,51 @@ const ClerkRoster = () => {
     dispatch(fetchResidentRoster({}));
   }, [dispatch, isAdmin]);
 
-  const filteredResidents = useMemo(() => {
-    let list = residents || [];
-    const { search, wing, active } = residentFilters;
+  const availableYears = useMemo(() => {
+  const years = (residents || [])
+    .map((r) => r.year)
+    .filter((y) => typeof y === "number" && !Number.isNaN(y));
 
-    if (search) {
-      const s = search.toLowerCase();
-      list = list.filter(
-        (r) =>
-          r.name?.toLowerCase().includes(s) ||
-          r.roomNumber?.toLowerCase().includes(s)
-      );
-    }
+  return Array.from(new Set(years)).sort((a, b) => b - a); // newest first
+}, [residents]);
 
-    if (wing) {
-      list = list.filter((r) =>
-        r.roomNumber?.toUpperCase().startsWith(wing.toUpperCase())
-      );
-    }
+const filteredResidents = useMemo(() => {
+  let list = residents || [];
+  const { search, wing, active, semester, year } = residentFilters;
 
-    if (active === "active") {
-      list = list.filter((r) => r.active === true);
-    } else if (active === "inactive") {
-      list = list.filter((r) => r.active === false);
-    }
+  if (search) {
+    const s = search.toLowerCase();
+    list = list.filter(
+      (r) =>
+        r.name?.toLowerCase().includes(s) ||
+        r.roomNumber?.toLowerCase().includes(s)
+    );
+  }
 
-    return list;
-  }, [residents, residentFilters]);
+  if (wing) {
+    // you could also use r.wing === 'North'/'South' if you prefer
+    list = list.filter((r) =>
+      r.roomNumber?.toUpperCase().startsWith(wing.toUpperCase())
+    );
+  }
+
+  if (active === "active") {
+    list = list.filter((r) => r.active === true);
+  } else if (active === "inactive") {
+    list = list.filter((r) => r.active === false);
+  }
+
+  if (semester) {
+    list = list.filter((r) => r.semester === semester);
+  }
+
+  if (year) {
+    // year is stored as Number in Mongo, select value comes as string
+    list = list.filter((r) => String(r.year) === String(year));
+  }
+
+  return list;
+}, [residents, residentFilters]);
 
   // ==========================
   // Handler: Add Clerk
@@ -347,7 +395,48 @@ const ClerkRoster = () => {
   navigate("/admin/clerks/new", { state: { fromAdmin: true } });
 };
 
+const handleCloseResidentModal = () => {
+  setSelectedResident(null);
+};
 
+// Handle "Add Visitor" from ResidentDetailModal
+// This receives the payload passed from ResidentDetailModal.handleAddVisitor:
+// { room, hostId, hostName }
+const handleAddNewGuestFromResident = (payload) => {
+
+  toast('Opening Add Visitor flow…', {
+  });
+
+  // TODO: Wire this to the overlay / AddNewGuest component, e.g.:
+  // openAddGuest(payload);
+};
+
+// Admin-only delete handler
+const handleDeleteResident = (residentToDelete) => {
+  if (!residentToDelete) return;
+
+  const { _id, name, roomNumber } = residentToDelete;
+
+  const confirmed = window.confirm(
+    `Are you sure you want to permanently delete resident "${name}" (Room ${roomNumber})? This action cannot be undone.`
+  );
+
+  if (!confirmed) return;
+
+  // TODO: dispatch your real delete thunk here, e.g.:
+  // await dispatch(deleteResident(residentToDelete._id)).unwrap();
+
+  console.log('[ResidentDetailModal] Delete resident requested:', {
+    id: _id,
+    name,
+    roomNumber,
+  });
+
+  toast.success(`Resident "${name}" scheduled for deletion`);
+
+  // Optionally close modal after delete
+  setSelectedResident(null);
+};
   const handleAddClerkFileClick = () => {
     if (addClerkFileInputRef.current) {
       addClerkFileInputRef.current.value = "";
@@ -405,6 +494,25 @@ const ClerkRoster = () => {
     }
   };
 
+
+  // ==========================
+  // Handler: Clerk resend invite
+  // ==========================
+  const handleResendInvite = async (clerk) => {
+  const confirmed = window.confirm(
+    `Resend invitation to "${clerk.name}" (${clerk.email})? This will generate a new temporary password and reset link.`
+  );
+  if (!confirmed) return;
+
+  try {
+    await resendInvite(clerk._id);
+    toast.success(`Invitation resent to ${clerk.email}`);
+  } catch (err) {
+    console.error("Resend invite error:", err);
+    toast.error(err?.response?.data?.message || err?.message || "Failed to resend invitation");
+  }
+};
+
   // ==========================
   // Handler: Resident filters
   // ==========================
@@ -425,7 +533,7 @@ const ClerkRoster = () => {
         <div className="screen-guard">
           <Shield size={32} />
           <h2>Admin Access Only</h2>
-          <p>You don’t have permission to view this page.</p>
+          <p>You don't have permission to view this page.</p>
         </div>
       </div>
     );
@@ -558,40 +666,57 @@ const ClerkRoster = () => {
           {/* Filters */}
           <div className="resident-filters">
             <div className="filter-group">
-              <div className="input-with-icon">
-                <Search size={16} />
-                <input
-                  type="text"
-                  name="search"
-                  value={residentFilters.search}
-                  onChange={handleResidentFilterChange}
-                  placeholder="Search by name or room"
-                />
-              </div>
-            </div>
+  <Filter size={16} />
 
-            <div className="filter-group">
-              <Filter size={16} />
-              <select
-                name="wing"
-                value={residentFilters.wing}
-                onChange={handleResidentFilterChange}
-              >
-                <option value="">All wings</option>
-                <option value="N">North wing (N*** )</option>
-                <option value="S">South wing (S*** )</option>
-              </select>
+  {/* Wing */}
+  <select
+    name="wing"
+    value={residentFilters.wing}
+    onChange={handleResidentFilterChange}
+  >
+    <option value="">All wings</option>
+    <option value="N">North wing (N*** )</option>
+    <option value="S">South wing (S*** )</option>
+  </select>
 
-              <select
-                name="active"
-                value={residentFilters.active}
-                onChange={handleResidentFilterChange}
-              >
-                <option value="">All statuses</option>
-                <option value="active">Active</option>
-                <option value="inactive">Paused / Deactivated</option>
-              </select>
-            </div>
+  {/* Active status */}
+  <select
+    name="active"
+    value={residentFilters.active}
+    onChange={handleResidentFilterChange}
+  >
+    <option value="">All statuses</option>
+    <option value="active">Active</option>
+    <option value="inactive">Paused / Deactivated</option>
+  </select>
+
+  {/* Semester */}
+  <select
+    name="semester"
+    value={residentFilters.semester}
+    onChange={handleResidentFilterChange}
+  >
+    <option value="">All semesters</option>
+    <option value="Spring">Spring</option>
+    <option value="Summer">Summer</option>
+    <option value="Fall">Fall</option>
+  </select>
+
+  {/* Year */}
+  <select
+    name="year"
+    value={residentFilters.year}
+    onChange={handleResidentFilterChange}
+  >
+    <option value="">All years</option>
+    {availableYears.map((y) => (
+      <option key={y} value={y}>
+        {y}
+      </option>
+    ))}
+  </select>
+</div>
+
           </div>
 
           {residentsLoading && (
@@ -689,18 +814,19 @@ const ClerkRoster = () => {
         onClose={() => setSelectedClerk(null)}
         onToggleActive={handleToggleActiveClerk}
         onDelete={handleDeleteClerk}
-        activity={[]} // wire /api/admin/activity?clerkId later
+        onResendInvite={handleResendInvite}  // Add this
+        activity={[]}
       />
-
       {/* Resident detail modal (your existing one, but as admin) */}
       {selectedResident && (
-        <ResidentDetailModal
-          resident={selectedResident}
-          onClose={() => setSelectedResident(null)}
-          onAddNewGuest={() =>
-            toast("Open AddNewGuest overlay from here if desired")
-          }
-        />
+       <ResidentDetailModal
+      resident={selectedResident}
+      onClose={handleCloseResidentModal}
+      onAddNewGuest={handleAddNewGuestFromResident}
+      onDeleteResident={handleDeleteResident}
+    />
+
+
       )}
     </div>
   );

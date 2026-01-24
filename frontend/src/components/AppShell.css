@@ -44,7 +44,6 @@
   left: 0;
   z-index: 100;
   overflow-y: auto;
-  overflow-x: hidden;
 }
 
 /* Branding */
@@ -200,8 +199,8 @@
   padding: 10px 12px;
   border-radius: 10px;
   border: none;
-  background: rgba(185, 28, 28, 0.08);
-  color: #b91c1c;
+  background: #b91c1c;
+  color: #fff7ed;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.15s ease;
