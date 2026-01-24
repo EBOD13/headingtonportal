@@ -1,10 +1,11 @@
-// server.js - COMPLETE UPDATED VERSION
+// server.js 
 const express = require("express");
 const dotenv = require("dotenv").config();
 const mongoose = require('mongoose'); // Add mongoose import
 const connectDB = require('./database/database');
 const cors = require('cors'); // Add CORS middleware
 const port = process.env.PORT || 8000;
+const adminRoutes = require('./routes/adminRoutes');
 
 // Connect to database
 connectDB();
@@ -95,6 +96,7 @@ const startJobs = () => {
     console.error('Failed to start jobs:', error.message);
   }
 };
+app.use('/api/admin', adminRoutes);
 
 // Improved error handling middleware
 app.use((err, req, res, next) => {
