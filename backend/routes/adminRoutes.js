@@ -32,6 +32,32 @@ const {
 
 const { uploadSingleFile } = require('../middleware/uploadMiddleware');
 
+console.log('ADMIN ROUTE HANDLERS CHECK:', {
+  getClerkRoster: typeof getClerkRoster,
+  getClerkDetailWithActivity: typeof getClerkDetailWithActivity,
+  updateClerkStatus: typeof updateClerkStatus,
+  deleteClerk: typeof deleteClerk,
+
+  getResidentRoster: typeof getResidentRoster,
+  updateResidentStatus: typeof updateResidentStatus,
+  deleteResidentAdmin: typeof deleteResidentAdmin,
+
+  getActivityFeed: typeof getActivityFeed,
+  exportVisitationCsv: typeof exportVisitationCsv,
+
+  getInbox: typeof getInbox,
+  sendMessage: typeof sendMessage,
+  markMessageRead: typeof markMessageRead,
+
+  getProfile: typeof getProfile,
+  updateProfile: typeof updateProfile,
+  changePassword: typeof changePassword,
+
+  importResidentsFromFile: typeof importResidentsFromFile,
+  importClerksFromFile: typeof importClerksFromFile,
+});
+
+
 // All admin routes require auth & at least 'admin' or 'supervisor'
 // router.use(protect, requireRole('admin', 'supervisor'));
 
