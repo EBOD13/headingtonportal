@@ -1,261 +1,328 @@
-# Headington Portal
+# **Headington Portal**
 
-*A fast, secure check-in/check-out system for athletic dorm visitor management.*
-
----
-
-## Overview
-
-**Headington Portal** is a full-stack visitor management system built to replace the slow, manual Excel-based visitor logging process used in athletic student housing.
-
-During my time working the front desk of an athlete residence hall, I identified two major problems:
-
-1. **Manual Excel tracking** slowed operations during peak periods (move-in, game days, parents weekend).
-2. **Holding physical IDs** (driver’s licenses) created liability and risk if a visitor forgot their ID.
-
-The Headington Portal solves these problems with:
-
-* Fast digital visitor check-in and check-out
-* Resident ↔ visitor linking
-* Automated SMS reminders for overstaying visitors
-* No more ID retention
-* MongoDB-backed audit logs
-* A clean React dashboard for clerks
-
-Visitors can be checked in within **under 60 seconds**, and checked out in **under 15 seconds**.
+*A modern, secure, production-grade visitor management system built for real-world residential operations.*
 
 ---
 
-# System Architecture
+## 🧭 **Overview**
 
-Below is the complete architecture as an ASCII diagram that fits GitHub Markdown.
+**Headington Portal** is a full-stack visitor check-in/check-out platform built to replace the slow, error-prone Excel sheets used in athletic student housing.
 
-```
-                               ┌──────────────────────────────────┐
-                               │          Clerk Dashboard         │
-                               │        (React Frontend)          │
-                               │----------------------------------│
-                               │ - Login / Logout                 │
-                               │ - Add Residents                  │
-                               │ - Add / Search Visitors          │
-                               │ - Check-In / Check-Out Forms     │
-                               │ - Activity Log Dashboard         │
-                               │ - Image Gallery (IDs, photos)    │
-                               └──────────────────────────────────┘
-                                             │
-                                             │  HTTPS (REST API)
-                                             ▼
-┌─────────────────────────────── Backend: Node.js / Express ───────────────────────────────┐
-│                                                                                          │
-│   ┌─────────────────────┐    ┌──────────────────────┐    ┌─────────────────────────────┐ │
-│   │  Controllers        │    │  Middleware          │    │  Services / Utilities       │ │
-│   │---------------------│    │----------------------│    │-----------------------------│ │
-│   │ - guestController   │    │ - authMiddleware     │    │ - Twilio SMS Notifications  │ │
-│   │ - residentController│    │ - errorMiddleware    │    │ - Google Sheets Integration │ │
-│   │ - clerkController   │    └──────────────────────┘    │ - Multer + GridFS Uploads   │ │
-│   │ - sheetController   │                                └─────────────────────────────┘ │
-│   └─────────────────────┘                                                                │  
-│                                         │                                                │  
-│                                         ▼                                                │  
-│                        ┌────────────────────────────────────────┐                        │  
-│                        │         MongoDB + Mongoose             │                        │  
-│                        │----------------------------------------│                        │  
-│                        │ - Residents Collection                 │                        │  
-│                        │ - Guests Collection                    │                        │  
-│                        │ - Clerks Collection (JWT Auth)         │                        │  
-│                        │ - Visit Logs                           │                        │  
-│                        │ - Uploaded Images (GridFS)             │                        │  
-│                        └────────────────────────────────────────┘                        │   
-└──────────────────────────────────────────────────────────────────────────────────────────┘
+While working the front desk of an athlete residence hall at the University of Oklahoma, I experienced firsthand how outdated the visitor process was:
 
-         Additional Integrations:
-         --------------------------------------------------------------------
-         • Twilio → Sends text messages to visitors who overstay
-         • Google Sheets → Sync or export visit logs
-         • Nodemailer → Sends email notifications (future extension)
-```
+### **Pain Points I identified**
+
+1. **Manual Excel tracking** slowed operations dramatically during peak traffic
+   (move-in, OU football games, parents weekend).
+
+2. **Collecting physical IDs** created liability and privacy risks
+   (lost IDs, long lines, slow checkout).
+
+3. **No real-time visibility** into who is visiting whom, which rooms are busiest, and how long guests stayed.
+
+4. **Zero automation** for overstaying visitors or expired clerk accounts.
+
+### **My goal**
+
+Build a **secure, fast, fully auditable digital system** that:
+
+* Keeps residents safe
+* Reduces clerk workload
+* Speeds up traffic flow
+* Provides admin oversight
+* Eliminates ID retention
+* Creates an accurate historical audit trail
+
+The result is **Headington Portal**—a production-grade system designed from scratch to solve real operational problems.
+
+Visitors can now be checked in **in under 60 seconds**, and checked out **in under 15 seconds**.
 
 ---
 
-# Features
+## 🎨 **Visual Overview**
 
-### Visitor & Resident Management
+Below are sections where you can paste screenshots or animated GIFs to visually demonstrate your system.
+These help recruiters instantly understand your UI, workflows, and engineering depth.
 
-* Register visitors and residents
+📌 Login & Authentication Flow
+![Login Screen](IMAGE_URL)
+
+
+Description:
+A secure login system for clerks and admins.
+Features include validation, password reset, and role-based access.
+
+🏠 Clerk Dashboard
+![Clerk Dashboard](IMAGE_URL)
+
+
+Description:
+A clean, fast dashboard designed for real-world front desk workflow.
+Clerks can access check-in, check-out, visitor search, and activity logs.
+
+📝 Visitor Registration & Check-In Flow
+![Check-In](IMAGE_URL)
+
+
+Description:
+Register a visitor, link them to a resident, automatically timestamp actions, and record them in MongoDB.
+
+🚪 Check-Out Flow
+![Check-Out](IMAGE_URL)
+
+
+Description:
+One-click checkout with instant timestamping and activity logging.
+
+🔍 Visitor / Resident Search
+![Search Modal](IMAGE_URL)
+
+
+Description:
+Ultra-fast search enabling staff to find residents or returning visitors in seconds.
+
+📈 Admin Analytics Dashboard
+![Analytics](IMAGE_URL)
+
+
+Description:
+Live statistics for administrators:
+
+Guest volume
+
+Peak traffic
+
+Clerk activity
+
+Recurring visitor patterns
+
+🧑‍💼 Admin Panel — Clerk & Resident Management
+![Admin Panel](IMAGE_URL)
+
+
+Description:
+Admins can add/edit/remove clerks & residents, import data, manage roles, and download reports.
+
+📬 Automated Email + SMS Notifications
+![Notifications](IMAGE_URL)
+
+
+Description:
+Automated reminders for overstaying visitors, monthly reports, and clerk expirations.
+
+📄 Monthly Report Generation
+![Reports](IMAGE_URL)
+
+
+Description:
+Automatically generated Excel/PDF reports summarizing visitor activity for compliance and historical record-keeping.
+
+📦 Data Model & Storage
+![Data Models](IMAGE_URL)
+
+
+Description:
+MongoDB models include: Residents, Guests, Clerks, Activity Logs, Messages, and more — all optimized for lookup speed and audit integrity.
+# 🚀 **Key Features**
+
+### ✔ Visitor Management
+
+* Register new visitors in seconds
 * Fast search for returning visitors
-* Link visitor → resident → room number
-* Store check-in/check-out timestamps
+* Link visitors → residents → rooms
+* Auto timestamps for check-ins/outs
 
-### Check-In / Check-Out Flow
+### ✔ Clerk Tools
 
-* Quick check-in (name, resident visited, room)
-* One-step checkout
-* Auto timestamps
-* Error validation + UI feedback
+* Clean, simple React UI
+* One-click check-in & check-out
+* Room selector
+* Real-time activity feed
+* Error validation + notifications
 
-### Automated Notifications
+### ✔ Admin Tools
 
-* Integration with **Twilio**
-* SMS reminders sent to visitors who stay beyond allowed hours
+* Manage clerks & residents
+* Approve / remove users
+* Import residents from CSV / Excel
+* Generate and download reports
+* Full visibility into all activity
 
-### Database & Admin Tools
+### ✔ Automated Jobs
 
-* MongoDB with Mongoose
-* Clerk authentication (JWT)
-* File upload support (Multer + GridFS)
+* **Clerk account expiration**
+* **Monthly PDF/Excel reports**
+* **Overstay reminders** via Twilio
+* **Scheduled analytics generation**
 
-### Frontend UI
+### ✔ Security
 
-A complete React dashboard:
-
-* Login & authentication
-* Add residents
-* Add/search visitors
-* Check-in/out pages
-* Resident & visitor rosters
-* Activity logs
-* Spinner + modals
-* Clean UI flow for real-world usage
+* Full JWT authentication
+* Role-based authorization
+* CORS controlled via `.env`
+* Sanitized & validated input
+* Activity logging for every action
+* No secrets in repository
+* Strict `.gitignore` + credential rotation
 
 ---
 
-# Tech Stack
+# 🏗️ **System Architecture**
 
-### Backend (Node.js)
+```
+                     ┌──────────────────────────────┐
+                     │       React Frontend          │
+                     │------------------------------│
+                     │ Clerk UI & Admin UI           │
+                     │ Login / Search / Modals       │
+                     │ Check-In / Check-Out          │
+                     │ Analytics / Stats             │
+                     └───────────────▲──────────────┘
+                                     │
+                                     │ HTTPS (REST API)
+                                     ▼
+     ┌────────────────────────────────────────────────────────────────────┐
+     │                     Node.js / Express Backend                       │
+     │--------------------------------------------------------------------│
+     │ Controllers • Middleware • Cron Jobs • Uploads • Reports • Auth    │
+     │                                                                    │
+     └───────────────────────▲────────────────────────────────────────────┘
+                             │
+                   ┌─────────┴─────────┐
+                   │   MongoDB Atlas   │
+                   │-------------------│
+                   │ Residents          │
+                   │ Guests             │
+                   │ Clerks (JWT Auth)  │
+                   │ Activity Logs      │
+                   │ Reports (Files)    │
+                   └────────────────────┘
+```
 
-* Express
-* MongoDB + Mongoose
-* JWT Authentication
-* Multer + GridFS
+**Additional Integrations:**
+
 * Twilio SMS
-* Google Sheets API
-* Nodemailer
-* Axios
-* Validator
-* dotenv
-
-### Frontend (React)
-
-* React 18
-* Redux Toolkit (Slices for residents, guests, sheets, auth)
-* React Router
-* CRA (Create React App)
-* CSS modules + custom components
-* SVG/PNG icon set
+* Excel/PDF report generation
+* Google Sheets import/export
+* Cron-based automation
 
 ---
 
-# Project Structure
+# 📁 **Project Structure (Clean & Professional)**
 
 ```
 headingtonportal/
 │
 ├── backend/
-│   ├── server.js
-│   ├── database/
-│   │   └── database.js
-│   ├── controllers/
-│   │   ├── clerkController.js
-│   │   ├── guestController.js
-│   │   ├── residentController.js
-│   │   └── sheetController.js
-│   ├── models/
-│   │   ├── clerkModel.js
-│   │   ├── guestModel.js
-│   │   ├── residentModel.js
-│   │   └── ImageModel.js
-│   ├── middleware/
-│   │   ├── authMiddleware.js
-│   │   └── errorMiddleware.js
-│   ├── notification/
-│   │   └── emails/
-│   │       └── registeredClerkEmail.js
-│   ├── routes/
-│   │   ├── clerkRoutes.js
-│   │   ├── guestRoutes.js
-│   │   ├── residentRoutes.js
-│   ├── uploads/
-│   │   └── clerkProfilePicture.js
-│   └── config/
-│       └── google-credentials.json   (ignored)
+│   ├── controllers/              # Request handlers
+│   ├── database/                 # MongoDB connection
+│   ├── jobs/                     # Automated cron jobs
+│   ├── middleware/               # Auth, errors, uploads
+│   ├── models/                   # Mongoose schemas
+│   ├── notification/             # Email templates
+│   ├── routes/                   # API endpoint routing
+│   ├── utils/                    # Logging, Excel gen, tokens
+│   ├── uploads/                  # Profile image handling
+│   └── server.js                 # Backend entry point
 │
-└── frontend/
-    ├── public/
-    └── src/
-        ├── components/
-        ├── features/
-        │   ├── auth/
-        │   ├── guests/
-        │   ├── residents/
-        │   └── sheets/
-        ├── images/
-        └── app/
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── api/                  # API client
+│   │   ├── app/                  # Redux store
+│   │   ├── components/           # UI + modals + pages
+│   │   ├── features/             # Redux slices/services
+│   │   ├── hooks/                # Custom hooks
+│   │   ├── images/               # Logos & icons
+│   │   ├── overlays/             # Overlay provider
+│   │   ├── index.js
+│   │   └── App.js
+│   └── package.json
+│
+├── README.md
+├── package.json
+└── yarn.lock
 ```
 
 ---
 
-# Getting Started
+# 🛠️ **Tech Stack**
 
-## 1. Clone the repository
+### **Frontend**
 
-```bash
-git clone https://github.com/EBOD13/headingtonportal.git
-cd headingtonportal
-```
+* React 18
+* Redux Toolkit
+* Axios
+* Custom Hooks
+* CSS Modules
+* Modular Component Architecture
+
+### **Backend**
+
+* Node.js + Express
+* MongoDB + Mongoose
+* Twilio SMS
+* JSON Web Tokens (JWT)
+* Multer + File Uploads
+* ExcelJS + PDF generation
+* Cron-based automation
+* dotenv + secure config loading
 
 ---
 
-# Backend Setup
+# 🔐 **Security & Best Practices**
 
-### 2. Install dependencies
+I implemented strong security principles:
+
+### ⭐ No secrets in source code
+
+* `.env` for all secrets
+* Credential rotation after accidental exposure
+* Repo history fully sanitized with `git filter-repo`
+
+### ⭐ Role-based access control
+
+* Clerk vs Admin
+* JWT + encrypted refresh tokens
+* All sensitive routes protected
+
+### ⭐ Safe database interactions
+
+* Sanitized input
+* Validation with `validator.js`
+* Mongo indexes for performance
+
+### ⭐ Network safety
+
+* CORS origins controlled via `.env`
+* No publicly exposed credentials
+* Upload sanitization
+
+### ⭐ Auditing & Traceability
+
+Every major action (check-in/out, edits, login attempts) is logged.
+
+---
+
+# 🧪 **Running the App**
+
+### **Backend**
 
 ```bash
 cd backend
 npm install
-```
-
-### 3. Environment variables
-
-Create `backend/.env`:
-
-```
-PORT=5000
-MONGO_URI=mongodb+srv://...
-JWT_SECRET=your_jwt_secret
-
-# Twilio
-TWILIO_ACCOUNT_SID=xxxx
-TWILIO_AUTH_TOKEN=xxxx
-TWILIO_PHONE_NUMBER=+1xxx
-
-# Google Sheets API
-GOOGLE_APPLICATION_CREDENTIALS=./config/google-credentials.json
-```
-
-### 4. Start the backend
-
-```bash
 npm run dev
 ```
 
----
-
-# Frontend Setup
-
-### 1. Install dependencies
+### **Frontend**
 
 ```bash
-cd ../frontend
+cd frontend
 npm install
-```
-
-### 2. Start the frontend
-
-```bash
 npm start
 ```
 
-Frontend runs at:
+Default frontend:
 
 ```
 http://localhost:3000
@@ -263,60 +330,87 @@ http://localhost:3000
 
 ---
 
-# REST API Endpoints
+# 🧩 **REST API Endpoints (Summary)**
 
 ### **Clerks (`/api/clerks`)**
 
-* POST `/register`
-* POST `/login`
-* GET `/me`
+* Register, Login, Profile
+* Admin-managed creation
 
 ### **Residents (`/api/residents`)**
 
-* POST `/`
-* GET `/`
-* PUT `/:id`
-* DELETE `/:id`
+* Add / edit / delete
+* Import from CSV
 
 ### **Guests (`/api/guests`)**
 
-* POST `/` – Add visitor
-* POST `/checkin`
-* POST `/checkout`
-* GET `/search`
+* Add visitor
+* Check in
+* Check out
+* Search
 
-### **Sheets (`/api/sheets`)**
+### **Reports (`/api/reports`)**
 
-* GET `/export`
-* POST `/sync`
-
----
-
-# Security
-
-* `google-credentials.json` is `.gitignore`d
-* `.env` is never committed
-* JWT protects clerk-only routes
-* Input validation with validator.js
-* Safe error handling middleware
+* Monthly summaries
+* PDF / Excel export
 
 ---
 
-# Roadmap & Future Implementation
+# 📈 **Roadmap**
 
-* [ ] Add analytics dashboard (traffic, peak hours)
-* [ ] SMS escalation to Residence Life after long overdue
-* [ ] Auto-detect returning visitors via phone number
-* [ ] Mobile-native interface (React Native)
-* [ ] PDF/CSV export UI buttons
-* [ ] Resident photo + ID upload
-* [ ] Push notifications for clerks
+* Full analytics dashboard (peaks, heatmaps, insights)
+* Resident photo uploads
+* Push notifications
+* QR Code instant check-in
+* Mobile app for staff (React Native)
+* Role-based dashboards for RAs / supervisors
 
 ---
 
-# 👤 Author
+# 👤 **Author**
 
 **Daniel Esambu**
-GitHub: [https://github.com/EBOD13](https://github.com/EBOD13)
+
+* GitHub: [https://github.com/EBOD13](https://github.com/EBOD13)
+* Portfolio: *coming soon*
+* Email: [daniel.esambu@ou.edu](mailto:daniel.esambu@ou.edu)
 
 ---
+
+# 💡 Why this project matters (for employers)
+
+This project demonstrates:
+
+### 🔨 **Full-stack engineering ability**
+
+* Architected backend + frontend from scratch
+* Designed API routes, schemas, auth, and UI flows
+* Implemented real-world automation (cron jobs, SMS, logs)
+
+### 🔒 **Security awareness**
+
+* Immediate credential rotation
+* History rewrites
+* Environment-driven config
+* No secrets exposed in production
+
+### 🚀 **Product thinking**
+
+This wasn’t built for LeetCode — it was built for a real operational environment with real stakeholders and real pain points.
+
+### 🧹 **Code quality & maintainability**
+
+* Clear folder structure
+* Modular design
+* Reusable hooks + reducers
+* Scalable API architecture
+
+### 📊 **Systems thinking**
+
+Combines:
+
+* front desk workflow
+* security policies
+* UX design
+* database modeling
+* operational efficiency
