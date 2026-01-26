@@ -3,9 +3,11 @@ const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
 const Guest = require('../models/guestModel');
 const ExcelReportGenerator = require('../utils/excelGenerator');
-const EmailService = require('../utils/emailService');
 const fs = require('fs');
 const path = require('path');
+const { Resend } = require('resend');
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const generateMonthlyReport = asyncHandler(async (req, res) => {
     try {
@@ -108,30 +110,63 @@ const sendReportByEmail = asyncHandler(async (req, res) => {
             monthNum
         );
 
-        // Send email
-        const emailService = new EmailService();
-        const emailResult = await emailService.sendMonthlyReport(
-            filePath,
-            fileName,
-            year,
-            monthNum
-        );
+        // Read file as base64 for Resend attachment
+        const fileBuffer = fs.readFileSync(filePath);
+        const fileBase64 = fileBuffer.toString('base64');
 
-        // Clean up
+        // Get month name for email
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const monthName = monthNames[monthNum - 1];
+
+        // Send email with Resend
+        const recipientEmail = email || process.env.REPORT_RECIPIENT_EMAIL;
+        
+        const { data, error } = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || 'Headington Hall <reports@headingtonhall.com>',
+            to: recipientEmail,
+            subject: `Headington Hall Guest Report - ${monthName} ${year}`,
+            html: `
+                <h2>Monthly Guest Report</h2>
+                <p>Please find attached the guest report for <strong>${monthName} ${year}</strong>.</p>
+                <p>This report includes all guest check-ins during this period.</p>
+                <br>
+                <p>Summary:</p>
+                <ul>
+                    <li>Total Guests: ${guestsWithHostInfo.length}</li>
+                    <li>Period: ${monthName} 1 - ${new Date(year, monthNum, 0).getDate()}, ${year}</li>
+                </ul>
+                <br>
+                <p style="color: #666; font-size: 12px;">
+                    This is an automated report from the Headington Hall Guest Management System.
+                </p>
+            `,
+            attachments: [
+                {
+                    filename: fileName,
+                    content: fileBase64,
+                }
+            ]
+        });
+
+        // Clean up temp file
         fs.unlinkSync(filePath);
 
-        if (emailResult.success) {
-            res.json({
-                success: true,
-                message: `Report for ${month}/${year} sent successfully`,
-                messageId: emailResult.messageId
-            });
-        } else {
-            res.status(500).json({
+        if (error) {
+            console.error('Resend email error:', error);
+            return res.status(500).json({
                 error: 'Failed to send email',
-                details: emailResult.error
+                details: error.message
             });
         }
+
+        res.json({
+            success: true,
+            message: `Report for ${month}/${year} sent successfully`,
+            messageId: data.id
+        });
 
     } catch (error) {
         console.error('Email report error:', error);
