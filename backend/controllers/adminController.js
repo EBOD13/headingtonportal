@@ -65,7 +65,7 @@ const updateClerkStatus = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Clerk not found' });
   }
 
-  // You might want to prevent an admin from deactivating themselves:
+  // Prevent an admin from deactivating themselves:
   if (String(clerk._id) === String(req.clerk._id)) {
     return res.status(400).json({
       message: "You cannot change your own status from this screen."

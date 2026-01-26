@@ -1,4 +1,4 @@
-// backend/models/clerkModel.js - ENHANCED
+// backend/models/clerkModel.js 
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
@@ -159,7 +159,7 @@ clerkSchema.methods.createPasswordResetToken = function (expiresInMs = 3 * 24 * 
   this.mustChangePasswordBy = new Date(Date.now() + expiresInMs);
   this.needsPasswordReset = true;
 
-  return rawToken; // you send THIS in the email link
+  return rawToken;
 };
 
 const Clerk = mongoose.model('Clerk', clerkSchema);

@@ -11,7 +11,6 @@ export const clerkKeys = {
 
 /**
  * API helpers
- * Adjust endpoints to match your backend routes.
  */
 const clerksAPI = {
   // GET /api/clerks  -> returns array of clerks
@@ -25,7 +24,6 @@ const clerksAPI = {
   },
 
   // PATCH /api/clerks/:id/role  -> { role: "admin" | "clerk" }
-  // Adjust path/body to whatever you actually implement.
   updateRole: async ({ id, role, token }) => {
     const { data } = await axios.patch(
       `/api/clerks/${id}/role`,
@@ -42,13 +40,10 @@ const clerksAPI = {
 
 /**
  * useClerksAdmin
- *
- * Admin-focused hook: lists all clerks
- * and lets you change roles (e.g. toggle admin).
- */
+  */
 export const useClerksAdmin = () => {
   const { clerk } = useSelector((state) => state.auth);
-  // 🔸 Adjust this if your token lives somewhere else (e.g. clerk.accessToken)
+
   const token = clerk?.token || clerk?.accessToken;
   const queryClient = useQueryClient();
 

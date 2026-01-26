@@ -4,7 +4,7 @@ const reportFileSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: String,
-    filePath: { type: String, required: true }, // absolute or relative path
+    filePath: { type: String, required: true }, 
     mimeType: {
       type: String,
       default: 'application/pdf'

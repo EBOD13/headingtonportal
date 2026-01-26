@@ -9,7 +9,6 @@ const guestSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // This should be the HOST RESIDENT (not the clerk)
     host: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,

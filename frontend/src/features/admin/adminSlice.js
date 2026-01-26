@@ -368,9 +368,6 @@ export const adminSlice = createSlice({
         state.message =
           payload.message ||
           `Imported ${payload.successCount || 0} clerk(s)`;
-
-        // You *could* choose to refetch roster here instead of guessing:
-        // We'll just leave clerks as-is and let the screen call fetchClerkRoster after.
       })
       .addCase(importClerks.rejected, (state, action) => {
         state.isLoading = false;

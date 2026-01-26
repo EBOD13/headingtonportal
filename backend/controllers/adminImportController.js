@@ -165,7 +165,7 @@ const importResidentsFromFile = asyncHandler(async (req, res) => {
   let rows;
 
   try {
-    rows = await parseUploadFile(filePath); // Now async
+    rows = await parseUploadFile(filePath);
   } catch (err) {
     fs.unlinkSync(filePath);
     return res.status(400).json({ message: 'Failed to parse file', error: err.message });
@@ -183,7 +183,7 @@ const importResidentsFromFile = asyncHandler(async (req, res) => {
 
   for (let index = 0; index < rows.length; index++) {
     const row = rows[index];
-    const rowNumber = index + 2; // header row is 1
+    const rowNumber = index + 2;
 
     const name = (row.Name || row.name || '').toString().trim();
     const roomNumber = (row.RoomNumber || row.roomNumber || '').toString().trim();
@@ -276,7 +276,7 @@ const importResidentsFromFile = asyncHandler(async (req, res) => {
         roomNumber: normalizedRoom,
         email,
         phoneNumber,
-        studentID, // you can hash later if desired
+        studentID, 
         active,
         semester,
         year
@@ -341,7 +341,7 @@ const importClerksFromFile = asyncHandler(async (req, res) => {
   let rows;
 
   try {
-    rows = await parseUploadFile(filePath); // Now async
+    rows = await parseUploadFile(filePath);
   } catch (err) {
     fs.unlinkSync(filePath);
     return res.status(400).json({ message: 'Failed to parse file', error: err.message });
@@ -420,7 +420,7 @@ const importClerksFromFile = asyncHandler(async (req, res) => {
       const clerk = await Clerk.create({
         name,
         email,
-        password, // will be hashed by pre('save')
+        password,
         role,
         isActive,
         // baseline permissions; admin/supervisor can tune later
@@ -458,9 +458,6 @@ const importClerksFromFile = asyncHandler(async (req, res) => {
           metadata: { rowNumber, role }
         });
       }
-
-      // If you want to email them their credentials, you can call your
-      // registeredClerkEmail sender here with name, email, clerk.clerkID, etc.
 
     } catch (err) {
       console.error('Error importing clerk row', rowNumber, err.message);

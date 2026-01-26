@@ -1,4 +1,4 @@
-// backend/middleware/authMiddleware.js - ENHANCED
+// backend/middleware/authMiddleware.js 
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const Clerk = require('../models/clerkModel');
@@ -31,7 +31,7 @@ const protect = asyncHandler(async (req, res, next) => {
         });
       }
 
-      // Window expired → reset counter
+      // Window expired => reset counter
       if (attempts.resetTime <= now) {
         rateLimit.delete(clientIp);
       }
@@ -117,7 +117,7 @@ const protect = asyncHandler(async (req, res, next) => {
       });
     }
 
-    // assumes Clerk schema has an instance method: clerk.isLocked()
+
     if (typeof clerk.isLocked === 'function' && clerk.isLocked()) {
       return res.status(423).json({
         success: false,
