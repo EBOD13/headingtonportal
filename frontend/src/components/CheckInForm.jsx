@@ -1,5 +1,5 @@
 // frontend/src/components/CheckInForm.jsx
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { checkInGuest } from '../features/guests/guestSlice';
@@ -11,11 +11,8 @@ import {
 import { addActivity } from '../features/activity/activitySlice';
 import './CheckInForm.css';
 
-// ============================================================================
-// Icons (using lucide-react)
-// ============================================================================
 import {
-  X as XIcon,
+  X,
   Building2,
   User,
   Users,
@@ -24,23 +21,20 @@ import {
   AlertCircle,
   Check,
   Loader2,
+  Search,
+  ChevronRight,
+  ArrowLeft,
 } from 'lucide-react';
-
-const Icons = {
-  X: XIcon,
-  Building: Building2,
-  User,
-  Users,
-  UserPlus,
-  LogIn,
-  AlertCircle,
-  Check,
-  Loader: Loader2,
-};
 
 // ============================================================================
 // Sub-components
 // ============================================================================
+const LoadingSpinner = () => (
+  <div className="checkin-spinner">
+    <Loader2 size={18} />
+  </div>
+);
+
 const FormField = ({
   icon: Icon,
   label,
@@ -50,13 +44,11 @@ const FormField = ({
   loading = false,
 }) => (
   <div
-    className={`form-field ${error ? 'error' : ''} ${
-      loading ? 'loading' : ''
-    }`}
+    className={`form-field ${error ? 'error' : ''} ${loading ? 'loading' : ''}`}
   >
     <label className="form-label">
       <div className="label-icon">
-        <Icon />
+        <Icon size={16} />
       </div>
       <span>{label}</span>
     </label>
@@ -64,36 +56,85 @@ const FormField = ({
     {hint && <div className="field-hint">{hint}</div>}
     {error && (
       <div className="field-error">
-        <Icons.AlertCircle /> {error}
+        <AlertCircle size={14} /> {error}
       </div>
     )}
   </div>
 );
 
-const LoadingSpinner = () => (
-  <div className="spinner">
-    <Icons.Loader />
-  </div>
+const HostCard = ({ host, isSelected, onSelect, capitalize }) => (
+  <button
+    type="button"
+    className={`host-card ${isSelected ? 'selected' : ''}`}
+    onClick={() => onSelect(host)}
+  >
+    <div className="host-card-avatar">
+      {(host.name || '?')
+        .split(' ')
+        .map((p) => p[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)}
+    </div>
+    <div className="host-card-info">
+      <span className="host-card-name">{capitalize(host.name)}</span>
+      <span className="host-card-room">Room {host.roomNumber}</span>
+    </div>
+    <div className="host-card-arrow">
+      <ChevronRight size={18} />
+    </div>
+  </button>
+);
+
+const GuestCard = ({ guest, isSelected, onToggle, capitalize }) => (
+  <button
+    type="button"
+    className={`guest-card guest-card--compact ${isSelected ? 'selected' : ''}`}
+    onClick={() => onToggle(guest)}
+  >
+    <div className="guest-card-avatar guest-card-avatar--small">
+      {(guest.name || '?')
+        .split(' ')
+        .map((p) => p[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)}
+    </div>
+    <div className="guest-card-info guest-card-info--tight">
+      <span className="guest-card-name">{capitalize(guest.name)}</span>
+      {guest.lastRoom && (
+        <span className="guest-card-meta">Last visit: Room {guest.lastRoom}</span>
+      )}
+    </div>
+    {isSelected && (
+      <div className="guest-card-check guest-card-check--small">
+        <Check size={16} />
+      </div>
+    )}
+  </button>
 );
 
 // ============================================================================
 // Main Component
 // ============================================================================
 function CheckInForm({ onClose, onAddNewGuest }) {
-  const [hosts, setHosts] = useState([]);
-  const [guests, setGuests] = useState([]);
-  const [formData, setFormData] = useState({
-    room: '',
-    host: '',
-    guest: '',
-  });
-  const [roomError, setRoomError] = useState('');
-  const [hostError, setHostError] = useState('');
-  const [guestError, setGuestError] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showAddGuestOption, setShowAddGuestOption] = useState(false);
+  // Step management: 'room' -> 'host' -> 'guests'
+  const [step, setStep] = useState('room');
 
-  const { room, host, guest } = formData;
+  // Room & Host state
+  const [room, setRoom] = useState('');
+  const [hosts, setHosts] = useState([]);
+  const [selectedHost, setSelectedHost] = useState(null);
+  const [roomError, setRoomError] = useState('');
+
+  // Guests state
+  const [guests, setGuests] = useState([]);
+  const [selectedGuests, setSelectedGuests] = useState([]);
+  const [guestSearch, setGuestSearch] = useState('');
+  const [guestError, setGuestError] = useState('');
+
+  // Processing state
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const dispatch = useDispatch();
   const residentState = useSelector((state) => state.resident);
@@ -103,32 +144,45 @@ function CheckInForm({ onClose, onAddNewGuest }) {
     if (!str) return '';
     return str
       .split(' ')
-      .map(
-        (word) =>
-          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-      )
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
   }, []);
 
-  // Update form data
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  // Filter guests by search
+  const filteredGuests = useMemo(() => {
+    if (!guestSearch.trim()) return guests;
+    const q = guestSearch.toLowerCase();
+    return guests.filter((g) => g.name?.toLowerCase().includes(q));
+  }, [guests, guestSearch]);
 
-    // If guest is selected, hide the add guest option
-    if (name === 'guest' && value) {
-      setShowAddGuestOption(false);
-    }
+  // Check if guest is selected
+  const isGuestSelected = useCallback(
+    (guest) => {
+      return selectedGuests.some((g) => g.id === guest.id);
+    },
+    [selectedGuests]
+  );
+
+  // Toggle guest selection
+  const handleToggleGuest = (guest) => {
+    setSelectedGuests((prev) => {
+      const exists = prev.some((g) => g.id === guest.id);
+      if (exists) {
+        return prev.filter((g) => g.id !== guest.id);
+      }
+      return [...prev, guest];
+    });
   };
 
   // Handle room input change
   const onChangeRoom = (e) => {
     const value = e.target.value.toUpperCase();
-    setFormData((prev) => ({ ...prev, room: value, host: '', guest: '' }));
+    setRoom(value);
     setRoomError('');
     setHosts([]);
+    setSelectedHost(null);
     setGuests([]);
-    setShowAddGuestOption(false);
+    setSelectedGuests([]);
   };
 
   // Fetch residents when room changes
@@ -156,15 +210,15 @@ function CheckInForm({ onClose, onAddNewGuest }) {
         if (result.meta.requestStatus === 'fulfilled') {
           const residents = result.payload;
           if (Array.isArray(residents) && residents.length > 0) {
-            setHosts(
-              residents.map((res) => ({
-                id: res._id,
-                name: res.name,
-                roomNumber: res.roomNumber,
-              }))
-            );
+            const hostList = residents.map((res) => ({
+              id: res._id,
+              name: res.name,
+              roomNumber: res.roomNumber,
+            }));
+            setHosts(hostList);
+            setStep('host');
           } else {
-            setRoomError('No residents found');
+            setRoomError('No residents found in this room');
             setHosts([]);
           }
         } else {
@@ -182,34 +236,44 @@ function CheckInForm({ onClose, onAddNewGuest }) {
   }, [room, dispatch]);
 
   // Handle host selection
-  const onHostSelect = async (e) => {
-    const selectedHostId = e.target.value;
-    setHostError('');
+  const handleSelectHost = async (host) => {
+    setSelectedHost(host);
     setGuestError('');
     setGuests([]);
-    setShowAddGuestOption(false);
-
-    setFormData((prev) => ({ ...prev, host: selectedHostId, guest: '' }));
-
-    if (!selectedHostId) return;
+    setSelectedGuests([]);
+    setGuestSearch('');
 
     try {
-      const result = await dispatch(getGuestsByHost(selectedHostId));
+      const result = await dispatch(getGuestsByHost(host.id));
       if (result.meta.requestStatus === 'fulfilled') {
         const guestsData = result.payload?.guestNames || [];
         setGuests(guestsData);
+        setStep('guests');
 
-        // Show add guest option if no guests found
         if (guestsData.length === 0) {
-          setGuestError('No previous guests found');
-          setShowAddGuestOption(true);
-        } else {
-          setShowAddGuestOption(false);
+          setGuestError('No previous guests found for this host');
         }
       }
     } catch (error) {
       setGuestError('Error loading guests');
-      setShowAddGuestOption(true); // Still show option to add if error occurs
+      setStep('guests');
+    }
+  };
+
+  // Go back to previous step
+  const handleBack = () => {
+    if (step === 'guests') {
+      setStep('host');
+      setSelectedHost(null);
+      setGuests([]);
+      setSelectedGuests([]);
+      setGuestSearch('');
+      setGuestError('');
+    } else if (step === 'host') {
+      setStep('room');
+      setRoom('');
+      setHosts([]);
+      setRoomError('');
     }
   };
 
@@ -217,59 +281,59 @@ function CheckInForm({ onClose, onAddNewGuest }) {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    let hasError = false;
-    if (!room || room.length !== 4) {
-      setRoomError('Enter a valid room');
-      hasError = true;
+    if (selectedGuests.length === 0) {
+      toast.error('Please select at least one guest to check in');
+      return;
     }
-    if (!host) {
-      setHostError('Select a host');
-      hasError = true;
-    }
-    if (!guest) {
-      setGuestError('Select a guest');
-      hasError = true;
-    }
-    if (hasError) return;
 
     setIsProcessing(true);
 
     try {
-      const result = await dispatch(checkInGuest(guest));
+      const timeIn = new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
 
-      if (result.meta.requestStatus === 'fulfilled') {
-        const selectedGuest = guests.find((g) => g.id === guest);
-        const timeIn = new Date().toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
+      let successCount = 0;
+      let failCount = 0;
 
-        if (selectedGuest) {
-          dispatch(
-            addActivity(
-              `Checked in: ${capitalize(
-                selectedGuest.name
-              )} at ${timeIn}`
-            )
-          );
+      for (const guest of selectedGuests) {
+        try {
+          const result = await dispatch(checkInGuest(guest.id));
+
+          if (result.meta.requestStatus === 'fulfilled') {
+            dispatch(
+              addActivity(`Checked in: ${capitalize(guest.name)} at ${timeIn}`)
+            );
+            successCount++;
+          } else if (result.payload?.message?.includes('Visitation Revoked')) {
+            toast.error(`${capitalize(guest.name)}: Visitation revoked`);
+            failCount++;
+          } else {
+            failCount++;
+          }
+        } catch (err) {
+          console.error('Check-in error for guest:', guest, err);
+          failCount++;
         }
-
-        toast.success('Guest checked in successfully');
-
-        // Reset and close
-        setTimeout(() => {
-          if (onClose) onClose();
-        }, 1000);
-      } else if (
-        result.payload?.message?.includes('Visitation Revoked')
-      ) {
-        setGuestError('Visitation revoked. Contact Assistant Director.');
-      } else {
-        setGuestError('Failed to check in guest');
       }
+
+      if (successCount > 0) {
+        toast.success(
+          `Checked in ${successCount} guest${successCount > 1 ? 's' : ''}`
+        );
+      }
+
+      if (failCount > 0 && successCount === 0) {
+        toast.error('Failed to check in guests');
+      }
+
+      // Reset and close
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 800);
     } catch (error) {
-      setGuestError('An error occurred');
+      toast.error('An error occurred during check-in');
     } finally {
       setIsProcessing(false);
     }
@@ -279,23 +343,19 @@ function CheckInForm({ onClose, onAddNewGuest }) {
   const handleAddNewGuest = () => {
     if (!onAddNewGuest) return;
 
-    const selectedHost = hosts.find((h) => h.id === host);
-
-    // Tell parent to open Add New Guest modal with prefilled data
     onAddNewGuest({
       room,
-      hostId: host,
+      hostId: selectedHost?.id,
       hostName: selectedHost?.name || '',
     });
 
-    // Let parent close this modal
     if (onClose) onClose();
   };
 
   // Close overlay
-  const closeOverlay = () => {
+  const closeOverlay = useCallback(() => {
     if (onClose) onClose();
-  };
+  }, [onClose]);
 
   // Close on escape key
   useEffect(() => {
@@ -314,197 +374,222 @@ function CheckInForm({ onClose, onAddNewGuest }) {
     };
   }, []);
 
+  const selectedCount = selectedGuests.length;
+
   return (
-    <div
-      className="modal-overlay checkin-overlay"
-      onClick={closeOverlay}
-    >
-      <div
-        className="modal-container checkin-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="checkin-overlay" onClick={closeOverlay}>
+      <div className="checkin-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="modal-header checkin-header">
-          <div className="modal-title">
-            <h2>
-              <Icons.LogIn />
-              Guest Check-In
-            </h2>
-            <p className="modal-subtitle">Register a visitor arrival</p>
+        <div className="checkin-header">
+          <div className="checkin-title">
+            {step !== 'room' && (
+              <button
+                type="button"
+                className="checkin-back"
+                onClick={handleBack}
+              >
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <div>
+              <h2>
+                <LogIn size={20} />
+                Guest Check-In
+              </h2>
+              <p className="checkin-subtitle">
+                {step === 'room' && 'Enter the host room number'}
+                {step === 'host' && `Select a host from Room ${room}`}
+                {step === 'guests' &&
+                  `Select guests for ${capitalize(selectedHost?.name || '')}`}
+              </p>
+            </div>
           </div>
-          <button className="modal-close" onClick={closeOverlay}>
-            <Icons.X />
+          <button type="button" className="checkin-close" onClick={closeOverlay}>
+            <X size={18} />
           </button>
         </div>
 
         {/* Content */}
-        <form onSubmit={onSubmit} className="checkin-form">
-          {/* Room Input */}
-          <FormField
-            icon={Icons.Building}
-            label="Host Room"
-            hint="Format: N/S followed by 3 digits"
-            error={roomError}
-            loading={room && room.length === 4 && isLoading}
-          >
-            <div className="input-with-icon">
-              <input
-                type="text"
-                name="room"
-                value={room}
-                onChange={onChangeRoom}
-                maxLength="4"
-                placeholder="Enter room number"
-                className="room-input"
-                autoComplete="off"
-                autoFocus
-                disabled={isLoading || isProcessing}
-              />
-              {room &&
-                room.length === 4 &&
-                !roomError && (
-                  <span className="input-status valid">
-                    <Icons.Check />
-                  </span>
-                )}
-            </div>
-          </FormField>
-
-          {/* Host Select */}
-          <FormField
-            icon={Icons.User}
-            label="Select Host"
-            hint={
-              hosts.length > 0 ? `${hosts.length} resident(s) found` : ''
-            }
-            error={hostError}
-            loading={isLoading && hosts.length === 0}
-          >
-            <div className="select-wrapper">
-              <select
-                name="host"
-                value={host}
-                onChange={onHostSelect}
-                className="host-select"
-                disabled={
-                  hosts.length === 0 || isLoading || isProcessing
-                }
+        <div className="checkin-content">
+          {/* Step 1: Room Input */}
+          {step === 'room' && (
+            <div className="checkin-step">
+              <FormField
+                icon={Building2}
+                label="Host Room"
+                hint="Format: N/S followed by 3 digits (e.g., N101, S222)"
+                error={roomError}
+                loading={room && room.length === 4 && isLoading}
               >
-                <option value="">
-                  {isLoading
-                    ? 'Loading...'
-                    : hosts.length === 0
-                    ? 'Enter a room first'
-                    : 'Select a host'}
-                </option>
-                {hosts.map((hostItem) => (
-                  <option value={hostItem.id} key={hostItem.id}>
-                    {capitalize(hostItem.name)} • Room{' '}
-                    {hostItem.roomNumber}
-                  </option>
-                ))}
-              </select>
-              {host && (
-                <span className="input-status selected">
-                  <Icons.Check />
-                </span>
-              )}
-            </div>
-          </FormField>
-
-          {/* Guest Select */}
-          <FormField
-            icon={Icons.Users}
-            label="Select Guest"
-            hint={
-              guests.length > 0 ? `${guests.length} guest(s) found` : ''
-            }
-            error={guestError}
-            loading={host && isLoading}
-          >
-            <div className="select-wrapper">
-              <select
-                name="guest"
-                value={guest}
-                onChange={onChange}
-                className="guest-select"
-                disabled={
-                  guests.length === 0 || !host || isLoading || isProcessing
-                }
-              >
-                <option value="">
-                  {!host
-                    ? 'Select host first'
-                    : isLoading
-                    ? 'Loading...'
-                    : guests.length === 0
-                    ? 'No guests found'
-                    : 'Select a guest'}
-                </option>
-                {guests.map((guestItem) => (
-                  <option value={guestItem.id} key={guestItem.id}>
-                    {capitalize(guestItem.name)}
-                    {guestItem.lastRoom &&
-                      ` • Last: ${guestItem.lastRoom}`}
-                  </option>
-                ))}
-              </select>
-              {guest && (
-                <span className="input-status selected">
-                  <Icons.Check />
-                </span>
-              )}
-            </div>
-          </FormField>
-
-          {/* Add New Guest Option */}
-          {showAddGuestOption &&
-            host &&
-            !guest &&
-            !isLoading &&
-            !isProcessing && (
-              <div className="add-guest-option">
-                <div className="add-guest-message">
-                  <Icons.AlertCircle />
-                  <span>
-                    No previous guests found for this host.
-                  </span>
+                <div className="input-with-icon">
+                  <input
+                    type="text"
+                    name="room"
+                    value={room}
+                    onChange={onChangeRoom}
+                    maxLength="4"
+                    placeholder="Enter room number"
+                    className="room-input"
+                    autoComplete="off"
+                    autoFocus
+                    disabled={isLoading || isProcessing}
+                  />
+                  {room && room.length === 4 && !roomError && hosts.length > 0 && (
+                    <span className="input-status valid">
+                      <Check size={16} />
+                    </span>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={handleAddNewGuest}
-                >
-                  <Icons.UserPlus />
-                  Add New Guest
-                </button>
-              </div>
-            )}
+              </FormField>
 
-          {/* Progress Indicator */}
+              {isLoading && room.length === 4 && (
+                <div className="checkin-loading">
+                  <LoadingSpinner />
+                  <span>Looking up residents...</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Host Selection */}
+          {step === 'host' && (
+            <div className="checkin-step">
+              <div className="checkin-step-info">
+                <Building2 size={16} />
+                <span>Room {room}</span>
+                <span className="checkin-step-divider">•</span>
+                <span>{hosts.length} resident{hosts.length !== 1 ? 's' : ''}</span>
+              </div>
+
+              <div className="host-list">
+                {hosts.map((host) => (
+                  <HostCard
+                    key={host.id}
+                    host={host}
+                    isSelected={selectedHost?.id === host.id}
+                    onSelect={handleSelectHost}
+                    capitalize={capitalize}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Guest Selection */}
+          {step === 'guests' && (
+            <div className="checkin-step">
+              {/* Info bar */}
+              <div className="checkin-step-info">
+                <User size={16} />
+                <span>{capitalize(selectedHost?.name || '')}</span>
+                <span className="checkin-step-divider">•</span>
+                <span>Room {room}</span>
+              </div>
+
+              {/* Loading */}
+              {isLoading && (
+                <div className="checkin-loading">
+                  <LoadingSpinner />
+                  <span>Loading guests...</span>
+                </div>
+              )}
+
+              {/* No guests found */}
+              {!isLoading && guests.length === 0 && (
+                <div className="checkin-empty">
+                  <Users size={32} />
+                  <h3>No Previous Guests</h3>
+                  <p>This host doesn't have any registered guests yet.</p>
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={handleAddNewGuest}
+                  >
+                    <UserPlus size={16} />
+                    Add New Guest
+                  </button>
+                </div>
+              )}
+
+              {/* Guest list */}
+              {!isLoading && guests.length > 0 && (
+                <>
+                  {/* Search & count toolbar */}
+                  <div className="checkin-toolbar">
+                    <div className="checkin-search">
+                      <Search size={16} />
+                      <input
+                        type="text"
+                        placeholder="Search guests..."
+                        value={guestSearch}
+                        onChange={(e) => setGuestSearch(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="checkin-guest-count">
+                      <Users size={16} />
+                      <span>
+                        {filteredGuests.length} guest
+                        {filteredGuests.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Guest cards */}
+                  <div className="checkin-guest-list-container">
+                    <div className="checkin-guest-list">
+                      {filteredGuests.map((guest) => (
+                        <GuestCard
+                          key={guest.id}
+                          guest={guest}
+                          isSelected={isGuestSelected(guest)}
+                          onToggle={handleToggleGuest}
+                          capitalize={capitalize}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Add new guest option */}
+                  <div className="checkin-add-guest">
+                    <button
+                      type="button"
+                      className="btn btn-text"
+                      onClick={handleAddNewGuest}
+                    >
+                      <UserPlus size={16} />
+                      Add a new guest for this host
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Processing Indicator */}
           {isProcessing && (
             <div className="checkin-progress">
               <LoadingSpinner />
               <span>Processing check-in...</span>
             </div>
           )}
-        </form>
+        </div>
 
         {/* Footer */}
-        <div className="modal-footer checkin-footer">
+        <div className="checkin-footer">
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={closeOverlay}
+            onClick={step === 'room' ? closeOverlay : handleBack}
             disabled={isProcessing}
           >
-            Cancel
+            {step === 'room' ? 'Cancel' : 'Back'}
           </button>
           <button
-            type="submit"
+            type="button"
             className="btn btn-primary"
             onClick={onSubmit}
-            disabled={!host || !guest || isProcessing}
+            disabled={selectedGuests.length === 0 || isProcessing}
           >
             {isProcessing ? (
               <>
@@ -513,8 +598,10 @@ function CheckInForm({ onClose, onAddNewGuest }) {
               </>
             ) : (
               <>
-                <Icons.LogIn />
-                Check-In Guest
+                <LogIn size={18} />
+                {selectedCount > 0
+                  ? `Check In ${selectedCount} Guest${selectedCount > 1 ? 's' : ''}`
+                  : 'Check In'}
               </>
             )}
           </button>
