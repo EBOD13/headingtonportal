@@ -25,7 +25,7 @@ const SetPasswordPage = () => {
     }
 
     if (isSuccess) {
-      toast.success('Password set successfully! Welcome to Headington Portal.');
+      toast.success('Password set successfully! Welcome to The Residence Hall Portal.');
       dispatch(reset());
       navigate('/dashboard');
     }
@@ -58,7 +58,7 @@ const SetPasswordPage = () => {
         <div className="login-header">
           <div className="login-brand">
             <div className="brand-text">
-              <h1>Headington Portal</h1>
+              <h1>Residence Hall Portal</h1>
             </div>
           </div>
           <div className="login-welcome">

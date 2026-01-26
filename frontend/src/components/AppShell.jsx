@@ -337,7 +337,7 @@ const AppShell = ({ children }) => {
             <div className="app-shell-sidebar-header">
               <div className="app-shell-logo">HH</div>
               <div className="app-shell-brand">
-                <span>Headington</span>
+                <span>Residence</span>
                 <small>Residence Portal</small>
               </div>
               {/* Close button for mobile */}

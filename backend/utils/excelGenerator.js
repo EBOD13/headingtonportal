@@ -77,7 +77,7 @@ class ExcelReportGenerator {
         headerRow.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF841620' } // Headington Hall red
+            fgColor: { argb: 'FF841620' } // Residence Hall red
         };
         headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
     }

@@ -78,9 +78,9 @@ class EmailService {
         }
         
         const mailOptions = {
-            from: `"Headington Hall Portal" <${process.env.EMAIL_USER}>`,
+            from: `"Residence Hall Portal" <${process.env.EMAIL_USER}>`,
             to: validTo.join(', '),
-            subject: `Headington Hall Visitor Report - ${monthName} ${year}`,
+            subject: `Residence Hall Visitor Report - ${monthName} ${year}`,
             html: this.getReportEmailTemplate(monthName, year, validTo),
             attachments: [
                 {
