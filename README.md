@@ -45,7 +45,11 @@ Below are sections where you can paste screenshots or animated GIFs to visually 
 These help recruiters instantly understand your UI, workflows, and engineering depth.
 
 📌 Login & Authentication Flow
-![Login Screen](IMAGE_URL)
+<p align="center">
+  <img src="https://github.com/EBOD13/headingtonportal/blob/main/screenshots/LoginScreen.png" 
+       alt="Clerk Dashboard" 
+       width="800">
+</p>
 
 
 Description:
@@ -56,36 +60,43 @@ Features include validation, password reset, and role-based access.
 <p align="center">
   <img src="https://github.com/EBOD13/headingtonportal/blob/main/screenshots/AdminAnalyticsView.png" 
        alt="Clerk Dashboard" 
-       width="500">
+       width="800">
 </p>
 
 Description:
 A clean, fast dashboard designed for real-world front desk workflow.
 Clerks can access check-in, check-out, visitor search, and activity logs.
 
-📝 Visitor Registration & Check-In Flow
-![Check-In](IMAGE_URL)
+📝 Visitor(Guest) Registration & Check-In Flow
+<p align="center">
+  <img src="https://github.com/EBOD13/headingtonportal/blob/main/screenshots/RegisterGuestView.png" 
+       alt="Visitor Registration" 
+       width="800">
+</p>
 
+🔍 Visitor / Resident Card
 
-Description:
-Register a visitor, link them to a resident, automatically timestamp actions, and record them in MongoDB.
-
-🚪 Check-Out Flow
-![Check-Out](IMAGE_URL)
-
-
-Description:
-One-click checkout with instant timestamping and activity logging.
-
-🔍 Visitor / Resident Search
-![Search Modal](IMAGE_URL)
+<p align="center">
+  <img src="https://github.com/EBOD13/headingtonportal/blob/main/screenshots/View Resident.png" 
+       alt="Resident Card" 
+       width="800">
+</p>
+<p align="center">
+  <img src="https://github.com/EBOD13/headingtonportal/blob/main/screenshots/GuestView.png" 
+       alt="Visitor Card" 
+       width="800">
+</p>
 
 
 Description:
 Ultra-fast search enabling staff to find residents or returning visitors in seconds.
 
 📈 Admin Analytics Dashboard
-![Analytics](IMAGE_URL)
+<p align="center">
+  <img src="https://github.com/EBOD13/headingtonportal/blob/main/screenshots/AdminAnalyticsView.png" 
+       alt="Admin Analytics Dashboard" 
+       width="800">
+</p>
 
 
 Description:
@@ -100,32 +111,12 @@ Clerk activity
 Recurring visitor patterns
 
 🧑‍💼 Admin Panel — Clerk & Resident Management
-![Admin Panel](IMAGE_URL)
+<p align="center">
+  <img src="https://github.com/EBOD13/headingtonportal/blob/main/screenshots/AdminPanel.png" 
+       alt="Admin Panel" 
+       width="800">
+</p>
 
-
-Description:
-Admins can add/edit/remove clerks & residents, import data, manage roles, and download reports.
-
-📬 Automated Email + SMS Notifications
-![Notifications](IMAGE_URL)
-
-
-Description:
-Automated reminders for overstaying visitors, monthly reports, and clerk expirations.
-
-📄 Monthly Report Generation
-![Reports](IMAGE_URL)
-
-
-Description:
-Automatically generated Excel/PDF reports summarizing visitor activity for compliance and historical record-keeping.
-
-📦 Data Model & Storage
-![Data Models](IMAGE_URL)
-
-
-Description:
-MongoDB models include: Residents, Guests, Clerks, Activity Logs, Messages, and more — all optimized for lookup speed and audit integrity.
 # 🚀 **Key Features**
 
 ### ✔ Visitor Management
