@@ -93,6 +93,11 @@ const startJobs = () => {
     const MonthlyReportJob = require('./jobs/monthlyReportJob');
     const monthlyReportJob = new MonthlyReportJob();
     monthlyReportJob.start();
+
+    const ClerkExpiryJob = require('./jobs/clerkExpiryJob');
+    const clerkExpiryJob = new ClerkExpiryJob();
+    clerkExpiryJob.start(); 
+
     
     console.log('Scheduled jobs initialized');
   } catch (error) {
@@ -156,6 +161,8 @@ app.use('*', (req, res) => {
     }
   });
 });
+
+
 
 // Start server with error handling
 const server = app.listen(port, () => {

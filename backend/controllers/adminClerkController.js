@@ -338,11 +338,36 @@ const deleteClerk = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Clerk deleted', id });
 });
 
+// Check for clerk with expired registration link and resend
+const runExpiryCheck = asyncHandler(async (req, res) => {
+  const ClerkExpiryJob = require('../jobs/clerkExpiryJob');
+  const job = new ClerkExpiryJob();
+  
+  try {
+    const result = await job.runNow();
+    
+    return res.status(200).json({
+      success: true,
+      message: `Expiry check complete. ${result.deactivatedCount} clerk(s) deactivated.`,
+      deactivatedCount: result.deactivatedCount,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to run expiry check',
+      error: err.message,
+    });
+  }
+});
+
+// Update module.exports
 module.exports = {
   adminCreateClerk,
   getClerkRoster,
   getClerkDetailWithActivity,
   updateClerkStatus,
   deleteClerk,
-  resendClerkInvite
+  resendClerkInvite,
+  runExpiryCheck,  
 };
+

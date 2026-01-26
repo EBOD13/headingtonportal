@@ -187,7 +187,7 @@ const Login = () => {
         {/* Header Section */}
         <div className="login-header">
           <div className="brand-text">
-            <h1>Headington Hall Portal</h1>
+            <h1>Residence Hall Portal</h1>
           </div>
           <div className="login-welcome">
             <h2>Welcome Back</h2>

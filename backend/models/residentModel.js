@@ -42,7 +42,6 @@ const residentSchema = new mongoose.Schema({
     enum: ['North', 'South'],
   },
 
-  // NEW: lifecycle fields to allow batch archival / deletion
   active: {
     type: Boolean,
     default: true,

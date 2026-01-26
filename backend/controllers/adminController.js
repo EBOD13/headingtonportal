@@ -1,3 +1,4 @@
+// adminController.js
 const asyncHandler = require('express-async-handler');
 const Clerk = require('../models/clerkModel');
 const ActivityLog = require('../models/activityLogModel');
