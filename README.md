@@ -53,8 +53,11 @@ A secure login system for clerks and admins.
 Features include validation, password reset, and role-based access.
 
 🏠 Clerk Dashboard
-![Clerk Dashboard](IMAGE_URL)
-
+<p align="center">
+  <img src="https://github.com/EBOD13/headingtonportal/blob/main/screenshots/AdminAnalyticsView.png" 
+       alt="Clerk Dashboard" 
+       width="500">
+</p>
 
 Description:
 A clean, fast dashboard designed for real-world front desk workflow.
