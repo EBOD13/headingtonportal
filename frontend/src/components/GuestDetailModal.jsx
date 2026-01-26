@@ -310,7 +310,7 @@ const GuestDetailModal = ({ guest, onClose, onCheckoutSuccess }) => {
               />
               <InfoItem
                 icon={Icons.GraduationCap}
-                label="OU Student"
+                label="Student?"
                 value={isOUStudent ? 'Yes' : 'No'}
               />
             </div>
