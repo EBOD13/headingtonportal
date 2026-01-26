@@ -343,6 +343,20 @@ http://localhost:3000
 * Check out
 * Search
 
+### **Admin (`/api/admin`)**
+
+* Add visitor
+* Check in
+* Check out
+* Search
+* Add Resident
+* Deactivate Resident
+* Delete and Update Resident
+* Add Clerk
+* Deactivate Clerk
+* Delete and Update Clerk
+
+
 ### **Reports (`/api/reports`)**
 
 * Monthly summaries
@@ -371,7 +385,7 @@ http://localhost:3000
 
 ---
 
-# 💡 Why this project matters (for employers)
+# 💡 Why this project matters
 
 This project demonstrates:
 
