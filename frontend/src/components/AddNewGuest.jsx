@@ -466,7 +466,7 @@ function AddNewGuest({ onClose, initialRoom = '', initialHostId = '', initialHos
 
             {/* Student Status and ID */}
             <div className="student-fields">
-              <FormField icon={Icons.GraduationCap} label="OU Student?" error={formErrors.studentAtOU}>
+              <FormField icon={Icons.GraduationCap} label="Student?" error={formErrors.studentAtOU}>
                 <select name="studentAtOU" value={studentAtOU} onChange={onChange} disabled={isLoading}>
                   <option value="">Select status</option>
                   <option value="yes">Yes</option>
