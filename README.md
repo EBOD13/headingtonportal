@@ -174,7 +174,6 @@ headingtonportal/
 │   │   ├── clerkRoutes.js
 │   │   ├── guestRoutes.js
 │   │   ├── residentRoutes.js
-│   │   └── sheetRoutes.js
 │   ├── uploads/
 │   │   └── clerkProfilePicture.js
 │   └── config/
