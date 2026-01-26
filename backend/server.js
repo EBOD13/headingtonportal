@@ -1,9 +1,9 @@
 // server.js 
 const express = require("express");
 const dotenv = require("dotenv").config();
-const mongoose = require('mongoose'); // Add mongoose import
+const mongoose = require('mongoose');
 const connectDB = require('./database/database');
-const cors = require('cors'); // Add CORS middleware
+const cors = require('cors');
 const port = process.env.PORT || 8000;
 const adminRoutes = require('./routes/adminRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -14,12 +14,11 @@ connectDB();
 
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://headingtonportal.danielesambu.com',
-  'https://headingtonportal-frontend.onrender.com'
-];
+// Load allowed origins from .env
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : [];
+
 
 app.use(cors({
   origin: allowedOrigins,
@@ -55,37 +54,21 @@ app.get('/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0',
     services: {
-      database: dbStatus === 'Connected' ? '✅' : '❌',
-      email: process.env.EMAIL_USER ? '✅' : '❌',
-      reports: '✅'
+      database: dbStatus === 'Connected' ? 'YES' : 'NO',
+      email: process.env.EMAIL_USER ? 'YES' : 'NO',
+      reports: 'YES'
     }
   });
 });
 
 // API Routes
 app.use('/api/reports', require('./routes/reportRoutes'));
-app.use('/api/sheets', require('./routes/sheetRoutes'));
+
 app.use('/api/clerks', require('./routes/clerkRoutes'));
 app.use('/api/residents', require('./routes/residentRoutes'));
 app.use('/api/guests', require("./routes/guestRoutes"));
 app.use('/api/auth', authRoutes);
 
-// Test email endpoint
-app.get('/api/test-email', async (req, res) => {
-  try {
-    const EmailService = require('./utils/emailService');
-    const emailService = new EmailService();
-    
-    const result = await emailService.testEmailConfig();
-    
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ 
-      error: 'Email test failed',
-      details: error.message 
-    });
-  }
-});
 
 // Initialize jobs
 const startJobs = () => {
@@ -243,7 +226,6 @@ process.on('SIGTERM', () => {
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
-  // Don't exit in development, but log heavily
   if (process.env.NODE_ENV === 'production') {
     process.exit(1);
   }
