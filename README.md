@@ -381,7 +381,7 @@ http://localhost:3000
 
 * GitHub: [https://github.com/EBOD13](https://github.com/EBOD13)
 * Portfolio: *coming soon*
-* Email: [daniel.esambu@ou.edu](mailto:olekabrida@gmail.com)
+* Email: [olekabrida@gmail.com](mailto:olekabrida@gmail.com)
 
 ---
 
