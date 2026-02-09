@@ -264,7 +264,7 @@
   }
 }
 
-/* Panels - Fixed containment */
+/* Panels*/
 .panel {
   background: #ffffff;
   border-radius: 1rem;
@@ -380,7 +380,7 @@
   }
 }
 
-/* Clerk Card - Fixed containment */
+/* Clerk Card */
 .clerk-card {
   background: #f8fafc;
   border-radius: 0.875rem;
@@ -541,7 +541,7 @@
   text-overflow: ellipsis;
 }
 
-/* Resident Filters - Fixed containment */
+/* Resident Filters  */
 .resident-filters {
   display: flex;
   flex-direction: column;

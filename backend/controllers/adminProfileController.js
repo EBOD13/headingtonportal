@@ -51,7 +51,7 @@ const changePassword = asyncHandler(async (req, res) => {
     return res.status(401).json({ message: 'Current password is incorrect' });
   }
 
-  clerk.password = newPassword; // will be hashed by pre('save')
+  clerk.password = newPassword; 
   await clerk.save();
 
   res.status(200).json({ message: 'Password updated successfully' });

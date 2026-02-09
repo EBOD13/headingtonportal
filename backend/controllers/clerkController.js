@@ -28,7 +28,6 @@ const capitalize = (str) =>
 // registerClerk
 // ======================
 // POST /api/clerks
-// In practice, you’ll usually hit this from an admin-only screen.
 const registerClerk = asyncHandler(async (req, res) => {
   const { name, password, email, role } = req.body;
 

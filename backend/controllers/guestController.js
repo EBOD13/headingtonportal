@@ -1,4 +1,4 @@
-// backend/controllers/guestController.js - COMPLETE FIXED VERSION
+// backend/controllers/guestController.js
 const Guest = require("../models/guestModel");
 const Resident = require("../models/residentModel");
 const asyncHandler = require("express-async-handler");
@@ -910,7 +910,7 @@ const getExportData = asyncHandler(async (req, res) => {
   }
 });
 
-// Don't forget to add these to your exports:
+
 module.exports = { 
   registerGuest, 
   checkInGuest, 

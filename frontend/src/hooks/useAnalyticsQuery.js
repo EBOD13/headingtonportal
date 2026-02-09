@@ -12,10 +12,9 @@ import {
 } from '../features/guests/guestSlice';
 
 // ==============================
-// Selectors - FIXED
+// Selectors
 // ==============================
 
-// Read from state.guests (matches your store.js)
 const selectGuestState = (state) => state.guests || initialGuestState;
 
 // Safely read Clerk token
@@ -45,7 +44,7 @@ const normalizeGuest = (g) => {
 };
 
 /**
- * useGuests - FIXED
+ * useGuests
  */
 export const useGuests = (options = {}) => {
   const { enabled = true, onError } = options || {};
@@ -120,7 +119,7 @@ export const useGuests = (options = {}) => {
 };
 
 /**
- * useCheckedInGuests - FIXED
+ * useCheckedInGuests
  */
 export const useCheckedInGuests = (options = {}) => {
   const { enabled = true, onError } = options || {};
@@ -197,7 +196,7 @@ export const useCheckedInGuests = (options = {}) => {
 };
 
 /**
- * useGuestActions - FIXED
+ * useGuestActions
  */
 export const useGuestActions = () => {
   const dispatch = useDispatch();

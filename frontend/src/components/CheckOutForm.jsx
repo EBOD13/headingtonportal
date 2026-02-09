@@ -331,7 +331,7 @@ function CheckOutForm({ onClose }) {
             !isErrorGuests &&
             checkedInGuests.length > 0 && (
               <>
-                {/* Fixed Toolbar with Search & Count */}
+                {/* Toolbar with Search & Count */}
                 <div className="checkout-toolbar">
                   <div className="checkout-search">
                     <Search size={16} />

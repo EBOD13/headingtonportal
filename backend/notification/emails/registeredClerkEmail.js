@@ -90,14 +90,14 @@ async function sendRegisteredClerkEmail({ name, email, clerkID, tempPassword, se
 <body>
   <div class="wrapper">
     <div class="banner">
-      <h1>Headington Hall Front Desk</h1>
+      <h1>Residence Hall Front Desk</h1>
     </div>
     <div class="content">
       <p>Hi ${name || 'there'},</p>
 
-      <p>Welcome to Headington Hall, and congratulations on joining the OU Athletics Department team as a front desk clerk.</p>
+      <p>Welcome to The Residence Hall, and congratulations on joining the OU Athletics Department team as a front desk clerk.</p>
 
-      <p>We've created your account for the Headington Portal. Here are your temporary credentials:</p>
+      <p>We've created your account for the The Residence Hall Portal. Here are your temporary credentials:</p>
 
       <div class="credentials">
         <div><strong>Clerk ID:</strong> ${clerkID}</div>

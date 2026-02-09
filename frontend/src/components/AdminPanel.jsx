@@ -593,8 +593,6 @@ const handleCreateResident = async (values) => {
       hostId,
       hostName,
     });
-
-    // Close the resident detail modal so you don't stack overlays
     setSelectedResident(null);
   };
 

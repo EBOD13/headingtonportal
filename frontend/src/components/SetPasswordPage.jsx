@@ -44,7 +44,7 @@ const SetPasswordPage = () => {
       return;
     }
 
-    // ✅ Send both password and password2
+    // Send both password and password2
     dispatch(setPasswordWithToken({ token, password, password2 }));
   };
 

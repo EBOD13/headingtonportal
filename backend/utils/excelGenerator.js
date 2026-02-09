@@ -52,7 +52,7 @@ class ExcelReportGenerator {
         const filePath = path.join(reportsDir, fileName);
         await this.workbook.xlsx.writeFile(filePath);
         
-        console.log(`✅ Report generated: ${filePath}`);
+        console.log(`Report generated: ${filePath}`);
         return { filePath, fileName };
     }
 

@@ -48,7 +48,7 @@ const adminCreateClerk = asyncHandler(async (req, res) => {
   const clerk = new Clerk({
     name: name.trim(),
     email: email.toLowerCase().trim(),
-    password: tempPassword, // will be hashed in pre-save hook
+    password: tempPassword,
     role: role || 'clerk',
     isActive: true,
     mustChangePassword: true,
@@ -98,7 +98,6 @@ const adminCreateClerk = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     console.error('Failed to send registered clerk email:', err.message);
-    // We don't fail the whole request if email fails; but you could choose to.
   }
 
   // 7) Respond with safe data (no password)

@@ -8,8 +8,6 @@ function startJobs() {
     const monthlyReportJob = new MonthlyReportJob();
     monthlyReportJob.start();
     
-    // You can add more jobs here
-    
     console.log('All jobs started successfully');
 }
 

@@ -80,7 +80,6 @@ export function useAdminClerks(options = {}) {
     [dispatch]
   );
 
-  // ✅ Fixed resendInvite - use token from selector, not undefined function
   const resendInvite = useCallback(
     async (clerkId) => {
       if (!token) {

@@ -1,74 +1,3 @@
-// const asyncHandler = require('express-async-handler');
-// const Guest = require('../models/guestModel');
-// const { Parser } = require('json2csv');
-
-// // GET /api/admin/exports/visitation
-// // Query: from, to (ISO) or preset=day|week|month
-// const exportVisitationCsv = asyncHandler(async (req, res) => {
-//   const { from, to, preset } = req.query;
-
-//   let startDate, endDate;
-
-//   const now = new Date();
-//   if (preset) {
-//     if (preset === 'day') {
-//       startDate = new Date(now);
-//       startDate.setHours(0, 0, 0, 0);
-//       endDate = new Date(now);
-//       endDate.setHours(23, 59, 59, 999);
-//     } else if (preset === 'week') {
-//       endDate = now;
-//       startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-//     } else if (preset === 'month') {
-//       endDate = now;
-//       startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-//     }
-//   } else if (from && to) {
-//     startDate = new Date(from);
-//     endDate = new Date(to);
-//   }
-
-//   if (!startDate || !endDate) {
-//     return res.status(400).json({
-//       message: 'Provide either preset=day|week|month or valid from/to dates'
-//     });
-//   }
-
-//   const guests = await Guest.find({
-//     checkIn: { $gte: startDate, $lte: endDate }
-//   })
-//     .populate('host', 'name roomNumber')
-//     .lean();
-
-//   const rows = guests.map((g) => ({
-//     guest_name: g.name,
-//     guest_contact: g.contact,
-//     room: g.room,
-//     wing: g.wing,
-//     host_name: g.host?.name || g.hostName,
-//     host_room: g.host?.roomNumber || g.hostRoom,
-//     status: g.isCheckedIn ? 'Checked In' : 'Checked Out',
-//     check_in: g.checkIn ? new Date(g.checkIn).toISOString() : '',
-//     check_out: g.checkout ? new Date(g.checkout).toISOString() : '',
-//     flagged: g.flagged ? 'Yes' : 'No',
-//     student_at_ou: g.studentAtOU ? 'Yes' : 'No'
-//   }));
-
-//   const parser = new Parser();
-//   const csv = parser.parse(rows);
-
-//   const fileName = `visitation_${startDate.toISOString().slice(0, 10)}_${endDate
-//     .toISOString()
-//     .slice(0, 10)}.csv`;
-
-//   res.setHeader('Content-Type', 'text/csv');
-//   res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-//   res.status(200).send(csv);
-// });
-
-// module.exports = { exportVisitationCsv };
-
-
 // backend/controllers/exportController.js
 const asyncHandler = require('express-async-handler');
 const Guest = require('../models/guestModel');
@@ -138,9 +67,6 @@ const exportVisitationCsv = asyncHandler(async (req, res) => {
   }
 
   const filter = {};
-
-  // You can filter on createdAt or checkInTime depending on your schema.
-  // We'll use createdAt here as a sane default.
   if (start || end) {
     filter.createdAt = {};
     if (start && !Number.isNaN(start.getTime())) {
@@ -167,7 +93,6 @@ const exportVisitationCsv = asyncHandler(async (req, res) => {
   ];
 
   const rows = visits.map((v) => {
-    // adjust fields to your schema – these fallbacks are defensive
     const guestName = v.name || v.guestName || '';
     const hostName = v.hostName || v.host?.name || v.host || '';
     const room = v.room || v.roomNumber || '';

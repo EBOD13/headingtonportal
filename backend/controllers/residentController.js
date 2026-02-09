@@ -25,8 +25,6 @@ const getGuestsByHost = asyncHandler(async (req, res) => {
     const resident = await Resident.findById(hostId)
       .populate({
         path: 'guests',
-        // If you only want non-checked-in guests, uncomment:
-        // match: { isCheckedIn: false },
       })
       .lean();
 
@@ -45,8 +43,6 @@ const getGuestsByHost = asyncHandler(async (req, res) => {
       isCheckedIn: !!guest.isCheckedIn,
       checkIn: guest.checkIn || null,
       checkout: guest.checkout || null,
-      // If you later add visitCount / lastVisit to the schema,
-      // they'll appear here automatically.
       visitCount: guest.visitCount || 1,
       lastVisit: guest.lastVisit || guest.checkout || guest.checkIn || null,
     }));
@@ -188,12 +184,6 @@ const deleteResident = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Resident not found');
   }
-
-  // If you want to enforce admin only deletion, uncomment:
-  // if (!req.clerk || req.clerk.role !== "admin") {
-  //   res.status(401);
-  //   throw new Error("Not authorized to delete resident");
-  // }
 
   await Resident.findByIdAndDelete(req.params.id);
   res.status(200).json({ id: req.params.id });
